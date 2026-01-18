@@ -1,0 +1,24 @@
+# Node
+node_modules/
+.next/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Models/cache
+models/hf/
+models/cache/
+
+# Generated images
+data/images/
+data/app.db
+
+# Env
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

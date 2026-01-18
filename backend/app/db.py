@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+import sqlite3
+from pathlib import Path
+
+from app import config
+
+
+def _ensure_parent(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def get_connection() -> sqlite3.Connection:
+    _ensure_parent(config.DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db() -> None:
+    conn = get_connection()
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                started_at INTEGER,
+                finished_at INTEGER,
+                error TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS runs (
+                id TEXT PRIMARY KEY,
+                job_id TEXT NOT NULL,
+                model_id TEXT NOT NULL,
+                prompt TEXT NOT NULL,
+                negative_prompt TEXT,
+                seed INTEGER NOT NULL,
+                steps INTEGER NOT NULL,
+                width INTEGER,
+                height INTEGER,
+                guidance_scale REAL,
+                true_cfg_scale REAL,
+                input_image_ids TEXT,
+                output_image_id TEXT,
+                latency_ms INTEGER,
+                FOREIGN KEY(job_id) REFERENCES jobs(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS images (
+                id TEXT PRIMARY KEY,
+                filename TEXT,
+                source TEXT,
+                created_at INTEGER NOT NULL,
+                width INTEGER,
+                height INTEGER,
+                size_bytes INTEGER,
+                content_type TEXT,
+                job_id TEXT,
+                run_id TEXT
+            );
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()

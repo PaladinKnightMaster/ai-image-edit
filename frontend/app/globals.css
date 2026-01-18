@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0f172a;
+  --mist: #f5f2ec;
+  --highlight: #f8d08a;
+  --ocean: #8cc5ff;
+  --accent: #3b82f6;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", serif;
+  --font-body: "Avenir Next", Avenir, Candara, Calibri, "Trebuchet MS", sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 800px at 10% -10%, rgba(248, 208, 138, 0.35), transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, rgba(140, 197, 255, 0.25), transparent 55%),
+    linear-gradient(180deg, #f7f4ef, #f1ede5);
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.grid-glow {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 120px 120px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

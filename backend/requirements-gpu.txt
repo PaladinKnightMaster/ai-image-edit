@@ -1,0 +1,4 @@
+# GPU requirements (CUDA 12.1 default). Adjust cu121 to match your CUDA version.
+--index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://pypi.org/simple
+-r requirements.txt

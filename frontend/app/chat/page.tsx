@@ -1,0 +1,1638 @@
+
+"use client";
+
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+
+type SystemInfo = {
+  profile: string;
+  profile_reason: string;
+  hardware: {
+    has_cuda?: boolean;
+    vram_gb?: number;
+    device_name?: string;
+    ram_gb?: number;
+  };
+  defaults: {
+    width: number;
+    height: number;
+    steps: number;
+  };
+  limits: {
+    max_width: number;
+    max_height: number;
+    max_steps: number;
+  };
+  memory: {
+    attention_slicing: boolean;
+    vae_slicing: boolean;
+    vae_tiling: boolean;
+  };
+};
+
+type ModelInfo = {
+  id: string;
+  capabilities: string[];
+  present: boolean;
+  local_path?: string | null;
+  revision?: string | null;
+};
+
+type RunRecord = {
+  id: string;
+  job_id: string;
+  model_id: string;
+  prompt: string;
+  negative_prompt?: string | null;
+  seed: number;
+  steps: number;
+  width?: number | null;
+  height?: number | null;
+  guidance_scale?: number | null;
+  true_cfg_scale?: number | null;
+  input_image_ids?: string[] | null;
+  output_image_id?: string | null;
+  latency_ms?: number | null;
+  type?: string | null;
+  status?: string | null;
+  error?: string | null;
+  created_at?: number | null;
+  finished_at?: number | null;
+};
+
+type ReadyState = {
+  ready: boolean;
+  status: string;
+  details: Record<string, unknown>;
+};
+
+type AttachmentDraft = {
+  id: string;
+  kind: "upload";
+  file: File;
+  previewUrl: string;
+};
+
+type AttachmentHistory = {
+  id: string;
+  kind: "history";
+  imageId: string;
+  previewUrl: string;
+};
+
+type AttachmentItem = AttachmentDraft | AttachmentHistory;
+
+type AttachmentSnapshot = {
+  id: string;
+  previewUrl: string;
+  source?: "upload" | "history";
+  imageId?: string;
+};
+
+type JobRequest = {
+  mode: "t2i" | "edit";
+  modelId: string;
+  params: Record<string, unknown>;
+  inputPreviews?: AttachmentSnapshot[];
+};
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  createdAt: number;
+  mode?: "generate" | "edit";
+  prompt?: string;
+  attachments?: AttachmentSnapshot[];
+  jobId?: string;
+  status?: string;
+  stage?: string;
+  progress?: number;
+  outputImageId?: string;
+  error?: string;
+  run?: RunRecord;
+  request?: JobRequest;
+};
+
+const STORAGE_KEY = "ai-image-chat-thread-v1";
+const MODEL_T2I = "qwen-image-2512";
+const MODEL_EDIT = "qwen-image-edit-2511";
+
+const makeId = () => `${Date.now().toString(36)}${Math.random().toString(16).slice(2)}`;
+
+const formatTime = (timestamp?: number) => {
+  if (!timestamp) {
+    return "";
+  }
+  return new Date(timestamp).toLocaleTimeString();
+};
+
+const formatLatency = (latency?: number | null) => {
+  if (!latency) {
+    return "n/a";
+  }
+  if (latency < 1000) {
+    return `${latency} ms`;
+  }
+  return `${(latency / 1000).toFixed(2)} s`;
+};
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+const parseIntOr = (value: string, fallback: number) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const parseFloatOr = (value: string) => {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const parseErrorMessage = async (response: Response) => {
+  const text = await response.text();
+  if (!text) {
+    return "Request failed.";
+  }
+  try {
+    const payload = JSON.parse(text) as { error?: { message?: string } };
+    return payload?.error?.message ?? text;
+  } catch {
+    return text;
+  }
+};
+
+export default function ChatPage() {
+  const backendUrl = useMemo(
+    () => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000",
+    []
+  );
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [readyState, setReadyState] = useState<ReadyState | null>(null);
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [recentRuns, setRecentRuns] = useState<RunRecord[]>([]);
+  const [failedRuns, setFailedRuns] = useState<RunRecord[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [negativePrompt, setNegativePrompt] = useState("");
+  const [seed, setSeed] = useState("");
+  const [steps, setSteps] = useState("");
+  const [width, setWidth] = useState("");
+  const [height, setHeight] = useState("");
+  const [guidanceScale, setGuidanceScale] = useState("");
+  const [trueCfgScale, setTrueCfgScale] = useState("");
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyRuns, setHistoryRuns] = useState<RunRecord[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const eventSources = useRef<Map<string, EventSource>>(new Map());
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as ChatMessage[];
+        setMessages(parsed);
+      } catch {
+        setMessages([]);
+      }
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      eventSources.current.forEach((source) => source.close());
+      eventSources.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages, hydrated]);
+
+  useEffect(() => {
+    const container = timelineRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages]);
+
+  const loadSystem = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/system`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as SystemInfo;
+      setSystemInfo(data);
+      setSteps((current) => current || String(data.defaults.steps));
+      setWidth((current) => current || String(data.defaults.width));
+      setHeight((current) => current || String(data.defaults.height));
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadReady = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/ready`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as ReadyState;
+      setReadyState(data);
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadModels = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/models`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as ModelInfo[];
+      setModels(data);
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadRuns = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/runs?limit=6`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as RunRecord[];
+      setRecentRuns(data);
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadHistoryRuns = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/runs?limit=50`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as RunRecord[];
+      setHistoryRuns(data);
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadFailedRuns = async () => {
+    try {
+      const response = await fetch(
+        `${backendUrl}/api/runs?status=failed&limit=6`,
+        { cache: "no-store" }
+      );
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as RunRecord[];
+      setFailedRuns(data);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    loadSystem();
+    loadModels();
+    loadRuns();
+    loadReady();
+    loadFailedRuns();
+  }, [backendUrl]);
+
+  const updateMessageByJob = (jobId: string, patch: Partial<ChatMessage>) => {
+    setMessages((current) =>
+      current.map((message) => (message.jobId === jobId ? { ...message, ...patch } : message))
+    );
+  };
+
+  const updateMessageById = (id: string, patch: Partial<ChatMessage>) => {
+    setMessages((current) =>
+      current.map((message) => (message.id === id ? { ...message, ...patch } : message))
+    );
+  };
+
+  const fetchJob = async (jobId: string) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/jobs/${jobId}`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      updateMessageByJob(jobId, {
+        status: data.status,
+        run: data.run,
+        outputImageId: data.run?.output_image_id ?? undefined
+      });
+      if (data.status === "succeeded" || data.status === "failed") {
+        eventSources.current.get(jobId)?.close();
+        eventSources.current.delete(jobId);
+        loadRuns();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const attachEventSource = (jobId: string) => {
+    if (eventSources.current.has(jobId)) {
+      return;
+    }
+    const source = new EventSource(`${backendUrl}/api/jobs/${jobId}/events`);
+    source.addEventListener("status", (event) => {
+      const payload = JSON.parse((event as MessageEvent).data);
+      updateMessageByJob(jobId, { status: payload.status });
+    });
+    source.addEventListener("stage", (event) => {
+      const payload = JSON.parse((event as MessageEvent).data);
+      updateMessageByJob(jobId, { stage: payload.stage });
+    });
+    source.addEventListener("progress", (event) => {
+      const payload = JSON.parse((event as MessageEvent).data);
+      updateMessageByJob(jobId, { progress: payload.percent });
+    });
+    source.addEventListener("result", (event) => {
+      const payload = JSON.parse((event as MessageEvent).data);
+      updateMessageByJob(jobId, {
+        status: "succeeded",
+        outputImageId: payload.output_image_id,
+        stage: "complete",
+        progress: 100
+      });
+      fetchJob(jobId);
+    });
+    source.addEventListener("error", (event) => {
+      try {
+        const payload = JSON.parse((event as MessageEvent).data);
+        updateMessageByJob(jobId, { status: "failed", error: payload.message });
+      } catch {
+        updateMessageByJob(jobId, { status: "failed", error: "Stream disconnected." });
+      }
+      source.close();
+      eventSources.current.delete(jobId);
+    });
+    source.onerror = () => {
+      updateMessageByJob(jobId, { error: "Stream disconnected." });
+    };
+    eventSources.current.set(jobId, source);
+  };
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    messages
+      .filter((message) => message.role === "assistant" && message.jobId)
+      .forEach((message) => {
+        if (!message.jobId) {
+          return;
+        }
+        if (message.status === "succeeded" || message.status === "failed") {
+          return;
+        }
+        fetchJob(message.jobId);
+        attachEventSource(message.jobId);
+      });
+  }, [hydrated, messages]);
+
+  const handleAttachImages = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) {
+      return;
+    }
+    setError(null);
+    if (attachments.length + files.length > 2) {
+      setError("Attach up to 2 images.");
+      event.target.value = "";
+      return;
+    }
+    const previews = await Promise.all(
+      files.map(async (file) => ({
+        id: makeId(),
+        kind: "upload" as const,
+        file,
+        previewUrl: await readFileAsDataUrl(file)
+      }))
+    );
+    setAttachments((current) => [...current, ...previews]);
+    event.target.value = "";
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((current) => current.filter((item) => item.id !== id));
+  };
+
+  const addHistoryAttachment = (imageId: string) => {
+    setError(null);
+    setAttachments((current) => {
+      if (current.length >= 2) {
+        setError("Attach up to 2 images.");
+        return current;
+      }
+      if (current.some((item) => item.kind === "history" && item.imageId === imageId)) {
+        return current;
+      }
+      return [
+        ...current,
+        {
+          id: makeId(),
+          kind: "history",
+          imageId,
+          previewUrl: `${backendUrl}/api/images/${imageId}`
+        }
+      ];
+    });
+  };
+
+  const openHistoryPicker = async () => {
+    await loadHistoryRuns();
+    setHistoryOpen(true);
+  };
+
+  const uploadImage = async (item: AttachmentDraft) => {
+    const payload = new FormData();
+    payload.append("file", item.file, item.file.name);
+    const response = await fetch(`${backendUrl}/api/images/upload`, {
+      method: "POST",
+      body: payload
+    });
+    if (!response.ok) {
+      const detail = await parseErrorMessage(response);
+      throw new Error(detail || "Image upload failed.");
+    }
+    const data = (await response.json()) as { image_id: string };
+    return data.image_id;
+  };
+
+  const submitJob = async (request: JobRequest, userMessage?: ChatMessage) => {
+    const assistantId = makeId();
+    const assistantMessage: ChatMessage = {
+      id: assistantId,
+      role: "assistant",
+      createdAt: Date.now(),
+      status: "queued",
+      stage: "queued",
+      request
+    };
+    setMessages((current) => [
+      ...current,
+      ...(userMessage ? [userMessage] : []),
+      assistantMessage
+    ]);
+
+    const endpoint = request.mode === "t2i" ? "/api/jobs/t2i" : "/api/jobs/edit";
+    try {
+      const response = await fetch(`${backendUrl}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model_id: request.modelId, ...request.params })
+      });
+      if (!response.ok) {
+        const detail = await parseErrorMessage(response);
+        throw new Error(detail || "Job submission failed.");
+      }
+      const data = (await response.json()) as { job_id: string };
+      updateMessageById(assistantId, { jobId: data.job_id });
+      attachEventSource(data.job_id);
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error ? submitError.message : "Job submission failed.";
+      updateMessageById(assistantId, { status: "failed", error: message });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!prompt.trim()) {
+      setError("Add a prompt before generating.");
+      return;
+    }
+    const isEdit = attachments.length > 0;
+    if (isEdit && attachments.length === 0) {
+      setError("Attach at least one image to edit.");
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const defaults = systemInfo?.defaults ?? { width: 1024, height: 1024, steps: 24 };
+      const limits = systemInfo?.limits ?? {
+        max_width: 2048,
+        max_height: 2048,
+        max_steps: 60
+      };
+      const stepsValue = parseIntOr(steps, defaults.steps);
+      if (stepsValue > limits.max_steps) {
+        throw new Error(`Steps exceed max ${limits.max_steps}.`);
+      }
+
+      const widthValue = parseIntOr(width, defaults.width);
+      const heightValue = parseIntOr(height, defaults.height);
+      if (!isEdit) {
+        if (widthValue > limits.max_width || heightValue > limits.max_height) {
+          throw new Error(`Resolution exceeds ${limits.max_width}x${limits.max_height}.`);
+        }
+        if (widthValue % 8 !== 0 || heightValue % 8 !== 0) {
+          throw new Error("Width and height must be divisible by 8.");
+        }
+      }
+
+      let imageIds: string[] = [];
+      let attachmentSnapshots: AttachmentSnapshot[] = [];
+      if (isEdit) {
+        imageIds = await Promise.all(
+          attachments.map(async (item) =>
+            item.kind === "history" ? item.imageId : uploadImage(item)
+          )
+        );
+        attachmentSnapshots = attachments.map((item, index) => ({
+          id: item.id,
+          previewUrl: item.previewUrl,
+          source: item.kind,
+          imageId: imageIds[index]
+        }));
+      }
+
+      const params: Record<string, unknown> = {
+        prompt: prompt.trim(),
+        steps: stepsValue
+      };
+      const parsedGuidance = parseFloatOr(guidanceScale);
+      if (parsedGuidance !== undefined) {
+        params.guidance_scale = parsedGuidance;
+      }
+      const parsedTrueCfg = parseFloatOr(trueCfgScale);
+      if (parsedTrueCfg !== undefined) {
+        params.true_cfg_scale = parsedTrueCfg;
+      }
+      if (seed.trim()) {
+        const parsedSeed = Number.parseInt(seed, 10);
+        if (!Number.isFinite(parsedSeed) || parsedSeed < 0) {
+          throw new Error("Seed must be a non-negative integer.");
+        }
+        params.seed = parsedSeed;
+      }
+
+      if (isEdit) {
+        params.image_ids = imageIds;
+      } else {
+        params.width = widthValue;
+        params.height = heightValue;
+        if (negativePrompt.trim()) {
+          params.negative_prompt = negativePrompt.trim();
+        }
+      }
+
+      const userMessage: ChatMessage = {
+        id: makeId(),
+        role: "user",
+        createdAt: Date.now(),
+        mode: isEdit ? "edit" : "generate",
+        prompt: prompt.trim(),
+        attachments: attachmentSnapshots.length ? attachmentSnapshots : undefined
+      };
+
+      const request: JobRequest = {
+        mode: isEdit ? "edit" : "t2i",
+        modelId: isEdit ? MODEL_EDIT : MODEL_T2I,
+        params,
+        inputPreviews: attachmentSnapshots.length ? attachmentSnapshots : undefined
+      };
+
+      await submitJob(request, userMessage);
+      setPrompt("");
+      setAttachments([]);
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error ? submitError.message : "Unable to submit job.";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const buildRequestFromRun = (run: RunRecord): JobRequest | null => {
+    if (!run.type) {
+      return null;
+    }
+    if (run.type === "t2i") {
+      return {
+        mode: "t2i",
+        modelId: run.model_id,
+        params: {
+          prompt: run.prompt,
+          negative_prompt: run.negative_prompt ?? undefined,
+          seed: run.seed,
+          steps: run.steps,
+          width: run.width ?? undefined,
+          height: run.height ?? undefined,
+          guidance_scale: run.guidance_scale ?? undefined,
+          true_cfg_scale: run.true_cfg_scale ?? undefined
+        }
+      };
+    }
+    if (run.type === "edit") {
+      return {
+        mode: "edit",
+        modelId: run.model_id,
+        params: {
+          prompt: run.prompt,
+          image_ids: run.input_image_ids ?? [],
+          seed: run.seed,
+          steps: run.steps,
+          guidance_scale: run.guidance_scale ?? undefined,
+          true_cfg_scale: run.true_cfg_scale ?? undefined
+        }
+      };
+    }
+    return null;
+  };
+
+  const submitReplay = async (run: RunRecord) => {
+    const request = buildRequestFromRun(run);
+    if (!request) {
+      setError("Replay data missing run type.");
+      return;
+    }
+
+    const attachmentSnapshots: AttachmentSnapshot[] | undefined =
+      run.input_image_ids?.map((imageId) => ({
+        id: makeId(),
+        previewUrl: `${backendUrl}/api/images/${imageId}`,
+        source: "history",
+        imageId
+      })) ?? undefined;
+
+    const userMessage: ChatMessage = {
+      id: makeId(),
+      role: "user",
+      createdAt: Date.now(),
+      mode: run.type === "edit" ? "edit" : "generate",
+      prompt: run.prompt,
+      attachments: attachmentSnapshots
+    };
+
+    const assistantId = makeId();
+    const assistantMessage: ChatMessage = {
+      id: assistantId,
+      role: "assistant",
+      createdAt: Date.now(),
+      status: "queued",
+      stage: "queued",
+      request
+    };
+
+    setMessages((current) => [...current, userMessage, assistantMessage]);
+
+    try {
+      const response = await fetch(`${backendUrl}/api/jobs/replay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ run_id: run.id })
+      });
+      if (!response.ok) {
+        const detail = await parseErrorMessage(response);
+        throw new Error(detail || "Replay failed.");
+      }
+      const data = (await response.json()) as { job_id: string };
+      updateMessageById(assistantId, { jobId: data.job_id });
+      attachEventSource(data.job_id);
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error ? submitError.message : "Replay failed.";
+      updateMessageById(assistantId, { status: "failed", error: message });
+    }
+  };
+
+  const handleRetry = async (message: ChatMessage) => {
+    if (!message.request) {
+      return;
+    }
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await submitJob(message.request);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyDebugInfo = async (message: ChatMessage) => {
+    const payload = {
+      job_id: message.jobId,
+      error: message.error,
+      request: message.request,
+      run: message.run,
+      backend_url: backendUrl
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    } catch {
+      setError("Unable to copy debug info.");
+    }
+  };
+
+  const exportThread = () => {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      backend_url: backendUrl,
+      messages
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `chat-thread-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const checkMissingImages = async (messagesToCheck: ChatMessage[]) => {
+    const imageIds = new Set<string>();
+    messagesToCheck.forEach((message) => {
+      message.attachments?.forEach((item) => {
+        if (item.imageId) {
+          imageIds.add(item.imageId);
+        }
+      });
+      if (message.outputImageId) {
+        imageIds.add(message.outputImageId);
+      }
+    });
+
+    if (imageIds.size === 0) {
+      setImportWarnings([]);
+      return;
+    }
+
+    const missing: string[] = [];
+    for (const imageId of imageIds) {
+      try {
+        const response = await fetch(`${backendUrl}/api/images/${imageId}/meta`, {
+          cache: "no-store"
+        });
+        if (!response.ok) {
+          missing.push(imageId);
+        }
+      } catch {
+        missing.push(imageId);
+      }
+    }
+    setImportWarnings(
+      missing.length ? [`Missing image IDs: ${missing.slice(0, 4).join(", ")}`] : []
+    );
+  };
+
+  const handleImportThread = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text) as { messages?: ChatMessage[] };
+      if (!payload.messages || !Array.isArray(payload.messages)) {
+        throw new Error("Invalid thread payload.");
+      }
+      setMessages(payload.messages);
+      await checkMissingImages(payload.messages);
+    } catch (importError) {
+      const message =
+        importError instanceof Error ? importError.message : "Failed to import thread.";
+      setError(message);
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const triggerImport = () => {
+    importInputRef.current?.click();
+  };
+
+  const copyRunParams = async (run?: RunRecord) => {
+    if (!run) {
+      return;
+    }
+    const payload: Record<string, unknown> = {
+      model_id: run.model_id,
+      prompt: run.prompt,
+      negative_prompt: run.negative_prompt,
+      seed: run.seed,
+      steps: run.steps,
+      width: run.width,
+      height: run.height,
+      guidance_scale: run.guidance_scale,
+      true_cfg_scale: run.true_cfg_scale,
+      input_image_ids: run.input_image_ids
+    };
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined || payload[key] === null) {
+        delete payload[key];
+      }
+    });
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    } catch {
+      setError("Unable to copy params to clipboard.");
+    }
+  };
+
+  const clearHistory = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    eventSources.current.forEach((source) => source.close());
+    eventSources.current.clear();
+    setMessages([]);
+    setImportWarnings([]);
+  };
+
+  const modelStatus = (id: string) => models.find((model) => model.id === id);
+
+  return (
+    <main className="mx-auto min-h-screen max-w-6xl px-6 py-10">
+      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+        <aside className="flex flex-col gap-6">
+          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">System profile</p>
+            <h2 className="mt-3 font-display text-xl text-slate-900">Offline arena</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {systemInfo
+                ? `${systemInfo.profile} (${systemInfo.profile_reason})`
+                : "Loading device profile..."}
+            </p>
+            {readyState ? (
+              <div className="mt-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em]">
+                <span
+                  className={`rounded-full px-2 py-1 ${
+                    readyState.ready ? "bg-emerald-500 text-white" : "bg-amber-400 text-slate-900"
+                  }`}
+                >
+                  {readyState.ready ? "Ready" : readyState.status}
+                </span>
+                <span className="text-slate-500">
+                  {(readyState.details?.message as string) ??
+                    (readyState.details?.error as string) ??
+                    ""}
+                </span>
+              </div>
+            ) : null}
+            {systemInfo ? (
+              <div className="mt-4 space-y-2 text-xs text-slate-500">
+                <div>RAM: {systemInfo.hardware.ram_gb ?? "n/a"} GB</div>
+                <div>CUDA: {systemInfo.hardware.has_cuda ? "yes" : "no"}</div>
+                <div>VRAM: {systemInfo.hardware.vram_gb ?? "n/a"} GB</div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Models
+            </h3>
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
+              {[MODEL_T2I, MODEL_EDIT].map((id) => {
+                const status = modelStatus(id);
+                const ready = status?.present;
+                return (
+                  <div key={id} className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-slate-800">{id}</p>
+                      <p className="text-xs text-slate-500">
+                        {status?.capabilities?.join(", ") || "loading..."}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] ${
+                        ready ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                      }`}
+                    >
+                      {ready ? "ready" : "missing"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Recent runs
+              </h3>
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline underline-offset-4"
+                onClick={loadRuns}
+              >
+                Refresh
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {recentRuns.length ? (
+                recentRuns.map((run) => (
+                  <div key={run.id} className="rounded-2xl border border-white/70 bg-white/80 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      {run.model_id}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">{run.prompt}</p>
+                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                      <span>{run.status ?? "done"}</span>
+                      <span>{formatLatency(run.latency_ms)}</span>
+                    </div>
+                    {run.output_image_id ? (
+                      <img
+                        src={`${backendUrl}/api/images/${run.output_image_id}`}
+                        alt="recent output"
+                        className="mt-3 h-28 w-full rounded-xl object-cover"
+                        loading="lazy"
+                      />
+                    ) : null}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">No runs yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Failed runs
+              </h3>
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline underline-offset-4"
+                onClick={loadFailedRuns}
+              >
+                Refresh
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {failedRuns.length ? (
+                failedRuns.map((run) => (
+                  <div key={run.id} className="rounded-2xl border border-rose-200 bg-rose-50 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-rose-500">
+                      {run.type ?? "run"}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">{run.prompt}</p>
+                    {run.error ? (
+                      <p className="mt-2 text-xs text-rose-600">{run.error}</p>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="mt-2 w-full rounded-full border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600"
+                      onClick={() => submitReplay(run)}
+                    >
+                      Replay
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">No failed runs.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              className="rounded-full border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+              onClick={exportThread}
+            >
+              Export thread
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
+              onClick={triggerImport}
+            >
+              Import thread
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={handleImportThread}
+            />
+            {importWarnings.length ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                {importWarnings.join(" ")}
+              </div>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            className="rounded-full border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+            onClick={clearHistory}
+          >
+            Clear local history
+          </button>
+        </aside>
+
+        <section className="flex min-h-[80vh] flex-col gap-6">
+          <header className="rounded-3xl border border-white/70 bg-white/70 p-6 shadow-soft backdrop-blur motion-safe:animate-fade-up">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Chat arena</p>
+                <h1 className="mt-2 font-display text-3xl text-slate-900">
+                  Generate or edit with Qwen in one thread.
+                </h1>
+              </div>
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-xs text-slate-600">
+                Backend: <span className="font-mono text-slate-800">{backendUrl}</span>
+              </div>
+            </div>
+          </header>
+
+          <div
+            ref={timelineRef}
+            className="flex-1 space-y-6 overflow-y-auto rounded-3xl border border-white/70 bg-white/60 p-6 shadow-soft backdrop-blur"
+          >
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
+                <p className="font-display text-2xl text-slate-700">Start with a prompt.</p>
+                <p className="mt-2 text-sm">
+                  Generate a new scene or attach an image to edit.
+                </p>
+              </div>
+            ) : (
+              messages.map((message) => {
+                const isUser = message.role === "user";
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-3xl border px-5 py-4 shadow-soft ${
+                        isUser
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-white/70 bg-white/80 text-slate-800"
+                      }`}
+                    >
+                      {isUser ? (
+                        <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-300">
+                          <span>{message.mode === "edit" ? "Edit" : "Generate"}</span>
+                          <span>{formatTime(message.createdAt)}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
+                          <span>Assistant</span>
+                          <span>{formatTime(message.createdAt)}</span>
+                        </div>
+                      )}
+
+                      {message.prompt ? (
+                        <p className="mt-3 text-sm leading-relaxed">{message.prompt}</p>
+                      ) : null}
+
+                      {message.attachments?.length ? (
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          {message.attachments.map((item) => (
+                            <div key={item.id} className="relative">
+                              <img
+                                src={
+                                  item.previewUrl ||
+                                  (item.imageId ? `${backendUrl}/api/images/${item.imageId}` : "")
+                                }
+                                alt="attachment preview"
+                                className="h-28 w-full rounded-2xl object-cover"
+                              />
+                              <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                                {item.source === "history" ? "History" : "Upload"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {!isUser ? (
+                        <div className="mt-4 space-y-3">
+                          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                            <span>Status: {message.status ?? "queued"}</span>
+                            {message.stage ? <span>Stage: {message.stage}</span> : null}
+                          </div>
+                          {typeof message.progress === "number" ? (
+                            <div className="h-2 w-full rounded-full bg-slate-200">
+                              <div
+                                className="h-2 rounded-full bg-slate-900 transition-all"
+                                style={{ width: `${message.progress}%` }}
+                              />
+                            </div>
+                          ) : null}
+                          {message.outputImageId ? (
+                            <img
+                              src={`${backendUrl}/api/images/${message.outputImageId}`}
+                              alt="generated output"
+                              className="w-full rounded-2xl object-cover"
+                              loading="lazy"
+                            />
+                          ) : null}
+                          {message.outputImageId ? (
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              <button
+                                type="button"
+                                className="rounded-full border border-slate-900 px-3 py-1 font-semibold text-slate-800"
+                                onClick={() => addHistoryAttachment(message.outputImageId!)}
+                              >
+                                Use as input
+                              </button>
+                              <a
+                                className="rounded-full border border-slate-900/60 px-3 py-1 font-semibold text-slate-700"
+                                href={`${backendUrl}/api/images/${message.outputImageId}`}
+                                download
+                              >
+                                Download
+                              </a>
+                              {message.run ? (
+                                <button
+                                  type="button"
+                                  className="rounded-full border border-slate-900/60 px-3 py-1 font-semibold text-slate-700"
+                                  onClick={() => copyRunParams(message.run)}
+                                >
+                                  Copy run params
+                                </button>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          {message.error ? (
+                            <p className="text-sm text-rose-600">{message.error}</p>
+                          ) : null}
+                          {message.status === "failed" && message.request ? (
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+                              onClick={() => handleRetry(message)}
+                            >
+                              Retry
+                            </button>
+                          ) : null}
+                          {message.status === "failed" ? (
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate-900/60 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
+                              onClick={() => copyDebugInfo(message)}
+                            >
+                              Copy debug info
+                            </button>
+                          ) : null}
+                          {message.run ? (
+                            <details className="rounded-2xl border border-white/70 bg-white/70 p-3 text-xs text-slate-600">
+                              <summary className="cursor-pointer text-xs uppercase tracking-[0.2em] text-slate-500">
+                                Metadata
+                              </summary>
+                              <div className="mt-3 grid gap-2">
+                                <div>Model: {message.run.model_id}</div>
+                                <div>Seed: {message.run.seed}</div>
+                                <div>Steps: {message.run.steps}</div>
+                                <div>
+                                  Size:{" "}
+                                  {message.run.width && message.run.height
+                                    ? `${message.run.width}x${message.run.height}`
+                                    : "n/a"}
+                                </div>
+                                <div>
+                                  Guidance: {message.run.guidance_scale ?? "n/a"}
+                                </div>
+                                <div>
+                                  True CFG: {message.run.true_cfg_scale ?? "n/a"}
+                                </div>
+                                <div>Latency: {formatLatency(message.run.latency_ms)}</div>
+                              </div>
+                            </details>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+            <div className="flex items-start justify-between gap-4">
+              <textarea
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                placeholder="Describe the scene or edit you want..."
+                className="min-h-[110px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+              />
+              <div className="flex flex-col gap-3">
+                <label className="cursor-pointer rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white">
+                  Attach images
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleAttachImages}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={openHistoryPicker}
+                  className="rounded-full border border-slate-900/60 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
+                >
+                  Pick from history
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={handleSubmit}
+                >
+                  {attachments.length ? "Edit" : "Generate"}
+                </button>
+              </div>
+            </div>
+
+            {attachments.length ? (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {attachments.map((item) => (
+                  <div key={item.id} className="relative">
+                    <img
+                      src={
+                        item.previewUrl ||
+                        (item.kind === "history" ? `${backendUrl}/api/images/${item.imageId}` : "")
+                      }
+                      alt="attachment"
+                      className="h-32 w-full rounded-2xl object-cover"
+                    />
+                    <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                      {item.kind === "history" ? "History" : "Upload"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(item.id)}
+                      className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs text-slate-700 shadow"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <span>{attachments.length}/2 images attached</span>
+              <button
+                type="button"
+                className="text-xs uppercase tracking-[0.2em] text-slate-500 underline underline-offset-4"
+                onClick={() => setSettingsOpen((open) => !open)}
+              >
+                {settingsOpen ? "Hide settings" : "Show settings"}
+              </button>
+              {error ? <span className="text-rose-600">{error}</span> : null}
+            </div>
+
+            {settingsOpen ? (
+              <div className="mt-4 grid gap-4 rounded-2xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-700">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Negative prompt
+                    </span>
+                    <input
+                      value={negativePrompt}
+                      onChange={(event) => setNegativePrompt(event.target.value)}
+                      disabled={attachments.length > 0}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Optional"
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Seed</span>
+                    <input
+                      value={seed}
+                      onChange={(event) => setSeed(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Leave blank for random"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Steps
+                    </span>
+                    <input
+                      value={steps}
+                      onChange={(event) => setSteps(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder={systemInfo ? String(systemInfo.defaults.steps) : "24"}
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Guidance scale
+                    </span>
+                    <input
+                      value={guidanceScale}
+                      onChange={(event) => setGuidanceScale(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Optional"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      True CFG scale
+                    </span>
+                    <input
+                      value={trueCfgScale}
+                      onChange={(event) => setTrueCfgScale(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Optional"
+                    />
+                  </label>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Width
+                      </span>
+                      <input
+                        value={width}
+                        onChange={(event) => setWidth(event.target.value)}
+                        disabled={attachments.length > 0}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder={systemInfo ? String(systemInfo.defaults.width) : "1024"}
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Height
+                      </span>
+                      <input
+                        value={height}
+                        onChange={(event) => setHeight(event.target.value)}
+                        disabled={attachments.length > 0}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder={systemInfo ? String(systemInfo.defaults.height) : "1024"}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      </div>
+      {historyOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4 py-10">
+          <div className="max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/70 bg-white/90 shadow-soft backdrop-blur">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  History picker
+                </p>
+                <h2 className="font-display text-2xl text-slate-900">
+                  Pick an output to edit
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-700"
+                onClick={() => setHistoryOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[65vh] overflow-y-auto px-6 py-6">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {historyRuns
+                  .filter((run) => run.output_image_id)
+                  .map((run) => (
+                    <div
+                      key={run.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-3"
+                    >
+                      <img
+                        src={`${backendUrl}/api/images/${run.output_image_id}`}
+                        alt="history output"
+                        className="h-36 w-full rounded-xl object-cover"
+                      />
+                      <div className="mt-3 space-y-1">
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                          {run.type ?? "run"}
+                        </p>
+                        <p className="text-sm text-slate-700">{run.prompt}</p>
+                        <button
+                          type="button"
+                          className="mt-2 w-full rounded-full border border-slate-900 px-3 py-1 text-xs font-semibold text-slate-800"
+                          onClick={() => {
+                            if (run.output_image_id) {
+                              addHistoryAttachment(run.output_image_id);
+                            }
+                          }}
+                        >
+                          Use as input
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              {!historyRuns.some((run) => run.output_image_id) ? (
+                <p className="text-sm text-slate-500">No outputs available yet.</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </main>
+  );
+}
+
+          <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+            <div className="flex items-start justify-between gap-4">
+              <textarea
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                placeholder="Describe the scene or edit you want..."
+                className="min-h-[110px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+              />
+              <div className="flex flex-col gap-3">
+                <label className="cursor-pointer rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white">
+                  Attach images
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleAttachImages}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={handleSubmit}
+                >
+                  {attachments.length ? "Edit" : "Generate"}
+                </button>
+              </div>
+            </div>
+
+            {attachments.length ? (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {attachments.map((item) => (
+                  <div key={item.id} className="relative">
+                    <img
+                      src={item.previewUrl}
+                      alt="attachment"
+                      className="h-32 w-full rounded-2xl object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(item.id)}
+                      className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs text-slate-700 shadow"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <span>{attachments.length}/2 images attached</span>
+              <button
+                type="button"
+                className="text-xs uppercase tracking-[0.2em] text-slate-500 underline underline-offset-4"
+                onClick={() => setSettingsOpen((open) => !open)}
+              >
+                {settingsOpen ? "Hide settings" : "Show settings"}
+              </button>
+              {error ? <span className="text-rose-600">{error}</span> : null}
+            </div>
+
+            {settingsOpen ? (
+              <div className="mt-4 grid gap-4 rounded-2xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-700">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Negative prompt
+                    </span>
+                    <input
+                      value={negativePrompt}
+                      onChange={(event) => setNegativePrompt(event.target.value)}
+                      disabled={attachments.length > 0}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Optional"
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Seed</span>
+                    <input
+                      value={seed}
+                      onChange={(event) => setSeed(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Leave blank for random"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Steps
+                    </span>
+                    <input
+                      value={steps}
+                      onChange={(event) => setSteps(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder={systemInfo ? String(systemInfo.defaults.steps) : "24"}
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Guidance scale
+                    </span>
+                    <input
+                      value={guidanceScale}
+                      onChange={(event) => setGuidanceScale(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Optional"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      True CFG scale
+                    </span>
+                    <input
+                      value={trueCfgScale}
+                      onChange={(event) => setTrueCfgScale(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="Optional"
+                    />
+                  </label>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Width
+                      </span>
+                      <input
+                        value={width}
+                        onChange={(event) => setWidth(event.target.value)}
+                        disabled={attachments.length > 0}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder={systemInfo ? String(systemInfo.defaults.width) : "1024"}
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Height
+                      </span>
+                      <input
+                        value={height}
+                        onChange={(event) => setHeight(event.target.value)}
+                        disabled={attachments.length > 0}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder={systemInfo ? String(systemInfo.defaults.height) : "1024"}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
