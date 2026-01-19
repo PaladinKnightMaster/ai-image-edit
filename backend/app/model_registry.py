@@ -83,19 +83,21 @@ def resolve_model_path(model_id: str) -> Path:
     return candidate
 
 
+def get_model_status(model_id: str) -> dict:
+    spec = MODEL_MAP.get(model_id)
+    if not spec:
+        raise KeyError(f"Unknown model id '{model_id}'.")
+    base_dir = _base_dir(spec)
+    candidate, revision, detail = _candidate_dir(base_dir)
+    present = candidate.exists()
+    return {
+        "id": spec.model_id,
+        "present": present,
+        "local_path": str(candidate),
+        "revision": revision,
+        "detail": None if present else detail,
+    }
+
+
 def list_models() -> List[dict]:
-    statuses = []
-    for spec in MODEL_SPECS:
-        base_dir = _base_dir(spec)
-        candidate, revision, detail = _candidate_dir(base_dir)
-        present = candidate.exists()
-        statuses.append(
-            {
-                "id": spec.model_id,
-                "present": present,
-                "local_path": str(candidate),
-                "revision": revision,
-                "detail": None if present else detail,
-            }
-        )
-    return statuses
+    return [get_model_status(spec.model_id) for spec in MODEL_SPECS]

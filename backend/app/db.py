@@ -17,6 +17,17 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
+def _ensure_columns(conn: sqlite3.Connection, table: str, columns: list[tuple[str, str]]) -> None:
+    existing = {
+        row["name"]
+        for row in conn.execute(f"PRAGMA table_info({table})").fetchall()
+    }
+    for name, column_type in columns:
+        if name in existing:
+            continue
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {column_type}")
+
+
 def init_db() -> None:
     conn = get_connection()
     try:
@@ -45,8 +56,10 @@ def init_db() -> None:
                 height INTEGER,
                 guidance_scale REAL,
                 true_cfg_scale REAL,
+                strength REAL,
                 input_image_ids TEXT,
                 output_image_id TEXT,
+                pending_output_image_id TEXT,
                 latency_ms INTEGER,
                 FOREIGN KEY(job_id) REFERENCES jobs(id)
             );
@@ -64,6 +77,14 @@ def init_db() -> None:
                 run_id TEXT
             );
             """
+        )
+        _ensure_columns(
+            conn,
+            "runs",
+            [
+                ("strength", "REAL"),
+                ("pending_output_image_id", "TEXT"),
+            ],
         )
         conn.commit()
     finally:

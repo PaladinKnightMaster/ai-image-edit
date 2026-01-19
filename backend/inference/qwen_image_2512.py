@@ -6,13 +6,22 @@ import torch
 from diffusers import DiffusionPipeline
 from PIL import Image
 
-from app import model_registry
+from app import config, model_registry
 from inference.base import GenerationParams, Runner, EditParams, seed_everything
 
 
 class QwenImage2512Runner(Runner):
     id = "qwen-image-2512"
+    label = "Qwen Image 2512"
     capabilities = {"t2i"}
+    defaults = {
+        "steps": config.DEFAULT_STEPS,
+        "width": config.DEFAULT_WIDTH,
+        "height": config.DEFAULT_HEIGHT,
+    }
+
+    def model_status(self) -> dict[str, object]:
+        return model_registry.get_model_status(self.id)
 
     def _load_pipeline(self) -> DiffusionPipeline:
         local_path = model_registry.resolve_model_path(self.id)

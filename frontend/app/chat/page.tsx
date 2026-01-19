@@ -31,10 +31,20 @@ type SystemInfo = {
 
 type ModelInfo = {
   id: string;
+  label?: string;
   capabilities: string[];
   present: boolean;
   local_path?: string | null;
   revision?: string | null;
+  defaults?: {
+    steps?: number;
+    width?: number;
+    height?: number;
+    guidance_scale?: number;
+    true_cfg_scale?: number;
+    strength?: number;
+  };
+  review_mode?: string | null;
 };
 
 type RunRecord = {
@@ -49,6 +59,7 @@ type RunRecord = {
   height?: number | null;
   guidance_scale?: number | null;
   true_cfg_scale?: number | null;
+  strength?: number | null;
   input_image_ids?: string[] | null;
   output_image_id?: string | null;
   latency_ms?: number | null;
@@ -107,14 +118,16 @@ type ChatMessage = {
   stage?: string;
   progress?: number;
   outputImageId?: string;
+  requiresReview?: boolean;
+  reviewNote?: string;
   error?: string;
   run?: RunRecord;
   request?: JobRequest;
 };
 
 const STORAGE_KEY = "ai-image-chat-thread-v1";
+const MODEL_PREF_KEY = "ai-image-chat-model-v1";
 const MODEL_T2I = "qwen-image-2512";
-const MODEL_EDIT = "qwen-image-edit-2511";
 
 const makeId = () => `${Date.now().toString(36)}${Math.random().toString(16).slice(2)}`;
 
@@ -178,6 +191,7 @@ export default function ChatPage() {
   const [failedRuns, setFailedRuns] = useState<RunRecord[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(MODEL_T2I);
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [seed, setSeed] = useState("");
@@ -186,6 +200,7 @@ export default function ChatPage() {
   const [height, setHeight] = useState("");
   const [guidanceScale, setGuidanceScale] = useState("");
   const [trueCfgScale, setTrueCfgScale] = useState("");
+  const [strength, setStrength] = useState("");
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyRuns, setHistoryRuns] = useState<RunRecord[]>([]);
@@ -196,6 +211,7 @@ export default function ChatPage() {
   const eventSources = useRef<Map<string, EventSource>>(new Map());
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const lastDefaultsRef = useRef({ steps: "", width: "", height: "" });
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -206,6 +222,10 @@ export default function ChatPage() {
       } catch {
         setMessages([]);
       }
+    }
+    const storedModel = localStorage.getItem(MODEL_PREF_KEY);
+    if (storedModel) {
+      setSelectedModelId(storedModel);
     }
     setHydrated(true);
   }, []);
@@ -223,6 +243,13 @@ export default function ChatPage() {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
   }, [messages, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    localStorage.setItem(MODEL_PREF_KEY, selectedModelId);
+  }, [selectedModelId, hydrated]);
 
   useEffect(() => {
     const container = timelineRef.current;
@@ -269,6 +296,13 @@ export default function ChatPage() {
       }
       const data = (await response.json()) as ModelInfo[];
       setModels(data);
+      setSelectedModelId((current) => {
+        if (data.some((model) => model.id === current)) {
+          return current;
+        }
+        const fallback = data.find((model) => model.capabilities.includes("t2i"));
+        return fallback?.id ?? data[0]?.id ?? current;
+      });
     } catch {
       // ignore
     }
@@ -324,6 +358,65 @@ export default function ChatPage() {
     loadFailedRuns();
   }, [backendUrl]);
 
+  useEffect(() => {
+    if (!models.length) {
+      return;
+    }
+    const mode = attachments.length ? "edit" : "t2i";
+    const selected = models.find((model) => model.id === selectedModelId);
+    const supportsMode = selected?.capabilities.includes(mode);
+    if (supportsMode) {
+      return;
+    }
+    const fallback = models.find((model) => model.capabilities.includes(mode));
+    if (fallback) {
+      setSelectedModelId(fallback.id);
+    }
+  }, [attachments.length, models, selectedModelId]);
+
+  const activeModel = models.find((model) => model.id === selectedModelId);
+  const activeDefaults = {
+    steps: activeModel?.defaults?.steps ?? systemInfo?.defaults.steps ?? 24,
+    width: activeModel?.defaults?.width ?? systemInfo?.defaults.width ?? 1024,
+    height: activeModel?.defaults?.height ?? systemInfo?.defaults.height ?? 1024,
+    guidance_scale: activeModel?.defaults?.guidance_scale,
+    true_cfg_scale: activeModel?.defaults?.true_cfg_scale,
+    strength: activeModel?.defaults?.strength
+  };
+  const activeReviewMode = activeModel?.review_mode ?? "off";
+  const activeMode = attachments.length ? "edit" : "t2i";
+  const selectableModels = models.filter((model) => model.capabilities.includes(activeMode));
+  const maxAttachments = activeModel?.id === "flux2-klein-9b-gguf" ? 1 : 2;
+
+  useEffect(() => {
+    const nextDefaults = {
+      steps: String(activeDefaults.steps),
+      width: String(activeDefaults.width),
+      height: String(activeDefaults.height)
+    };
+    setSteps((current) =>
+      current === "" || current === lastDefaultsRef.current.steps
+        ? nextDefaults.steps
+        : current
+    );
+    setWidth((current) =>
+      current === "" || current === lastDefaultsRef.current.width
+        ? nextDefaults.width
+        : current
+    );
+    setHeight((current) =>
+      current === "" || current === lastDefaultsRef.current.height
+        ? nextDefaults.height
+        : current
+    );
+    if (activeModel?.id === "flux2-klein-9b-gguf" && activeDefaults.strength !== undefined) {
+      setStrength((current) =>
+        current === "" ? String(activeDefaults.strength) : current
+      );
+    }
+    lastDefaultsRef.current = nextDefaults;
+  }, [activeDefaults.steps, activeDefaults.width, activeDefaults.height, activeDefaults.strength, activeModel?.id]);
+
   const updateMessageByJob = (jobId: string, patch: Partial<ChatMessage>) => {
     setMessages((current) =>
       current.map((message) => (message.jobId === jobId ? { ...message, ...patch } : message))
@@ -346,9 +439,12 @@ export default function ChatPage() {
       updateMessageByJob(jobId, {
         status: data.status,
         run: data.run,
-        outputImageId: data.run?.output_image_id ?? undefined
+        outputImageId: data.run?.output_image_id ?? undefined,
+        requiresReview: data.status === "pending_review",
+        reviewNote: data.status === "pending_review" ? "Manual review required." : undefined,
+        ...(data.status === "pending_review" ? { stage: "review" } : {})
       });
-      if (data.status === "succeeded" || data.status === "failed") {
+      if (data.status === "succeeded" || data.status === "failed" || data.status === "pending_review") {
         eventSources.current.get(jobId)?.close();
         eventSources.current.delete(jobId);
         loadRuns();
@@ -384,6 +480,18 @@ export default function ChatPage() {
         progress: 100
       });
       fetchJob(jobId);
+    });
+    source.addEventListener("review_required", (event) => {
+      const payload = JSON.parse((event as MessageEvent).data);
+      updateMessageByJob(jobId, {
+        status: "pending_review",
+        requiresReview: true,
+        reviewNote: payload.message,
+        stage: "review"
+      });
+      source.close();
+      eventSources.current.delete(jobId);
+      loadRuns();
     });
     source.addEventListener("error", (event) => {
       try {
@@ -425,8 +533,8 @@ export default function ChatPage() {
       return;
     }
     setError(null);
-    if (attachments.length + files.length > 2) {
-      setError("Attach up to 2 images.");
+    if (attachments.length + files.length > maxAttachments) {
+      setError(`Attach up to ${maxAttachments} image${maxAttachments > 1 ? "s" : ""}.`);
       event.target.value = "";
       return;
     }
@@ -449,8 +557,8 @@ export default function ChatPage() {
   const addHistoryAttachment = (imageId: string) => {
     setError(null);
     setAttachments((current) => {
-      if (current.length >= 2) {
-        setError("Attach up to 2 images.");
+      if (current.length >= maxAttachments) {
+        setError(`Attach up to ${maxAttachments} image${maxAttachments > 1 ? "s" : ""}.`);
         return current;
       }
       if (current.some((item) => item.kind === "history" && item.imageId === imageId)) {
@@ -518,6 +626,7 @@ export default function ChatPage() {
       const data = (await response.json()) as { job_id: string };
       updateMessageById(assistantId, { jobId: data.job_id });
       attachEventSource(data.job_id);
+      fetchJob(data.job_id);
     } catch (submitError) {
       const message =
         submitError instanceof Error ? submitError.message : "Job submission failed.";
@@ -535,12 +644,38 @@ export default function ChatPage() {
       setError("Attach at least one image to edit.");
       return;
     }
+    if (attachments.length > maxAttachments) {
+      setError(`This model supports up to ${maxAttachments} input image${maxAttachments > 1 ? "s" : ""}.`);
+      return;
+    }
 
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const defaults = systemInfo?.defaults ?? { width: 1024, height: 1024, steps: 24 };
+      const mode = isEdit ? "edit" : "t2i";
+      const modelForMode =
+        models.find(
+          (model) => model.id === selectedModelId && model.capabilities.includes(mode)
+        ) ?? models.find((model) => model.capabilities.includes(mode));
+      if (!modelForMode) {
+        throw new Error(`No model available for ${mode}.`);
+      }
+      if (!modelForMode.present) {
+        throw new Error(`Model files missing for ${modelForMode.label ?? modelForMode.id}.`);
+      }
+      if (modelForMode.id !== selectedModelId) {
+        setSelectedModelId(modelForMode.id);
+      }
+
+      const defaults = {
+        width: modelForMode.defaults?.width ?? systemInfo?.defaults.width ?? 1024,
+        height: modelForMode.defaults?.height ?? systemInfo?.defaults.height ?? 1024,
+        steps: modelForMode.defaults?.steps ?? systemInfo?.defaults.steps ?? 24,
+        guidance_scale: modelForMode.defaults?.guidance_scale,
+        true_cfg_scale: modelForMode.defaults?.true_cfg_scale,
+        strength: modelForMode.defaults?.strength
+      };
       const limits = systemInfo?.limits ?? {
         max_width: 2048,
         max_height: 2048,
@@ -582,11 +717,15 @@ export default function ChatPage() {
         prompt: prompt.trim(),
         steps: stepsValue
       };
-      const parsedGuidance = parseFloatOr(guidanceScale);
+      const parsedGuidance = guidanceScale.trim()
+        ? parseFloatOr(guidanceScale)
+        : defaults.guidance_scale;
       if (parsedGuidance !== undefined) {
         params.guidance_scale = parsedGuidance;
       }
-      const parsedTrueCfg = parseFloatOr(trueCfgScale);
+      const parsedTrueCfg = trueCfgScale.trim()
+        ? parseFloatOr(trueCfgScale)
+        : defaults.true_cfg_scale;
       if (parsedTrueCfg !== undefined) {
         params.true_cfg_scale = parsedTrueCfg;
       }
@@ -599,6 +738,14 @@ export default function ChatPage() {
       }
 
       if (isEdit) {
+        if (modelForMode.id === "flux2-klein-9b-gguf") {
+          const parsedStrength = strength.trim()
+            ? parseFloatOr(strength)
+            : defaults.strength;
+          if (parsedStrength !== undefined) {
+            params.strength = parsedStrength;
+          }
+        }
         params.image_ids = imageIds;
       } else {
         params.width = widthValue;
@@ -619,7 +766,7 @@ export default function ChatPage() {
 
       const request: JobRequest = {
         mode: isEdit ? "edit" : "t2i",
-        modelId: isEdit ? MODEL_EDIT : MODEL_T2I,
+        modelId: modelForMode.id,
         params,
         inputPreviews: attachmentSnapshots.length ? attachmentSnapshots : undefined
       };
@@ -666,7 +813,8 @@ export default function ChatPage() {
           seed: run.seed,
           steps: run.steps,
           guidance_scale: run.guidance_scale ?? undefined,
-          true_cfg_scale: run.true_cfg_scale ?? undefined
+          true_cfg_scale: run.true_cfg_scale ?? undefined,
+          strength: run.strength ?? undefined
         }
       };
     }
@@ -722,6 +870,7 @@ export default function ChatPage() {
       const data = (await response.json()) as { job_id: string };
       updateMessageById(assistantId, { jobId: data.job_id });
       attachEventSource(data.job_id);
+      fetchJob(data.job_id);
     } catch (submitError) {
       const message =
         submitError instanceof Error ? submitError.message : "Replay failed.";
@@ -739,6 +888,36 @@ export default function ChatPage() {
       await submitJob(message.request);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleReveal = async (message: ChatMessage) => {
+    if (!message.jobId) {
+      return;
+    }
+    setError(null);
+    try {
+      const response = await fetch(`${backendUrl}/api/jobs/${message.jobId}/reveal`, {
+        method: "POST"
+      });
+      if (!response.ok) {
+        const detail = await parseErrorMessage(response);
+        throw new Error(detail || "Reveal failed.");
+      }
+      const data = (await response.json()) as { image_id: string };
+      updateMessageByJob(message.jobId, {
+        status: "succeeded",
+        outputImageId: data.image_id,
+        requiresReview: false,
+        reviewNote: undefined,
+        stage: "complete",
+        progress: 100
+      });
+      fetchJob(message.jobId);
+    } catch (revealError) {
+      const messageText =
+        revealError instanceof Error ? revealError.message : "Reveal failed.";
+      setError(messageText);
     }
   };
 
@@ -850,6 +1029,7 @@ export default function ChatPage() {
       height: run.height,
       guidance_scale: run.guidance_scale,
       true_cfg_scale: run.true_cfg_scale,
+      strength: run.strength,
       input_image_ids: run.input_image_ids
     };
     Object.keys(payload).forEach((key) => {
@@ -871,8 +1051,6 @@ export default function ChatPage() {
     setMessages([]);
     setImportWarnings([]);
   };
-
-  const modelStatus = (id: string) => models.find((model) => model.id === id);
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-10">
@@ -916,27 +1094,30 @@ export default function ChatPage() {
               Models
             </h3>
             <div className="mt-4 space-y-3 text-sm text-slate-700">
-              {[MODEL_T2I, MODEL_EDIT].map((id) => {
-                const status = modelStatus(id);
-                const ready = status?.present;
-                return (
-                  <div key={id} className="flex items-center justify-between gap-2">
+              {models.length ? (
+                models.map((model) => (
+                  <div key={model.id} className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-slate-800">{id}</p>
+                      <p className="font-semibold text-slate-800">
+                        {model.label ?? model.id}
+                      </p>
                       <p className="text-xs text-slate-500">
-                        {status?.capabilities?.join(", ") || "loading..."}
+                        {model.capabilities.join(", ")}
+                        {model.review_mode === "manual" ? " · manual review" : ""}
                       </p>
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] ${
-                        ready ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                        model.present ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
                       }`}
                     >
-                      {ready ? "ready" : "missing"}
+                      {model.present ? "ready" : "missing"}
                     </span>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">Loading models...</p>
+              )}
             </div>
           </div>
 
@@ -1149,6 +1330,20 @@ export default function ChatPage() {
                               />
                             </div>
                           ) : null}
+                          {message.requiresReview ? (
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                              {message.reviewNote ?? "Manual review required."}
+                            </div>
+                          ) : null}
+                          {message.requiresReview ? (
+                            <button
+                              type="button"
+                              className="rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900 transition hover:-translate-y-0.5"
+                              onClick={() => handleReveal(message)}
+                            >
+                              Reveal result
+                            </button>
+                          ) : null}
                           {message.outputImageId ? (
                             <img
                               src={`${backendUrl}/api/images/${message.outputImageId}`}
@@ -1226,6 +1421,9 @@ export default function ChatPage() {
                                 <div>
                                   True CFG: {message.run.true_cfg_scale ?? "n/a"}
                                 </div>
+                                <div>
+                                  Strength: {message.run.strength ?? "n/a"}
+                                </div>
                                 <div>Latency: {formatLatency(message.run.latency_ms)}</div>
                               </div>
                             </details>
@@ -1240,6 +1438,36 @@ export default function ChatPage() {
           </div>
 
           <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
+              <div className="flex items-center gap-3">
+                <span>Model</span>
+                <select
+                  value={selectedModelId}
+                  onChange={(event) => setSelectedModelId(event.target.value)}
+                  disabled={!models.length}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                >
+                  {(selectableModels.length ? selectableModels : models).map((model) => (
+                    <option key={model.id} value={model.id} disabled={!model.present}>
+                      {model.label ?? model.id}
+                      {model.present ? "" : " (missing)"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                {activeReviewMode === "manual" ? (
+                  <span className="rounded-full bg-amber-200 px-3 py-1 text-[10px] font-semibold text-amber-900">
+                    Manual review
+                  </span>
+                ) : null}
+                {activeModel && !activeModel.present ? (
+                  <span className="rounded-full bg-rose-200 px-3 py-1 text-[10px] font-semibold text-rose-900">
+                    Missing files
+                  </span>
+                ) : null}
+              </div>
+            </div>
             <div className="flex items-start justify-between gap-4">
               <textarea
                 value={prompt}
@@ -1253,7 +1481,7 @@ export default function ChatPage() {
                   <input
                     type="file"
                     accept="image/*"
-                    multiple
+                    multiple={maxAttachments > 1}
                     className="hidden"
                     onChange={handleAttachImages}
                   />
@@ -1304,7 +1532,10 @@ export default function ChatPage() {
             ) : null}
 
             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-              <span>{attachments.length}/2 images attached</span>
+              <span>
+                {attachments.length}/{maxAttachments} image
+                {maxAttachments > 1 ? "s" : ""} attached
+              </span>
               <button
                 type="button"
                 className="text-xs uppercase tracking-[0.2em] text-slate-500 underline underline-offset-4"
@@ -1350,7 +1581,7 @@ export default function ChatPage() {
                       value={steps}
                       onChange={(event) => setSteps(event.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder={systemInfo ? String(systemInfo.defaults.steps) : "24"}
+                      placeholder={String(activeDefaults.steps)}
                     />
                   </label>
                   <label className="space-y-2">
@@ -1361,10 +1592,34 @@ export default function ChatPage() {
                       value={guidanceScale}
                       onChange={(event) => setGuidanceScale(event.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder="Optional"
+                      placeholder={
+                        activeDefaults.guidance_scale !== undefined
+                          ? String(activeDefaults.guidance_scale)
+                          : "Optional"
+                      }
                     />
                   </label>
                 </div>
+
+                {attachments.length && activeModel?.id === "flux2-klein-9b-gguf" ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Strength
+                      </span>
+                      <input
+                        value={strength}
+                        onChange={(event) => setStrength(event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder={
+                          activeDefaults.strength !== undefined
+                            ? String(activeDefaults.strength)
+                            : "0.65"
+                        }
+                      />
+                    </label>
+                  </div>
+                ) : null}
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
@@ -1375,7 +1630,11 @@ export default function ChatPage() {
                       value={trueCfgScale}
                       onChange={(event) => setTrueCfgScale(event.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder="Optional"
+                      placeholder={
+                        activeDefaults.true_cfg_scale !== undefined
+                          ? String(activeDefaults.true_cfg_scale)
+                          : "Optional"
+                      }
                     />
                   </label>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -1388,7 +1647,7 @@ export default function ChatPage() {
                         onChange={(event) => setWidth(event.target.value)}
                         disabled={attachments.length > 0}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                        placeholder={systemInfo ? String(systemInfo.defaults.width) : "1024"}
+                        placeholder={String(activeDefaults.width)}
                       />
                     </label>
                     <label className="space-y-2">
@@ -1400,7 +1659,7 @@ export default function ChatPage() {
                         onChange={(event) => setHeight(event.target.value)}
                         disabled={attachments.length > 0}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                        placeholder={systemInfo ? String(systemInfo.defaults.height) : "1024"}
+                        placeholder={String(activeDefaults.height)}
                       />
                     </label>
                   </div>

@@ -3,7 +3,8 @@ python-multipart>=0.0.9
 uvicorn[standard]>=0.29.0
 pydantic>=2.6.0
 ruff>=0.4.0
-huggingface_hub>=0.23.0
+huggingface_hub>=0.32.0
+python-dotenv>=1.0.1
 git+https://github.com/huggingface/diffusers.git
 pillow>=10.4.0
 torch>=2.3.0

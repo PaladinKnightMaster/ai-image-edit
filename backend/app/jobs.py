@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import queue
 import threading
@@ -120,6 +121,12 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
     if job_type == "edit" and "edit" not in runner.capabilities:
         raise ValueError("Model does not support image editing.")
 
+    status = runner.model_status()
+    if not status.get("present", True):
+        raise ValueError(
+            f"Model files missing for '{model_id}'. Check local assets and try again."
+        )
+
     if job_type == "edit" and isinstance(params, EditParams):
         for image_id in params.image_ids:
             if not image_store.get_image_path(image_id).exists():
@@ -133,6 +140,7 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
     width = None
     height = None
     negative_prompt = None
+    strength = None
     if isinstance(params, GenerationParams):
         width = params.width
         height = params.height
@@ -140,6 +148,7 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
         input_image_ids = json.dumps([])
     if isinstance(params, EditParams):
         input_image_ids = json.dumps(params.image_ids)
+        strength = params.strength
 
     with db.get_connection() as conn:
         conn.execute(
@@ -154,9 +163,10 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
             INSERT INTO runs (
                 id, job_id, model_id, prompt, negative_prompt, seed, steps,
                 width, height, guidance_scale, true_cfg_scale,
-                input_image_ids, output_image_id, latency_ms
+                strength, input_image_ids, output_image_id, pending_output_image_id,
+                latency_ms
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run_id,
@@ -170,7 +180,9 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
                 height,
                 params.guidance_scale,
                 params.true_cfg_scale,
+                strength,
                 input_image_ids,
+                None,
                 None,
                 None,
             ),
@@ -232,9 +244,13 @@ def _run_job(job_id: str) -> None:
         "height": run.get("height"),
         "guidance_scale": run.get("guidance_scale"),
         "true_cfg_scale": run.get("true_cfg_scale"),
+        "strength": run.get("strength"),
         "device": runner.device,
         "dtype": str(runner.dtype),
     }
+    backend_name = getattr(runner, "backend_name", None)
+    if backend_name:
+        log_payload["engine_backend"] = backend_name
     if config.DEBUG:
         log_payload["prompt"] = prompt_value
     logging_utils.log_event("job_start", **log_payload)
@@ -270,6 +286,7 @@ def _run_job(job_id: str) -> None:
                     steps=run["steps"],
                     guidance_scale=run["guidance_scale"],
                     true_cfg_scale=run["true_cfg_scale"],
+                    strength=run.get("strength"),
                 )
                 image = runner.edit(params, progress_callback=progress_callback)
             else:
@@ -292,23 +309,41 @@ def _run_job(job_id: str) -> None:
 
     finished_at = _now_ms()
 
+    review_required = runner.manual_review and config.SAFETY_REVIEW_MODE == "manual"
     with db.get_connection() as conn:
-        conn.execute(
-            "UPDATE runs SET output_image_id = ?, latency_ms = ? WHERE job_id = ?",
-            (image_id, latency_ms, job_id),
-        )
-        conn.execute(
-            "UPDATE jobs SET status = ?, finished_at = ? WHERE id = ?",
-            ("succeeded", finished_at, job_id),
-        )
+        if review_required:
+            conn.execute(
+                "UPDATE runs SET pending_output_image_id = ?, latency_ms = ? WHERE job_id = ?",
+                (image_id, latency_ms, job_id),
+            )
+            conn.execute(
+                "UPDATE jobs SET status = ?, finished_at = ? WHERE id = ?",
+                ("pending_review", finished_at, job_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE runs SET output_image_id = ?, latency_ms = ? WHERE job_id = ?",
+                (image_id, latency_ms, job_id),
+            )
+            conn.execute(
+                "UPDATE jobs SET status = ?, finished_at = ? WHERE id = ?",
+                ("succeeded", finished_at, job_id),
+            )
         conn.commit()
 
+    if review_required:
+        _publish(job_id, "status", {"status": "pending_review"})
+        _publish(job_id, "review_required", {"message": "Manual review required."})
+        logging_utils.log_event(
+            "job_pending_review",
+            job_id=job_id,
+            run_id=run["id"],
+            latency_ms=latency_ms,
+        )
+        return
+
     _publish(job_id, "status", {"status": "succeeded"})
-    _publish(
-        job_id,
-        "result",
-        {"output_image_id": image_id, "latency_ms": latency_ms},
-    )
+    _publish(job_id, "result", {"output_image_id": image_id, "latency_ms": latency_ms})
     logging_utils.log_event(
         "job_success",
         job_id=job_id,
@@ -427,14 +462,54 @@ def list_runs(limit: int = 50, status: str | None = None) -> list[dict[str, Any]
     return runs
 
 
-def stream_events(job_id: str) -> Any:
-    def generator() -> Any:
+def reveal_job(job_id: str) -> str:
+    job = get_job(job_id)
+    if not job:
+        raise ValueError("Job not found.")
+    if job.get("status") != "pending_review":
+        raise ValueError("Job is not awaiting review.")
+    run = job.get("run") or {}
+
+    with db.get_connection() as conn:
+        row = conn.execute(
+            "SELECT pending_output_image_id FROM runs WHERE job_id = ?",
+            (job_id,),
+        ).fetchone()
+        if not row or not row["pending_output_image_id"]:
+            raise ValueError("No pending image to reveal.")
+        image_id = row["pending_output_image_id"]
+        conn.execute(
+            "UPDATE runs SET output_image_id = ?, pending_output_image_id = NULL WHERE job_id = ?",
+            (image_id, job_id),
+        )
+        conn.execute(
+            "UPDATE jobs SET status = ? WHERE id = ?",
+            ("succeeded", job_id),
+        )
+        conn.commit()
+
+    _publish(job_id, "status", {"status": "succeeded"})
+    _publish(job_id, "result", {"output_image_id": image_id})
+    logging_utils.log_event(
+        "job_revealed",
+        job_id=job_id,
+        run_id=run.get("id"),
+        output_image_id=image_id,
+    )
+    return image_id
+
+
+def stream_events(job_id: str, request: Any | None = None) -> Any:
+    async def generator() -> Any:
         job = get_job(job_id)
         if not job:
             yield format_sse("error", {"message": "Job not found."})
             return
 
         yield format_sse("status", {"status": job["status"]})
+        if job["status"] == "pending_review":
+            yield format_sse("review_required", {"message": "Manual review required."})
+            return
         if job["status"] == "succeeded" and job.get("run"):
             output_image_id = job["run"].get("output_image_id")
             if output_image_id:
@@ -447,13 +522,19 @@ def stream_events(job_id: str) -> Any:
         subscriber = subscribe(job_id)
         try:
             while True:
+                if request is not None:
+                    try:
+                        if await request.is_disconnected():
+                            break
+                    except Exception:
+                        pass
                 try:
-                    event = subscriber.get(timeout=15)
+                    event = await asyncio.to_thread(subscriber.get, True, 5)
                 except queue.Empty:
                     yield ": keep-alive\n\n"
                     continue
                 yield format_sse(event["event"], event["data"])
-                if event["event"] in {"result", "error"}:
+                if event["event"] in {"result", "error", "review_required"}:
                     break
         finally:
             unsubscribe(job_id, subscriber)

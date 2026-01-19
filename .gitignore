@@ -10,10 +10,16 @@ __pycache__/
 # Models/cache
 models/hf/
 models/cache/
+models/flux2_klein_9b_gguf/
+models/flux2_klein_9b_gguf/.downloads/
 
 # Generated images
 data/images/
 data/app.db
+data/flux2_outputs/
+
+# Tools/binaries
+tools/
 
 # Env
 .env

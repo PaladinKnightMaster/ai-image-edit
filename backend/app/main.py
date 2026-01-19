@@ -8,7 +8,7 @@ import sys
 import time
 from typing import List
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
@@ -18,6 +18,7 @@ from app import config, images as image_store, jobs, ready, logging_utils, model
 from app.errors import APIError, register_error_handlers
 from inference.base import EditParams, GenerationParams
 from inference.manager import get_manager
+from inference.flux2_klein_gguf import flux2_diagnostics
 
 APP_NAME = config.APP_NAME
 APP_VERSION = config.APP_VERSION
@@ -89,10 +90,13 @@ class VersionResponse(BaseModel):
 
 class ModelStatus(BaseModel):
     id: str
+    label: str
     capabilities: list[str]
     present: bool
     local_path: str | None = None
     revision: str | None = None
+    defaults: dict | None = None
+    review_mode: str | None = None
 
 
 class T2IRequest(GenerationParams):
@@ -127,6 +131,7 @@ class RunResponse(BaseModel):
     height: int | None = None
     guidance_scale: float | None = None
     true_cfg_scale: float | None = None
+    strength: float | None = None
     input_image_ids: list[str] | None = None
     output_image_id: str | None = None
     latency_ms: int | None = None
@@ -175,6 +180,10 @@ class ReplayRequest(BaseModel):
     export: dict | None = None
 
 
+class RevealResponse(BaseModel):
+    image_id: str
+
+
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok")
@@ -211,6 +220,11 @@ def submit_t2i_job(request: T2IRequest) -> JobSubmitResponse:
     return JobSubmitResponse(job_id=job_id)
 
 
+@app.post("/api/images/generate", response_model=JobSubmitResponse)
+def generate_image(request: T2IRequest) -> JobSubmitResponse:
+    return submit_t2i_job(request)
+
+
 @app.post("/api/jobs/edit", response_model=JobSubmitResponse)
 def submit_edit_job(request: EditRequest) -> JobSubmitResponse:
     params = EditParams.model_validate(request.model_dump(exclude={"model_id"}))
@@ -221,6 +235,11 @@ def submit_edit_job(request: EditRequest) -> JobSubmitResponse:
     return JobSubmitResponse(job_id=job_id)
 
 
+@app.post("/api/images/edit", response_model=JobSubmitResponse)
+def edit_image(request: EditRequest) -> JobSubmitResponse:
+    return submit_edit_job(request)
+
+
 @app.get("/api/jobs/{job_id}", response_model=JobResponse)
 def get_job(job_id: str) -> JobResponse:
     job = jobs.get_job(job_id)
@@ -229,17 +248,34 @@ def get_job(job_id: str) -> JobResponse:
     return job
 
 
+@app.post("/api/jobs/{job_id}/reveal", response_model=RevealResponse)
+def reveal_job(job_id: str) -> RevealResponse:
+    try:
+        image_id = jobs.reveal_job(job_id)
+    except ValueError as exc:
+        raise APIError("invalid_request", str(exc), status_code=400) from exc
+    return RevealResponse(image_id=image_id)
+
+
 @app.get("/api/jobs/{job_id}/events")
-def stream_job_events(job_id: str) -> StreamingResponse:
+def stream_job_events(job_id: str, request: Request) -> StreamingResponse:
     job = jobs.get_job(job_id)
     if not job:
         raise APIError("not_found", "Job not found.", status_code=404)
-    return StreamingResponse(jobs.stream_events(job_id), media_type="text/event-stream")
+    return StreamingResponse(
+        jobs.stream_events(job_id, request),
+        media_type="text/event-stream",
+    )
 
 
 @app.get("/api/runs", response_model=list[RunResponse])
 def list_runs(limit: int = 50, status: str | None = None) -> list[RunResponse]:
     return jobs.list_runs(limit=limit, status=status)
+
+
+@app.get("/api/diagnostics/engines")
+def engine_diagnostics() -> dict:
+    return {"flux2_klein_gguf": flux2_diagnostics()}
 
 
 @app.post("/api/infer/t2i", response_model=InferResponse)
@@ -415,6 +451,7 @@ def export_run(run_id: str) -> dict:
         "height": run.get("height"),
         "guidance_scale": run.get("guidance_scale"),
         "true_cfg_scale": run.get("true_cfg_scale"),
+        "strength": run.get("strength"),
         "input_image_ids": run.get("input_image_ids"),
         "output_image_id": run.get("output_image_id"),
         "created_at": run.get("created_at"),
@@ -481,6 +518,7 @@ def replay_job(request: ReplayRequest) -> JobSubmitResponse:
                 steps=payload.get("steps", config.DEFAULT_STEPS),
                 guidance_scale=payload.get("guidance_scale"),
                 true_cfg_scale=payload.get("true_cfg_scale"),
+                strength=payload.get("strength"),
             )
             job_id = jobs.submit_job("edit", model_id, params)
         except ValidationError as exc:

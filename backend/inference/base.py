@@ -54,6 +54,7 @@ class EditParams(BaseModel):
     steps: int = Field(config.DEFAULT_STEPS, ge=1, le=config.MAX_STEPS)
     guidance_scale: float | None = Field(default=None, ge=0)
     true_cfg_scale: float | None = Field(default=None, ge=0)
+    strength: float | None = Field(default=None, ge=0, le=1)
 
     @model_validator(mode="after")
     def apply_seed(self) -> "EditParams":
@@ -91,7 +92,10 @@ def seed_everything(seed: int, device: str) -> torch.Generator:
 
 class Runner(abc.ABC):
     id: str
+    label: str = ""
     capabilities: set[str]
+    defaults: dict[str, Any] = {}
+    manual_review: bool = False
 
     def __init__(self) -> None:
         self._pipe: Any | None = None
@@ -105,6 +109,9 @@ class Runner(abc.ABC):
     @property
     def dtype(self) -> torch.dtype:
         return self._dtype
+
+    def model_status(self) -> dict[str, Any]:
+        return {"present": True, "local_path": None, "revision": None}
 
     def load(self) -> Any:
         if self._pipe is not None:

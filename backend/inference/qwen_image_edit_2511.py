@@ -6,14 +6,22 @@ import torch
 from diffusers import QwenImageEditPlusPipeline
 from PIL import Image
 
-from app import images as image_store
-from app import model_registry
+from app import config, images as image_store, model_registry
 from inference.base import EditParams, GenerationParams, Runner, seed_everything
 
 
 class QwenImageEdit2511Runner(Runner):
     id = "qwen-image-edit-2511"
+    label = "Qwen Image Edit 2511"
     capabilities = {"edit"}
+    defaults = {
+        "steps": config.DEFAULT_STEPS,
+        "guidance_scale": None,
+        "true_cfg_scale": None,
+    }
+
+    def model_status(self) -> dict[str, object]:
+        return model_registry.get_model_status(self.id)
 
     def _load_pipeline(self) -> QwenImageEditPlusPipeline:
         local_path = model_registry.resolve_model_path(self.id)

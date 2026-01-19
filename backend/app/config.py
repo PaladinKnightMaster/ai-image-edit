@@ -5,7 +5,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from dotenv import load_dotenv
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+_dotenv_path = os.getenv("DOTENV_PATH")
+if _dotenv_path:
+    load_dotenv(Path(_dotenv_path).expanduser(), override=False)
+else:
+    load_dotenv(REPO_ROOT / "backend" / ".env", override=False)
 
 APP_NAME = os.getenv("APP_NAME", "ai-image-edit")
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
@@ -31,8 +39,80 @@ MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "10"))
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 WARMUP_MODELS = os.getenv("WARMUP_MODELS", "1").lower() not in {"0", "false", "no"}
 WARMUP_TIMEOUT_SEC = int(os.getenv("WARMUP_TIMEOUT_SEC", "300"))
+SAFETY_REVIEW_MODE = os.getenv("SAFETY_REVIEW_MODE", "manual").lower()
+
+FLUX2_MODEL_DIR = _resolve_path(
+    os.getenv("FLUX2_MODEL_DIR", REPO_ROOT / "models" / "flux2_klein_9b_gguf"), REPO_ROOT
+)
+FLUX2_DIFFUSION_GGUF = _resolve_path(
+    os.getenv(
+        "FLUX2_DIFFUSION_GGUF",
+        FLUX2_MODEL_DIR / "diffusion_model" / "flux-2-klein-9b-Q4_K_M.gguf",
+    ),
+    REPO_ROOT,
+)
+FLUX2_VAE = _resolve_path(
+    os.getenv("FLUX2_VAE", FLUX2_MODEL_DIR / "vae" / "flux2-vae.safetensors"),
+    REPO_ROOT,
+)
+_flux2_text_precision = os.getenv("FLUX2_TEXT_ENCODER_PRECISION", "fp4").lower()
+if _flux2_text_precision not in {"fp4", "fp8"}:
+    _flux2_text_precision = "fp4"
+_flux2_text_encoder_name = f"qwen_3_8b_{_flux2_text_precision}mixed.safetensors"
+FLUX2_TEXT_ENCODER = _resolve_path(
+    os.getenv(
+        "FLUX2_TEXT_ENCODER",
+        FLUX2_MODEL_DIR / "text_encoder" / _flux2_text_encoder_name,
+    ),
+    REPO_ROOT,
+)
+FLUX2_TEXT_ENCODER_GGUF = os.getenv("FLUX2_TEXT_ENCODER_GGUF")
+FLUX2_LLM_GGUF = _resolve_path(
+    os.getenv(
+        "FLUX2_LLM_GGUF",
+        FLUX2_MODEL_DIR / "text_encoder_gguf" / "Qwen3-8B-Q6_K.gguf",
+    ),
+    REPO_ROOT,
+)
+_flux2_use_py_raw = os.getenv("FLUX2_USE_PY_BINDINGS")
+if _flux2_use_py_raw is None:
+    FLUX2_USE_PY_BINDINGS = os.name != "nt"
+else:
+    FLUX2_USE_PY_BINDINGS = _flux2_use_py_raw.lower() not in {"0", "false", "no"}
+FLUX2_USE_SDCLI_FALLBACK = os.getenv("FLUX2_USE_SDCLI_FALLBACK", "1").lower() not in {
+    "0",
+    "false",
+    "no",
+}
+FLUX2_SDCLI_PATH = os.getenv("FLUX2_SDCLI_PATH", "sd")
+FLUX2_SDCLI_EXTRA_ARGS = os.getenv("FLUX2_SDCLI_EXTRA_ARGS", "")
+FLUX2_DEFAULT_STEPS = int(os.getenv("FLUX2_DEFAULT_STEPS", "4"))
+FLUX2_DEFAULT_GUIDANCE = float(os.getenv("FLUX2_DEFAULT_GUIDANCE", "4.0"))
+FLUX2_DEFAULT_SIZE = int(os.getenv("FLUX2_DEFAULT_SIZE", "1024"))
+FLUX2_DEFAULT_STRENGTH = float(os.getenv("FLUX2_DEFAULT_STRENGTH", "0.65"))
+FLUX2_PREDICTION = os.getenv("FLUX2_PREDICTION", "flux2_flow")
+FLUX2_RNG_TYPE = os.getenv("FLUX2_RNG_TYPE", "cpu")
+FLUX2_SAMPLER_RNG_TYPE = os.getenv("FLUX2_SAMPLER_RNG_TYPE", "cpu")
+_flux2_allow_safetensors = os.getenv("FLUX2_ALLOW_SAFETENSORS_LLM")
+if _flux2_allow_safetensors is None:
+    FLUX2_ALLOW_SAFETENSORS_LLM = os.name != "nt"
+else:
+    FLUX2_ALLOW_SAFETENSORS_LLM = _flux2_allow_safetensors.lower() not in {
+        "0",
+        "false",
+        "no",
+    }
 
 QUALITY_PROFILE = os.getenv("QUALITY_PROFILE", "auto").lower()
+ENABLED_MODELS_RAW = os.getenv("ENABLED_MODELS", "")
+
+
+def _parse_enabled_models(value: str) -> set[str] | None:
+    items = {item.strip() for item in value.split(",") if item.strip()}
+    return items or None
+
+
+ENABLED_MODELS = _parse_enabled_models(ENABLED_MODELS_RAW)
 
 
 def _env_int(name: str) -> int | None:

@@ -22,7 +22,7 @@ Backend:
 3) `pip install -r backend/requirements.txt` (CPU, requires `git` on PATH)
    - GPU: `pip install -r backend/requirements-gpu.txt` (edit CUDA version if needed)
 4) Copy env vars: `copy backend/.env.example backend/.env`
-5) Run: `make dev-backend`
+5) Run: `make dev-backend` (backend auto-loads `backend/.env` via python-dotenv)
 
 Frontend:
 1) `cd frontend`
@@ -38,6 +38,71 @@ If you do not have GNU Make installed, run these directly:
 - Backend: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 - Frontend: `cd frontend && npm run dev`
 
+## From scratch (full install + model downloads)
+
+Windows (PowerShell):
+```powershell
+cd D:\1_PROJECT\PRIVATE_WORK\ai-image-edit
+python -m venv .venv
+./.venv/Scripts/Activate.ps1
+pip install -r backend/requirements.txt
+copy backend/.env.example backend/.env
+cd frontend
+npm install
+copy .env.example .env.local
+cd ..
+```
+
+Linux/macOS (bash):
+```bash
+cd /path/to/ai-image-edit
+python -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+cp backend/.env.example backend/.env
+cd frontend
+npm install
+cp .env.example .env.local
+cd ..
+```
+
+Download models (Qwen diffusers):
+```bash
+python scripts/mirror_models.py
+```
+
+Download FLUX.2 klein GGUF assets (optional):
+```bash
+# Windows
+powershell -ExecutionPolicy Bypass -File scripts/fetch_flux2_klein_gguf.ps1
+# Linux/macOS
+bash scripts/fetch_flux2_klein_gguf.sh
+python scripts/verify_flux2_klein_assets.py
+```
+
+Tips:
+- Set `HF_TOKEN` before downloads for higher Hub rate limits.
+- To prefetch fp8 text encoder: `FLUX2_TEXT_ENCODER_PRECISION=fp8` or pass `--text-encoder fp8`.
+
+Run dev servers:
+```bash
+# Backend
+cd backend
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Frontend (new terminal)
+cd frontend
+npm run dev
+```
+
+GPU setup from scratch (Windows/Linux/macOS):
+```bash
+# Install GPU-enabled torch (replace cu121 with your CUDA version)
+pip install -r backend/requirements-gpu.txt
+```
+Notes:
+- Ensure the CUDA toolkit/drivers match your PyTorch wheel.
+- On Windows, use the same venv steps above before installing GPU deps.
+
 ## Offline model mirroring
 
 Mirror the required Qwen models to local disk so the backend can run with the network disabled.
@@ -49,6 +114,67 @@ This writes to `models/hf/<org>/<name>/<revision>/...` and the backend reads fro
 
 Smoke-check offline config + model presence (requires `diffusers` installed):
 - `python scripts/smoke_offline_load.py`
+
+## FLUX.2 klein GGUF (fast engine)
+
+This optional engine uses stable-diffusion.cpp. It stays fully offline after you mirror assets.
+
+Important: 15-byte files happen when you download VAE/text encoder from the wrong repo (the GGUF repo
+does not contain those files and returns `Entry not found`).
+
+1) Download model assets (resumable, uses HF Hub API):
+   - Windows: `powershell -ExecutionPolicy Bypass -File scripts/fetch_flux2_klein_gguf.ps1`
+   - Linux/macOS: `bash scripts/fetch_flux2_klein_gguf.sh`
+   - Optional flags: `--quant Q4_K_M`, `--text-encoder fp8`, `--llm-file Qwen3-8B-Q6_K.gguf`
+   - Env override: `FLUX2_TEXT_ENCODER_PRECISION=fp8`
+   - For higher Hub limits: set `HF_TOKEN`
+   - If you see Xet errors: `pip install hf-xet`
+   - Requires: `pip install "huggingface_hub>=0.32.0"`
+2) Verify assets:
+   - `python scripts/verify_flux2_klein_assets.py`
+3) Preferred backend (in-process bindings):
+   - `pip install -r backend/requirements-flux.txt`
+   - Windows note: pybindings are more stable with a GGUF text encoder. Convert once:
+     - `python scripts/convert_flux2_text_encoder.py --precision fp4`
+     - Set `FLUX2_TEXT_ENCODER_GGUF=./models/flux2_klein_9b_gguf/text_encoder/qwen_3_8b_fp4mixed.gguf`
+   - If pybindings still crash on Windows, enable sd-cli fallback:
+     - Set `FLUX2_USE_SDCLI_FALLBACK=1` and follow the sd-cli steps below.
+   - Windows default: if `FLUX2_USE_PY_BINDINGS` is unset, the backend defaults to sd-cli.
+4) sd-cli fallback (binary):
+   - `powershell -ExecutionPolicy Bypass -File scripts/fetch_sdcli.ps1 -Variant avx2`
+   - Set `FLUX2_SDCLI_PATH` to the `sd` binary and `FLUX2_LLM_GGUF` to a GGUF LLM.
+   - Diagnostics: `python scripts/diagnose_flux2_sdcli.py`
+   - Windows guide: `docs/engines/flux2_sdcli_windows.md`
+
+Exact hf download commands (manual alternative):
+```bash
+hf download unsloth/FLUX.2-klein-9B-GGUF --include "flux-2-klein-9b-Q4_K_M.gguf"
+hf download Comfy-Org/flux2-klein-9B --include "split_files/vae/flux2-vae.safetensors"
+hf download Comfy-Org/flux2-klein-9B --include "split_files/text_encoders/qwen_3_8b_fp4mixed.safetensors"
+# Required for sd-cli (--llm):
+hf download Qwen/Qwen3-8B-GGUF --include "Qwen3-8B-Q6_K.gguf"
+# FP8 encoder option:
+# hf download Comfy-Org/flux2-klein-9B --include "split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors"
+```
+Copy the downloaded files into:
+- `models/flux2_klein_9b_gguf/diffusion_model/`
+- `models/flux2_klein_9b_gguf/vae/`
+- `models/flux2_klein_9b_gguf/text_encoder/`
+- `models/flux2_klein_9b_gguf/text_encoder_gguf/`
+
+Tip: you can download both fp4 and fp8 encoders ahead of time and switch later by setting
+`FLUX2_TEXT_ENCODER_PRECISION` in `backend/.env` without re-downloading.
+
+Memory tip: if you only want one model loaded, set `ENABLED_MODELS` to a single id (for example,
+`qwen-image-2512` or `flux2-klein-9b-gguf`). Only those models are registered, warmed, and shown in the UI.
+
+Manual review gate:
+- `SAFETY_REVIEW_MODE=manual` is the default and required for FLUX.2 licensing guidance.
+- Jobs return `pending_review` until you call `POST /api/jobs/{job_id}/reveal` (UI exposes a Reveal button).
+
+License note:
+- `unsloth/FLUX.2-klein-9B-GGUF` is non-commercial and requires manual review or filters. Keep the manual
+  review gate enabled for production use.
 
 ## Torch install (CPU vs GPU)
 
@@ -73,16 +199,21 @@ Examples (replace `cu121` with your CUDA version):
 - `GET /api/system` -> device info + active quality profile
 - `POST /api/jobs/t2i` -> `{ "job_id": "..." }`
 - `POST /api/jobs/edit` -> `{ "job_id": "..." }`
+- `POST /api/jobs/{job_id}/reveal` -> `{ "image_id": "..." }` (manual review gate)
 - `POST /api/jobs/replay` -> `{ "job_id": "..." }`
 - `GET /api/jobs/{job_id}` -> job + run metadata
 - `GET /api/jobs/{job_id}/events` -> SSE stream
 - `GET /api/runs` -> recent runs (supports `status=failed`)
 - `GET /api/runs/{run_id}/export` -> reproducibility export JSON
 - `GET /api/stats` -> queue + latency summary
+- `GET /api/diagnostics/engines` -> optional engine diagnostics
+- `POST /api/images/generate` -> `{ "job_id": "..." }` (alias for /api/jobs/t2i)
+- `POST /api/images/edit` -> `{ "job_id": "..." }` (alias for /api/jobs/edit)
 
 ## Environment variables
 
 Backend (`backend/.env.example`):
+See `backend/ENV.md` for full descriptions and tuning recipes.
 - `APP_NAME` display name for the API
 - `APP_VERSION` semantic version string
 - `APP_COMMIT` git commit hash or label (defaults to `dev`)
@@ -97,6 +228,7 @@ Backend (`backend/.env.example`):
 - `MAX_UPLOAD_MB` max upload size in MB (default 10)
 - `MAX_CONCURRENT_JOBS` maximum concurrent jobs (default `1`)
 - `QUALITY_PROFILE` auto|low|balanced|high|ultra|cpu-low|cpu-balanced
+- `ENABLED_MODELS` optional comma-separated model ids to load (e.g. `qwen-image-2512` or `flux2-klein-9b-gguf`)
 - `DEFAULT_WIDTH` override default width
 - `DEFAULT_HEIGHT` override default height
 - `DEFAULT_STEPS` override default steps
@@ -106,9 +238,27 @@ Backend (`backend/.env.example`):
 - `WARMUP_MODELS` pre-load pipelines on startup (default `1`)
 - `WARMUP_TIMEOUT_SEC` warmup timeout before reporting degraded readiness (default `300`)
 - `DEBUG` include prompts in logs (default `0`)
+- `SAFETY_REVIEW_MODE` manual|off (default `manual`, required for FLUX.2)
+- `FLUX2_MODEL_DIR` local path for FLUX assets (default `./models/flux2_klein_9b_gguf`)
+- `FLUX2_DIFFUSION_GGUF` path to GGUF diffusion model
+- `FLUX2_VAE` path to `flux2-vae.safetensors`
+- `FLUX2_TEXT_ENCODER` path to `qwen_3_8b_fp4mixed.safetensors` (or fp8 mixed if preferred)
+- `FLUX2_TEXT_ENCODER_PRECISION` fp4 or fp8 (used if `FLUX2_TEXT_ENCODER` is not set)
+- `FLUX2_LLM_GGUF` GGUF LLM path for sd-cli (`--llm`)
+- `FLUX2_TEXT_ENCODER_GGUF` legacy GGUF text encoder path (fallback)
+- `FLUX2_USE_PY_BINDINGS` enable stable-diffusion-cpp-python (default `1`)
+- `FLUX2_USE_SDCLI_FALLBACK` enable sd-cli fallback (default `1`)
+- `FLUX2_SDCLI_PATH` sd-cli binary path or name (default `sd`)
+- `FLUX2_SDCLI_EXTRA_ARGS` extra args passed to sd-cli
+- `FLUX2_DEFAULT_STEPS` default steps for FLUX (default `4`)
+- `FLUX2_DEFAULT_GUIDANCE` default guidance for FLUX (default `4.0`)
+- `FLUX2_DEFAULT_SIZE` default size for FLUX (default `1024`)
+- `FLUX2_DEFAULT_STRENGTH` default edit strength (default `0.65`)
 
 Frontend (`frontend/.env.example`):
 - `NEXT_PUBLIC_BACKEND_URL` backend base URL (default `http://localhost:8000`)
+
+See `frontend/ENV.md` for full frontend env documentation.
 
 ## Notes
 
