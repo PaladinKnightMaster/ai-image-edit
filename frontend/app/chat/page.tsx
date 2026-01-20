@@ -460,6 +460,34 @@ export default function ChatPage() {
   const selectableModels = models.filter((model) => model.capabilities.includes(activeMode));
   const maxAttachments = activeModel?.id === "flux2-klein-9b-gguf" ? 1 : 2;
 
+  const applyCpuRealisticPreset = () => {
+    if (activeModel?.id === "flux2-klein-9b-gguf") {
+      setSteps("8");
+      setGuidanceScale("4.0");
+      if (!attachments.length) {
+        setWidth("768");
+        setHeight("768");
+      }
+      if (attachments.length) {
+        setStrength("0.6");
+      }
+      return;
+    }
+
+    if (activeModel?.id?.startsWith("qwen-image")) {
+      setSteps("16");
+      setGuidanceScale("4.0");
+      setTrueCfgScale("1.2");
+      if (!attachments.length) {
+        setWidth("512");
+        setHeight("512");
+      }
+      if (attachments.length) {
+        setStrength("0.6");
+      }
+    }
+  };
+
   useEffect(() => {
     const nextDefaults = {
       steps: String(activeDefaults.steps),
@@ -1656,6 +1684,18 @@ export default function ChatPage() {
 
             {settingsOpen ? (
               <div className="mt-4 grid gap-4 rounded-2xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-700">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                    Presets
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                    onClick={applyCpuRealisticPreset}
+                  >
+                    CPU Realistic
+                  </button>
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
                     <SettingLabel
