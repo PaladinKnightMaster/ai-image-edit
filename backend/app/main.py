@@ -184,6 +184,10 @@ class RevealResponse(BaseModel):
     image_id: str
 
 
+class DeleteRunsResponse(BaseModel):
+    deleted: int
+
+
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok")
@@ -271,6 +275,31 @@ def stream_job_events(job_id: str, request: Request) -> StreamingResponse:
 @app.get("/api/runs", response_model=list[RunResponse])
 def list_runs(limit: int = 50, status: str | None = None) -> list[RunResponse]:
     return jobs.list_runs(limit=limit, status=status)
+
+
+@app.delete("/api/runs/{run_id}", response_model=DeleteRunsResponse)
+def delete_run(run_id: str) -> DeleteRunsResponse:
+    run = jobs.get_run(run_id)
+    if not run:
+        raise APIError("not_found", "Run not found.", status_code=404)
+    if run.get("status") in {"queued", "running"}:
+        raise APIError(
+            "invalid_request",
+            "Cannot delete a queued or running run.",
+            status_code=409,
+        )
+    if not jobs.delete_run(run_id):
+        raise APIError("not_found", "Run not found.", status_code=404)
+    return DeleteRunsResponse(deleted=1)
+
+
+@app.delete("/api/runs", response_model=DeleteRunsResponse)
+def delete_runs(status: str | None = None, limit: int | None = None) -> DeleteRunsResponse:
+    try:
+        deleted = jobs.delete_runs(status=status, limit=limit)
+    except ValueError as exc:
+        raise APIError("invalid_request", str(exc), status_code=400) from exc
+    return DeleteRunsResponse(deleted=deleted)
 
 
 @app.get("/api/diagnostics/engines")

@@ -462,6 +462,51 @@ def list_runs(limit: int = 50, status: str | None = None) -> list[dict[str, Any]
     return runs
 
 
+def delete_run(run_id: str) -> bool:
+    with db.get_connection() as conn:
+        row = conn.execute("SELECT job_id FROM runs WHERE id = ?", (run_id,)).fetchone()
+        if not row:
+            return False
+        job_id = row["job_id"]
+        conn.execute("DELETE FROM runs WHERE id = ?", (run_id,))
+        conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+        conn.commit()
+    return True
+
+
+def delete_runs(status: str | None = None, limit: int | None = None) -> int:
+    if not status and not limit:
+        raise ValueError("Provide status or limit to delete runs.")
+    if status in {"queued", "running"}:
+        raise ValueError("Cannot delete active runs.")
+
+    query = (
+        "SELECT runs.id "
+        "FROM runs "
+        "JOIN jobs ON jobs.id = runs.job_id "
+    )
+    params: list[Any] = []
+    if status:
+        query += "WHERE jobs.status = ? "
+        params.append(status)
+    else:
+        query += "WHERE jobs.status NOT IN (?, ?) "
+        params.extend(["queued", "running"])
+    query += "ORDER BY jobs.created_at DESC "
+    if limit:
+        query += "LIMIT ?"
+        params.append(limit)
+
+    with db.get_connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    deleted = 0
+    for row in rows:
+        if delete_run(row["id"]):
+            deleted += 1
+    return deleted
+
+
 def reveal_job(job_id: str) -> str:
     job = get_job(job_id)
     if not job:

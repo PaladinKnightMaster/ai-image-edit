@@ -350,6 +350,60 @@ export default function ChatPage() {
     }
   };
 
+  const removeRunFromState = (runId: string) => {
+    setRecentRuns((runs) => runs.filter((run) => run.id !== runId));
+    setFailedRuns((runs) => runs.filter((run) => run.id !== runId));
+    setHistoryRuns((runs) => runs.filter((run) => run.id !== runId));
+  };
+
+  const deleteRun = async (runId: string) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/runs/${runId}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        setError(await parseErrorMessage(response));
+        return;
+      }
+      removeRunFromState(runId);
+      setError(null);
+    } catch {
+      setError("Failed to delete run.");
+    }
+  };
+
+  const clearRecentRuns = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/runs?limit=6`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        setError(await parseErrorMessage(response));
+        return;
+      }
+      await Promise.all([loadRuns(), loadFailedRuns(), loadHistoryRuns()]);
+      setError(null);
+    } catch {
+      setError("Failed to clear recent runs.");
+    }
+  };
+
+  const clearFailedRuns = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/runs?status=failed`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        setError(await parseErrorMessage(response));
+        return;
+      }
+      await Promise.all([loadFailedRuns(), loadRuns(), loadHistoryRuns()]);
+      setError(null);
+    } catch {
+      setError("Failed to clear failed runs.");
+    }
+  };
+
   useEffect(() => {
     loadSystem();
     loadModels();
@@ -1126,21 +1180,39 @@ export default function ChatPage() {
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Recent runs
               </h3>
-              <button
-                type="button"
-                className="text-xs text-slate-500 underline underline-offset-4"
-                onClick={loadRuns}
-              >
-                Refresh
-              </button>
+              <div className="flex items-center gap-3 text-xs">
+                <button
+                  type="button"
+                  className="text-slate-500 underline underline-offset-4"
+                  onClick={loadRuns}
+                >
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  className="text-rose-500 underline underline-offset-4"
+                  onClick={clearRecentRuns}
+                >
+                  Clear
+                </button>
+              </div>
             </div>
             <div className="mt-4 space-y-4">
               {recentRuns.length ? (
                 recentRuns.map((run) => (
                   <div key={run.id} className="rounded-2xl border border-white/70 bg-white/80 p-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      {run.model_id}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        {run.model_id}
+                      </p>
+                      <button
+                        type="button"
+                        className="text-[10px] uppercase tracking-[0.2em] text-slate-400 underline underline-offset-4"
+                        onClick={() => deleteRun(run.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                     <p className="mt-1 text-sm text-slate-700">{run.prompt}</p>
                     <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
                       <span>{run.status ?? "done"}</span>
@@ -1167,13 +1239,22 @@ export default function ChatPage() {
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Failed runs
               </h3>
-              <button
-                type="button"
-                className="text-xs text-slate-500 underline underline-offset-4"
-                onClick={loadFailedRuns}
-              >
-                Refresh
-              </button>
+              <div className="flex items-center gap-3 text-xs">
+                <button
+                  type="button"
+                  className="text-slate-500 underline underline-offset-4"
+                  onClick={loadFailedRuns}
+                >
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  className="text-rose-500 underline underline-offset-4"
+                  onClick={clearFailedRuns}
+                >
+                  Clear
+                </button>
+              </div>
             </div>
             <div className="mt-4 space-y-4">
               {failedRuns.length ? (
@@ -1186,13 +1267,22 @@ export default function ChatPage() {
                     {run.error ? (
                       <p className="mt-2 text-xs text-rose-600">{run.error}</p>
                     ) : null}
-                    <button
-                      type="button"
-                      className="mt-2 w-full rounded-full border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600"
-                      onClick={() => submitReplay(run)}
-                    >
-                      Replay
-                    </button>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="flex-1 rounded-full border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600"
+                        onClick={() => submitReplay(run)}
+                      >
+                        Replay
+                      </button>
+                      <button
+                        type="button"
+                        className="flex-1 rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600"
+                        onClick={() => deleteRun(run.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (

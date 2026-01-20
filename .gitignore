@@ -16,6 +16,8 @@ models/flux2_klein_9b_gguf/.downloads/
 # Generated images
 data/images/
 data/app.db
+data/app.db-shm
+data/app.db-wal
 data/flux2_outputs/
 
 # Tools/binaries

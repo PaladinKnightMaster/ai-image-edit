@@ -6,6 +6,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -87,6 +88,14 @@ def _split_extra_args(extra_args: str) -> list[str]:
     if not extra_args:
         return []
     return shlex.split(extra_args, posix=os.name != "nt")
+
+
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+_SDCLI_PROGRESS_RE = re.compile(r"\|\s*[=><]+\s*\|\s*(\d+)\s*/\s*(\d+)")
+
+
+def _strip_ansi(text: str) -> str:
+    return _ANSI_ESCAPE_RE.sub("", text)
 
 
 def _filter_kwargs(callable_obj: Any, kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -264,20 +273,55 @@ class _Flux2SdCliBackend:
             "sd-cli backend requires FLUX2_LLM_GGUF (or FLUX2_TEXT_ENCODER_GGUF) for --llm."
         )
 
-    def _run(self, args: list[str], output_dir: Path) -> None:
+    def _run(
+        self,
+        args: list[str],
+        output_dir: Path,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
-        result = subprocess.run(
-            args,
-            capture_output=True,
-            text=True,
-        )
         log_path = output_dir / "sdcli.log"
-        log_path.write_text(
-            f"exit_code={result.returncode}\n\nstdout:\n{result.stdout}\n\nstderr:\n{result.stderr}\n",
-            encoding="utf-8",
-        )
-        if result.returncode != 0:
-            raise RuntimeError(f"sd-cli failed (exit {result.returncode}). See {log_path}.")
+        sampling_active = False
+        last_progress: tuple[int, int] | None = None
+        with log_path.open("w", encoding="utf-8") as log_file:
+            log_file.write(f"command: {' '.join(args)}\n\noutput:\n")
+            process = subprocess.Popen(
+                args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,
+            )
+            assert process.stdout is not None
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                if not line:
+                    continue
+                clean_line = _strip_ansi(line)
+                log_file.write(clean_line)
+                log_file.flush()
+
+                lower_line = clean_line.lower()
+                if "generating image" in lower_line or "txt2img" in lower_line or "img2img" in lower_line:
+                    sampling_active = True
+                if sampling_active and progress_callback:
+                    match = _SDCLI_PROGRESS_RE.search(clean_line)
+                    if match:
+                        step = int(match.group(1))
+                        total = int(match.group(2))
+                        progress = (step, total)
+                        if progress != last_progress:
+                            last_progress = progress
+                            progress_callback(step, total)
+
+            return_code = process.wait()
+            log_file.write(f"\nexit_code={return_code}\n")
+        if return_code != 0:
+            raise RuntimeError(f"sd-cli failed (exit {return_code}). See {log_path}.")
 
     def _build_args(
         self,
@@ -335,6 +379,7 @@ class _Flux2SdCliBackend:
         steps: int,
         guidance: float,
         seed: int,
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> Image.Image:
         run_id = uuid4().hex
         output_dir = config.REPO_ROOT / "data" / "flux2_outputs" / run_id
@@ -349,7 +394,7 @@ class _Flux2SdCliBackend:
             seed=seed,
             output_path=output_path,
         )
-        self._run(args, output_dir)
+        self._run(args, output_dir, progress_callback=progress_callback)
         with Image.open(output_path) as image:
             image.load()
             return image.copy()
@@ -363,6 +408,7 @@ class _Flux2SdCliBackend:
         guidance: float,
         seed: int,
         strength: float,
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> Image.Image:
         run_id = uuid4().hex
         output_dir = config.REPO_ROOT / "data" / "flux2_outputs" / run_id
@@ -382,7 +428,7 @@ class _Flux2SdCliBackend:
             init_image=input_path,
             strength=strength,
         )
-        self._run(args, output_dir)
+        self._run(args, output_dir, progress_callback=progress_callback)
         with Image.open(output_path) as image:
             image.load()
             return image.copy()
@@ -468,27 +514,33 @@ class Flux2KleinGGUFRunner(Runner):
         params: GenerationParams,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> Image.Image:
-        _ = progress_callback
         pipe = self.load()
         guidance = (
             params.guidance_scale
             if params.guidance_scale is not None
             else config.FLUX2_DEFAULT_GUIDANCE
         )
+        payload = dict(
+            prompt=params.prompt,
+            negative_prompt=params.negative_prompt,
+            width=params.width,
+            height=params.height,
+            steps=params.steps,
+            guidance=guidance,
+            seed=params.seed,
+        )
         try:
-            return pipe.txt2img(
-                prompt=params.prompt,
-                negative_prompt=params.negative_prompt,
-                width=params.width,
-                height=params.height,
-                steps=params.steps,
-                guidance=guidance,
-                seed=params.seed,
-            )
+            signature = inspect.signature(pipe.txt2img)
+            if progress_callback and "progress_callback" in signature.parameters:
+                payload["progress_callback"] = progress_callback
+        except (TypeError, ValueError):
+            pass
+        try:
+            return pipe.txt2img(**payload)
         except Exception as exc:
             if isinstance(pipe, _Flux2PythonBackend):
                 pipe = self._fallback_to_sdcli(exc)
-                return pipe.txt2img(
+                payload = dict(
                     prompt=params.prompt,
                     negative_prompt=params.negative_prompt,
                     width=params.width,
@@ -497,6 +549,9 @@ class Flux2KleinGGUFRunner(Runner):
                     guidance=guidance,
                     seed=params.seed,
                 )
+                if progress_callback:
+                    payload["progress_callback"] = progress_callback
+                return pipe.txt2img(**payload)
             raise
 
     def edit(
@@ -504,7 +559,6 @@ class Flux2KleinGGUFRunner(Runner):
         params: EditParams,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> Image.Image:
-        _ = progress_callback
         pipe = self.load()
         if len(params.image_ids) != 1:
             raise ValueError("FLUX2 edit requires exactly one input image.")
@@ -515,20 +569,27 @@ class Flux2KleinGGUFRunner(Runner):
             else config.FLUX2_DEFAULT_GUIDANCE
         )
         strength = params.strength if params.strength is not None else config.FLUX2_DEFAULT_STRENGTH
+        payload = dict(
+            prompt=params.prompt,
+            negative_prompt=None,
+            init_image=input_image,
+            steps=params.steps,
+            guidance=guidance,
+            seed=params.seed,
+            strength=strength,
+        )
         try:
-            return pipe.img2img(
-                prompt=params.prompt,
-                negative_prompt=None,
-                init_image=input_image,
-                steps=params.steps,
-                guidance=guidance,
-                seed=params.seed,
-                strength=strength,
-            )
+            signature = inspect.signature(pipe.img2img)
+            if progress_callback and "progress_callback" in signature.parameters:
+                payload["progress_callback"] = progress_callback
+        except (TypeError, ValueError):
+            pass
+        try:
+            return pipe.img2img(**payload)
         except Exception as exc:
             if isinstance(pipe, _Flux2PythonBackend):
                 pipe = self._fallback_to_sdcli(exc)
-                return pipe.img2img(
+                payload = dict(
                     prompt=params.prompt,
                     negative_prompt=None,
                     init_image=input_image,
@@ -537,6 +598,9 @@ class Flux2KleinGGUFRunner(Runner):
                     seed=params.seed,
                     strength=strength,
                 )
+                if progress_callback:
+                    payload["progress_callback"] = progress_callback
+                return pipe.img2img(**payload)
             raise
 
 
