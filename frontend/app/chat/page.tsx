@@ -179,6 +179,24 @@ const parseErrorMessage = async (response: Response) => {
   }
 };
 
+type SettingLabelProps = {
+  label: string;
+  tooltip: string;
+};
+
+const SettingLabel = ({ label, tooltip }: SettingLabelProps) => (
+  <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+    <span>{label}</span>
+    <span
+      className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[10px] text-slate-500"
+      title={tooltip}
+      aria-label={tooltip}
+    >
+      i
+    </span>
+  </span>
+);
+
 export default function ChatPage() {
   const backendUrl = useMemo(
     () => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000",
@@ -1640,9 +1658,10 @@ export default function ChatPage() {
               <div className="mt-4 grid gap-4 rounded-2xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-700">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Negative prompt
-                    </span>
+                    <SettingLabel
+                      label="Negative prompt"
+                      tooltip="Optional terms to steer away from."
+                    />
                     <input
                       value={negativePrompt}
                       onChange={(event) => setNegativePrompt(event.target.value)}
@@ -1652,7 +1671,10 @@ export default function ChatPage() {
                     />
                   </label>
                   <label className="space-y-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Seed</span>
+                    <SettingLabel
+                      label="Seed"
+                      tooltip="Same seed + params gives similar results."
+                    />
                     <input
                       value={seed}
                       onChange={(event) => setSeed(event.target.value)}
@@ -1664,9 +1686,10 @@ export default function ChatPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Steps
-                    </span>
+                    <SettingLabel
+                      label="Steps"
+                      tooltip="More steps = slower, often sharper."
+                    />
                     <input
                       value={steps}
                       onChange={(event) => setSteps(event.target.value)}
@@ -1675,9 +1698,10 @@ export default function ChatPage() {
                     />
                   </label>
                   <label className="space-y-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Guidance scale
-                    </span>
+                    <SettingLabel
+                      label="Guidance scale"
+                      tooltip="How strongly the prompt is followed."
+                    />
                     <input
                       value={guidanceScale}
                       onChange={(event) => setGuidanceScale(event.target.value)}
@@ -1694,9 +1718,10 @@ export default function ChatPage() {
                 {attachments.length && activeModel?.id === "flux2-klein-9b-gguf" ? (
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Strength
-                      </span>
+                      <SettingLabel
+                        label="Strength"
+                        tooltip="How much to change the input image (0-1)."
+                      />
                       <input
                         value={strength}
                         onChange={(event) => setStrength(event.target.value)}
@@ -1713,9 +1738,10 @@ export default function ChatPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      True CFG scale
-                    </span>
+                    <SettingLabel
+                      label="True CFG scale"
+                      tooltip="Qwen-specific guidance. 1.0 disables."
+                    />
                     <input
                       value={trueCfgScale}
                       onChange={(event) => setTrueCfgScale(event.target.value)}
@@ -1729,9 +1755,10 @@ export default function ChatPage() {
                   </label>
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Width
-                      </span>
+                      <SettingLabel
+                        label="Width"
+                        tooltip="Output size in pixels (divisible by 8)."
+                      />
                       <input
                         value={width}
                         onChange={(event) => setWidth(event.target.value)}
@@ -1741,9 +1768,10 @@ export default function ChatPage() {
                       />
                     </label>
                     <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Height
-                      </span>
+                      <SettingLabel
+                        label="Height"
+                        tooltip="Output size in pixels (divisible by 8)."
+                      />
                       <input
                         value={height}
                         onChange={(event) => setHeight(event.target.value)}
