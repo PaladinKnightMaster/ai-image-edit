@@ -12,6 +12,21 @@ between them.
 - `data/` local persistence (empty)
 - `models/` local model assets + caches
 
+## Current models
+
+Available model IDs (use these in `ENABLED_MODELS` and API requests):
+- `qwen-image-2512` (text-to-image)
+- `qwen-image-edit-2511` (image editing)
+- `flux2-klein-9b-gguf` (text-to-image + edit via stable-diffusion.cpp)
+
+Note: models only show as `present` in `/api/models` after their assets are mirrored locally.
+
+## Recent updates (rolling)
+
+- FLUX.2 sd-cli backend supports SSE progress streaming from live stdout parsing.
+- UI includes a “CPU Realistic” preset button to auto-fill settings per model.
+- Run cleanup endpoints + UI controls for removing recent/failed runs.
+
 ## Quickstart
 
 Backend:
@@ -166,7 +181,8 @@ Tip: you can download both fp4 and fp8 encoders ahead of time and switch later b
 `FLUX2_TEXT_ENCODER_PRECISION` in `backend/.env` without re-downloading.
 
 Memory tip: if you only want one model loaded, set `ENABLED_MODELS` to a single id (for example,
-`qwen-image-2512` or `flux2-klein-9b-gguf`). Only those models are registered, warmed, and shown in the UI.
+`qwen-image-2512` or `flux2-klein-9b-gguf`). Valid IDs are listed under “Current models.”
+Only those models are registered, warmed, and shown in the UI.
 
 Manual review gate:
 - `SAFETY_REVIEW_MODE=manual` is the default and required for FLUX.2 licensing guidance.
@@ -204,6 +220,8 @@ Examples (replace `cu121` with your CUDA version):
 - `GET /api/jobs/{job_id}` -> job + run metadata
 - `GET /api/jobs/{job_id}/events` -> SSE stream
 - `GET /api/runs` -> recent runs (supports `status=failed`)
+- `DELETE /api/runs/{run_id}` -> remove a run (and its job record)
+- `DELETE /api/runs` -> bulk delete runs (supports `status=failed` and/or `limit=...`)
 - `GET /api/runs/{run_id}/export` -> reproducibility export JSON
 - `GET /api/stats` -> queue + latency summary
 - `GET /api/diagnostics/engines` -> optional engine diagnostics
