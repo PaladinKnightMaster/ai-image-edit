@@ -43,6 +43,15 @@ the path by setting `DOTENV_PATH`.
 - `DEFAULT_WIDTH`, `DEFAULT_HEIGHT`, `DEFAULT_STEPS` override defaults.
 - `MAX_CONCURRENT_JOBS` default `1` to avoid GPU/CPU contention.
 
+## Worker mode (separate inference process)
+
+Use this when you want the API server to stay light while a worker does model loading/inference.
+
+- `INFERENCE_MODE` `local` (default) or `worker`.
+- `WORKER_URL` worker base URL (default `http://127.0.0.1:8001`).
+- `WORKER_CALLBACK_URL` API base URL for worker event callbacks (default `http://127.0.0.1:8000`).
+- `WORKER_TOKEN` optional shared token (set in both API + worker to authorize callbacks/dispatch).
+
 ## Quality profile (auto tuning)
 
 - `QUALITY_PROFILE` selects presets: `auto`, `low`, `balanced`, `high`, `ultra`,

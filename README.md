@@ -53,6 +53,30 @@ If you do not have GNU Make installed, run these directly:
 - Backend: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 - Frontend: `cd frontend && npm run dev`
 
+## Worker mode (optional)
+
+Run inference in a separate process (lower RAM pressure on the API process).
+
+1) In `backend/.env` set:
+```
+INFERENCE_MODE=worker
+WORKER_URL=http://127.0.0.1:8001
+WORKER_CALLBACK_URL=http://127.0.0.1:8000
+```
+
+2) Start API + worker in separate terminals:
+```
+# API
+cd backend
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Worker
+cd backend
+python -m uvicorn worker.main:app --reload --host 0.0.0.0 --port 8001
+```
+
+3) Start frontend as usual.
+
 ## From scratch (full install + model downloads)
 
 Windows (PowerShell):

@@ -8,7 +8,7 @@ import sys
 import time
 from typing import List
 
-from fastapi import FastAPI, UploadFile, File, Request
+from fastapi import FastAPI, UploadFile, File, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
@@ -35,6 +35,10 @@ def parse_origins(value: str) -> List[str]:
 async def lifespan(_: FastAPI):
     jobs.init_jobs()
     ready.set_state(False, "starting", {"message": "server starting"})
+    if config.INFERENCE_MODE == "worker":
+        ready.set_state(True, "worker", {"message": "inference handled by worker"})
+        yield
+        return
     if config.WARMUP_MODELS:
         ready.set_state(False, "warming", {"message": "warming models"})
 
@@ -188,6 +192,11 @@ class DeleteRunsResponse(BaseModel):
     deleted: int
 
 
+class JobEventRequest(BaseModel):
+    event: str
+    data: dict
+
+
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok")
@@ -270,6 +279,20 @@ def stream_job_events(job_id: str, request: Request) -> StreamingResponse:
         jobs.stream_events(job_id, request),
         media_type="text/event-stream",
     )
+
+
+@app.post("/api/internal/jobs/{job_id}/event")
+def publish_job_event(
+    job_id: str,
+    payload: JobEventRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    if config.WORKER_TOKEN:
+        expected = f"Bearer {config.WORKER_TOKEN}"
+        if authorization != expected:
+            raise APIError("unauthorized", "Invalid worker token.", status_code=401)
+    jobs.publish_event(job_id, payload.event, payload.data)
+    return {"ok": True}
 
 
 @app.get("/api/runs", response_model=list[RunResponse])

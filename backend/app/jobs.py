@@ -5,6 +5,8 @@ import json
 import queue
 import threading
 import time
+import urllib.error
+import urllib.request
 from typing import Any
 from uuid import uuid4
 
@@ -34,6 +36,10 @@ def _publish(job_id: str, event: str, data: dict[str, Any]) -> None:
         subscriber.put({"event": event, "data": data})
 
 
+def publish_event(job_id: str, event: str, data: dict[str, Any]) -> None:
+    _publish(job_id, event, data)
+
+
 def subscribe(job_id: str) -> queue.Queue[dict[str, Any]]:
     subscriber: queue.Queue[dict[str, Any]] = queue.Queue()
     with _SUBSCRIBERS_LOCK:
@@ -61,7 +67,8 @@ def init_jobs() -> None:
         return
     db.init_db()
     _recover_jobs()
-    _start_workers()
+    if config.INFERENCE_MODE == "local":
+        _start_workers()
     _WORKERS_STARTED = True
 
 
@@ -106,6 +113,21 @@ def _validate_limits(job_type: str, params: GenerationParams | EditParams) -> No
             raise ValueError(
                 f"resolution exceeds MAX_WIDTH={config.MAX_WIDTH} or MAX_HEIGHT={config.MAX_HEIGHT}"
             )
+
+
+def _dispatch_to_worker(job_id: str) -> None:
+    url = config.WORKER_URL.rstrip("/") + "/worker/run"
+    payload = json.dumps({"job_id": job_id}).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if config.WORKER_TOKEN:
+        headers["Authorization"] = f"Bearer {config.WORKER_TOKEN}"
+    request = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            if response.status >= 400:
+                raise RuntimeError(f"Worker responded with status {response.status}.")
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Worker dispatch failed: {exc}") from exc
 
 
 def submit_job(job_type: str, model_id: str, params: GenerationParams | EditParams) -> str:
@@ -189,7 +211,14 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
         )
         conn.commit()
 
-    _JOB_QUEUE.put(job_id)
+    if config.INFERENCE_MODE == "worker":
+        try:
+            _dispatch_to_worker(job_id)
+        except Exception as exc:
+            _mark_job_failed(job_id, str(exc))
+            raise
+    else:
+        _JOB_QUEUE.put(job_id)
     _publish(job_id, "status", {"status": "queued"})
     return job_id
 
@@ -200,15 +229,19 @@ def _worker_loop() -> None:
         if job_id is None:
             continue
         try:
-            _run_job(job_id)
+            run_job(job_id)
         except Exception as exc:
             _mark_job_failed(job_id, str(exc))
         finally:
             _JOB_QUEUE.task_done()
 
 
-def _run_job(job_id: str) -> None:
+def run_job(
+    job_id: str,
+    publish: Callable[[str, str, dict[str, Any]], None] | None = None,
+) -> None:
     global _CURRENT_JOB_ID
+    publish_fn = publish or _publish
     job = get_job(job_id)
     if not job:
         return
@@ -222,8 +255,8 @@ def _run_job(job_id: str) -> None:
             ("running", started_at, job_id),
         )
         conn.commit()
-    _publish(job_id, "status", {"status": "running"})
-    _publish(job_id, "stage", {"stage": "loading"})
+    publish_fn(job_id, "status", {"status": "running"})
+    publish_fn(job_id, "stage", {"stage": "loading"})
 
     run = job.get("run")
     if not run:
@@ -257,12 +290,16 @@ def _run_job(job_id: str) -> None:
 
     def progress_callback(step: int, total_steps: int) -> None:
         percent = int((step / total_steps) * 100)
-        _publish(job_id, "progress", {"step": step, "total_steps": total_steps, "percent": percent})
+        publish_fn(
+            job_id,
+            "progress",
+            {"step": step, "total_steps": total_steps, "percent": percent},
+        )
 
     _GPU_SEMAPHORE.acquire()
     try:
         runner.load()
-        _publish(job_id, "stage", {"stage": "running"})
+        publish_fn(job_id, "stage", {"stage": "running"})
 
         start = time.perf_counter()
         try:
@@ -294,7 +331,7 @@ def _run_job(job_id: str) -> None:
         except Exception as exc:
             raise RuntimeError(str(exc)) from exc
 
-        _publish(job_id, "stage", {"stage": "saving"})
+        publish_fn(job_id, "stage", {"stage": "saving"})
         image_id, _ = image_store.save_image(
             image,
             source="job",
@@ -332,8 +369,8 @@ def _run_job(job_id: str) -> None:
         conn.commit()
 
     if review_required:
-        _publish(job_id, "status", {"status": "pending_review"})
-        _publish(job_id, "review_required", {"message": "Manual review required."})
+        publish_fn(job_id, "status", {"status": "pending_review"})
+        publish_fn(job_id, "review_required", {"message": "Manual review required."})
         logging_utils.log_event(
             "job_pending_review",
             job_id=job_id,
@@ -342,8 +379,8 @@ def _run_job(job_id: str) -> None:
         )
         return
 
-    _publish(job_id, "status", {"status": "succeeded"})
-    _publish(job_id, "result", {"output_image_id": image_id, "latency_ms": latency_ms})
+    publish_fn(job_id, "status", {"status": "succeeded"})
+    publish_fn(job_id, "result", {"output_image_id": image_id, "latency_ms": latency_ms})
     logging_utils.log_event(
         "job_success",
         job_id=job_id,
@@ -353,8 +390,13 @@ def _run_job(job_id: str) -> None:
     )
 
 
-def _mark_job_failed(job_id: str, message: str) -> None:
+def _mark_job_failed(
+    job_id: str,
+    message: str,
+    publish: Callable[[str, str, dict[str, Any]], None] | None = None,
+) -> None:
     global _CURRENT_JOB_ID
+    publish_fn = publish or _publish
     job = get_job(job_id) or {}
     run = job.get("run") or {}
     finished_at = _now_ms()
@@ -368,14 +410,22 @@ def _mark_job_failed(job_id: str, message: str) -> None:
         global _CURRENT_JOB_ID
         if _CURRENT_JOB_ID == job_id:
             _CURRENT_JOB_ID = None
-    _publish(job_id, "status", {"status": "failed"})
-    _publish(job_id, "error", {"message": message})
+    publish_fn(job_id, "status", {"status": "failed"})
+    publish_fn(job_id, "error", {"message": message})
     logging_utils.log_error(
         "job_failed",
         job_id=job_id,
         run_id=run.get("id"),
         error=message,
     )
+
+
+def mark_job_failed(
+    job_id: str,
+    message: str,
+    publish: Callable[[str, str, dict[str, Any]], None] | None = None,
+) -> None:
+    _mark_job_failed(job_id, message, publish=publish)
 
 
 def get_queue_length() -> int:

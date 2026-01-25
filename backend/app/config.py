@@ -40,6 +40,12 @@ MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 WARMUP_MODELS = os.getenv("WARMUP_MODELS", "1").lower() not in {"0", "false", "no"}
 WARMUP_TIMEOUT_SEC = int(os.getenv("WARMUP_TIMEOUT_SEC", "300"))
 SAFETY_REVIEW_MODE = os.getenv("SAFETY_REVIEW_MODE", "manual").lower()
+INFERENCE_MODE = os.getenv("INFERENCE_MODE", "local").lower()
+if INFERENCE_MODE not in {"local", "worker"}:
+    INFERENCE_MODE = "local"
+WORKER_URL = os.getenv("WORKER_URL", "http://127.0.0.1:8001")
+WORKER_CALLBACK_URL = os.getenv("WORKER_CALLBACK_URL", "http://127.0.0.1:8000")
+WORKER_TOKEN = os.getenv("WORKER_TOKEN", "")
 
 FLUX2_MODEL_DIR = _resolve_path(
     os.getenv("FLUX2_MODEL_DIR", REPO_ROOT / "models" / "flux2_klein_9b_gguf"), REPO_ROOT
