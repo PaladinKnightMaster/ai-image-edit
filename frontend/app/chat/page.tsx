@@ -1153,10 +1153,10 @@ export default function ChatPage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-6 py-10">
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside className="flex flex-col gap-6">
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+    <main className="mx-auto min-h-screen max-w-7xl px-6 pb-24 pt-10 lg:px-10">
+      <div className="grid gap-10 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+        <aside className="flex flex-col gap-7 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
+          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.5)] backdrop-blur">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">System profile</p>
             <h2 className="mt-3 font-display text-xl text-slate-900">Offline arena</h2>
             <p className="mt-2 text-sm text-slate-600">
@@ -1189,7 +1189,7 @@ export default function ChatPage() {
             ) : null}
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+          <div className="rounded-3xl border border-rose-100/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Models
             </h3>
@@ -1221,7 +1221,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Recent runs
@@ -1246,7 +1246,7 @@ export default function ChatPage() {
             <div className="mt-4 space-y-4">
               {recentRuns.length ? (
                 recentRuns.map((run) => (
-                  <div key={run.id} className="rounded-2xl border border-white/70 bg-white/80 p-3">
+                  <div key={run.id} className="rounded-2xl border border-slate-200/70 bg-white/90 p-3">
                     <div className="flex items-center justify-between">
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                         {run.model_id}
@@ -1280,7 +1280,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-soft backdrop-blur">
+          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.5)] backdrop-blur">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Failed runs
@@ -1376,15 +1376,15 @@ export default function ChatPage() {
         </aside>
 
         <section className="flex min-h-[80vh] flex-col gap-6">
-          <header className="rounded-3xl border border-white/70 bg-white/70 p-6 shadow-soft backdrop-blur motion-safe:animate-fade-up">
+          <header className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_25px_70px_-50px_rgba(15,23,42,0.6)] backdrop-blur motion-safe:animate-fade-up">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Chat arena</p>
                 <h1 className="mt-2 font-display text-3xl text-slate-900">
-                  Generate or edit with Qwen in one thread.
+                  Generate or edit in a single creative thread.
                 </h1>
               </div>
-              <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-xs text-slate-600">
+              <div className="rounded-2xl border border-slate-200/70 bg-white/90 px-4 py-3 text-xs text-slate-600">
                 Backend: <span className="font-mono text-slate-800">{backendUrl}</span>
               </div>
             </div>
@@ -1392,7 +1392,7 @@ export default function ChatPage() {
 
           <div
             ref={timelineRef}
-            className="flex-1 space-y-6 overflow-y-auto rounded-3xl border border-white/70 bg-white/60 p-6 shadow-soft backdrop-blur"
+            className="flex-1 space-y-6 overflow-y-auto rounded-3xl border border-slate-200/70 bg-white/70 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur"
           >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
@@ -1410,10 +1410,10 @@ export default function ChatPage() {
                     className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-3xl border px-5 py-4 shadow-soft ${
+                      className={`max-w-[80%] rounded-[28px] border px-5 py-4 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.4)] ${
                         isUser
                           ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-white/70 bg-white/80 text-slate-800"
+                          : "border-slate-200/70 bg-white text-slate-800"
                       }`}
                     >
                       {isUser ? (
@@ -1537,7 +1537,7 @@ export default function ChatPage() {
                             </button>
                           ) : null}
                           {message.run ? (
-                            <details className="rounded-2xl border border-white/70 bg-white/70 p-3 text-xs text-slate-600">
+                            <details className="rounded-2xl border border-slate-200/70 bg-white/90 p-3 text-xs text-slate-600">
                               <summary className="cursor-pointer text-xs uppercase tracking-[0.2em] text-slate-500">
                                 Metadata
                               </summary>
@@ -1573,7 +1573,7 @@ export default function ChatPage() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+          <div className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur lg:sticky lg:bottom-6">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
               <div className="flex items-center gap-3">
                 <span>Model</span>
@@ -1581,7 +1581,7 @@ export default function ChatPage() {
                   value={selectedModelId}
                   onChange={(event) => setSelectedModelId(event.target.value)}
                   disabled={!models.length}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm"
                 >
                   {(selectableModels.length ? selectableModels : models).map((model) => (
                     <option key={model.id} value={model.id} disabled={!model.present}>
@@ -1609,7 +1609,7 @@ export default function ChatPage() {
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
                 placeholder="Describe the scene or edit you want..."
-                className="min-h-[110px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+                className="min-h-[120px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
               />
               <div className="flex flex-col gap-3">
                 <label className="cursor-pointer rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white">
@@ -1632,7 +1632,7 @@ export default function ChatPage() {
                 <button
                   type="button"
                   disabled={isSubmitting}
-                  className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_40px_-28px_rgba(15,23,42,0.6)] transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={handleSubmit}
                 >
                   {attachments.length ? "Edit" : "Generate"}
@@ -1829,7 +1829,7 @@ export default function ChatPage() {
       </div>
       {historyOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4 py-10">
-          <div className="max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/70 bg-white/90 shadow-soft backdrop-blur">
+          <div className="max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200/70 bg-white/95 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-500">

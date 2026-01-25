@@ -53,6 +53,27 @@ If you do not have GNU Make installed, run these directly:
 - Backend: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 - Frontend: `cd frontend && npm run dev`
 
+## Cloning to a new machine (same path notes)
+
+You generally **should not copy `.venv`** across machines. Even with the same OS + Python version,
+it can break due to absolute paths and compiled wheels.
+
+If the new machine is truly identical and you **clone to the exact same path**, a copied `.venv`
+*may* work, but it is not guaranteed. The reliable approach is always:
+1) Recreate the venv on the new machine.
+2) Reinstall requirements from `backend/requirements*.txt`.
+
+If you still want to try reusing a venv, make sure:
+- OS + architecture match
+- Python version matches exactly
+- Repo path is identical
+- GPU driver + CUDA versions match (if using GPU)
+
+Example (identical path + version):
+- OS: Windows 11 x64 on both machines
+- Python: 3.12.2 (same installer path, e.g. `C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe`)
+- Repo path: `D:\1_PROJECT\PRIVATE_WORK\ai-image-edit`
+
 ## Worker mode (optional)
 
 Run inference in a separate process (lower RAM pressure on the API process).
