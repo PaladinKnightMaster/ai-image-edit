@@ -23,3 +23,8 @@ Reason:
 ### Decision: Repo-backed continuity is the memory model
 Reason:
 - new sessions need durable docs, not dependence on prior chat history
+
+### Decision: The durable docs stack is now the canonical project knowledge base
+Reason:
+- `docs/index.md` now anchors ADRs, architecture, workflows, models, design, and testing docs
+- new sessions should recover system understanding from repo docs first, then planning docs, instead of reconstructing context from chat

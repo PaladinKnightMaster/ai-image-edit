@@ -28,6 +28,15 @@
 - `docs/context/decision-log.md`
 - `docs/context/ai-operating-model.md`
 
+## Durable knowledge base
+- `docs/index.md`
+- `docs/adr/*`
+- `docs/architecture/*`
+- `docs/models/*`
+- `docs/design/*`
+- `docs/workflows/*`
+- `docs/testing/*`
+
 ## Roadmap memory
 - `docs/planning/mvp-war-room-plan.md`
 - `docs/planning/sprint-1-backlog.md`

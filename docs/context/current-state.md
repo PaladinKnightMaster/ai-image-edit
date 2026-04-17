@@ -7,6 +7,7 @@ Last updated: 2026-04-17
 - Sprint 1, Sprint 2, and Sprint 3 planning docs drafted
 - fast-check env profiles added for CPU-only development
 - war-room operating layer added as project-local architecture
+- durable ADR, architecture, workflow, model, design, and testing docs added under `docs/`
 
 ## Known Critical Blocker
 - backend startup is currently blocked by a syntax error in `backend/app/config.py`
@@ -16,6 +17,9 @@ Last updated: 2026-04-17
 - `docs/planning/sprint-1-backlog.md`
 - `docs/planning/sprint-2-outline.md`
 - `docs/planning/sprint-3-outline.md`
+
+## Documentation Entry Point
+- `docs/index.md`
 
 ## Current Recommended Immediate Work
 1. fix backend startup blocker
