@@ -247,6 +247,7 @@ def run_job(
         return
 
     started_at = _now_ms()
+    job_started = time.perf_counter()
     with _CURRENT_JOB_LOCK:
         _CURRENT_JOB_ID = job_id
     with db.get_connection() as conn:
@@ -256,7 +257,15 @@ def run_job(
         )
         conn.commit()
     publish_fn(job_id, "status", {"status": "running"})
-    publish_fn(job_id, "stage", {"stage": "loading"})
+
+    def _publish_stage(stage: str) -> None:
+        publish_fn(
+            job_id,
+            "stage",
+            {"stage": stage, "elapsed_ms": int((time.perf_counter() - job_started) * 1000)},
+        )
+
+    _publish_stage("loading")
 
     run = job.get("run")
     if not run:
@@ -293,13 +302,18 @@ def run_job(
         publish_fn(
             job_id,
             "progress",
-            {"step": step, "total_steps": total_steps, "percent": percent},
+            {
+                "step": step,
+                "total_steps": total_steps,
+                "percent": percent,
+                "elapsed_ms": int((time.perf_counter() - job_started) * 1000),
+            },
         )
 
     _GPU_SEMAPHORE.acquire()
     try:
         runner.load()
-        publish_fn(job_id, "stage", {"stage": "running"})
+        _publish_stage("running")
 
         start = time.perf_counter()
         try:
@@ -331,7 +345,7 @@ def run_job(
         except Exception as exc:
             raise RuntimeError(str(exc)) from exc
 
-        publish_fn(job_id, "stage", {"stage": "saving"})
+        _publish_stage("saving")
         image_id, _ = image_store.save_image(
             image,
             source="job",
@@ -512,19 +526,33 @@ def list_runs(limit: int = 50, status: str | None = None) -> list[dict[str, Any]
     return runs
 
 
-def delete_run(run_id: str) -> bool:
+def delete_run(run_id: str, delete_images: bool = False) -> bool:
     with db.get_connection() as conn:
-        row = conn.execute("SELECT job_id FROM runs WHERE id = ?", (run_id,)).fetchone()
+        row = conn.execute(
+            "SELECT job_id, output_image_id, pending_output_image_id FROM runs WHERE id = ?",
+            (run_id,),
+        ).fetchone()
         if not row:
             return False
         job_id = row["job_id"]
+        output_image_id = row["output_image_id"]
+        pending_image_id = row["pending_output_image_id"]
         conn.execute("DELETE FROM runs WHERE id = ?", (run_id,))
         conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
         conn.commit()
+    if delete_images:
+        if output_image_id:
+            image_store.delete_image(output_image_id)
+        if pending_image_id and pending_image_id != output_image_id:
+            image_store.delete_image(pending_image_id)
     return True
 
 
-def delete_runs(status: str | None = None, limit: int | None = None) -> int:
+def delete_runs(
+    status: str | None = None,
+    limit: int | None = None,
+    delete_images: bool = False,
+) -> int:
     if not status and not limit:
         raise ValueError("Provide status or limit to delete runs.")
     if status in {"queued", "running"}:
@@ -552,7 +580,7 @@ def delete_runs(status: str | None = None, limit: int | None = None) -> int:
 
     deleted = 0
     for row in rows:
-        if delete_run(row["id"]):
+        if delete_run(row["id"], delete_images=delete_images):
             deleted += 1
     return deleted
 

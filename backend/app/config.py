@@ -46,6 +46,7 @@ if INFERENCE_MODE not in {"local", "worker"}:
 WORKER_URL = os.getenv("WORKER_URL", "http://127.0.0.1:8001")
 WORKER_CALLBACK_URL = os.getenv("WORKER_CALLBACK_URL", "http://127.0.0.1:8000")
 WORKER_TOKEN = os.getenv("WORKER_TOKEN", "")
+WORKER_HEALTH_TIMEOUT_SEC = float(os.getenv("WORKER_HEALTH_TIMEOUT_SEC", "2.0"))
 
 FLUX2_MODEL_DIR = _resolve_path(
     os.getenv("FLUX2_MODEL_DIR", REPO_ROOT / "models" / "flux2_klein_9b_gguf"), REPO_ROOT
@@ -103,11 +104,28 @@ _flux2_allow_safetensors = os.getenv("FLUX2_ALLOW_SAFETENSORS_LLM")
 if _flux2_allow_safetensors is None:
     FLUX2_ALLOW_SAFETENSORS_LLM = os.name != "nt"
 else:
-    FLUX2_ALLOW_SAFETENSORS_LLM = _flux2_allow_safetensors.lower() not in {
+FLUX2_ALLOW_SAFETENSORS_LLM = _flux2_allow_safetensors.lower() not in {
         "0",
         "false",
         "no",
     }
+
+SDXL_OV_BASE_DIR = _resolve_path(
+    os.getenv("SDXL_OV_BASE_DIR", REPO_ROOT / "models" / "openvino" / "sdxl_base"),
+    REPO_ROOT,
+)
+SDXL_OV_REFINER_DIR = _resolve_path(
+    os.getenv("SDXL_OV_REFINER_DIR", REPO_ROOT / "models" / "openvino" / "sdxl_refiner"),
+    REPO_ROOT,
+)
+SDXL_OV_DEVICE = os.getenv("SDXL_OV_DEVICE", "CPU")
+SDXL_OV_COMPILE = os.getenv("SDXL_OV_COMPILE", "1").lower() not in {"0", "false", "no"}
+SDXL_REFINER_ENABLED = os.getenv("SDXL_REFINER_ENABLED", "0").lower() not in {
+    "0",
+    "false",
+    "no",
+}
+SDXL_REFINER_DENOISING_START = float(os.getenv("SDXL_REFINER_DENOISING_START", "0.8"))
 
 QUALITY_PROFILE = os.getenv("QUALITY_PROFILE", "auto").lower()
 ENABLED_MODELS_RAW = os.getenv("ENABLED_MODELS", "")

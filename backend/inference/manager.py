@@ -7,6 +7,7 @@ from inference.base import Runner
 from inference.flux2_klein_gguf import Flux2KleinGGUFRunner
 from inference.qwen_image_2512 import QwenImage2512Runner
 from inference.qwen_image_edit_2511 import QwenImageEdit2511Runner
+from inference.sdxl_openvino import SDXLOpenVINORunner
 
 
 class InferenceManager:
@@ -15,6 +16,7 @@ class InferenceManager:
             QwenImage2512Runner(),
             QwenImageEdit2511Runner(),
             Flux2KleinGGUFRunner(),
+            SDXLOpenVINORunner(),
         ]
         if config.ENABLED_MODELS:
             runners = [runner for runner in runners if runner.id in config.ENABLED_MODELS]

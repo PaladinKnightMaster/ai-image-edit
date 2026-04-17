@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 import io
+import json
 import math
 import threading
 import sys
 import time
+import urllib.error
+import urllib.request
 from typing import List
 
 from fastapi import FastAPI, UploadFile, File, Request, Header
@@ -14,7 +17,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
 from PIL import Image
 
-from app import config, images as image_store, jobs, ready, logging_utils, model_registry
+from app import config, images as image_store, jobs, ready, logging_utils, model_registry, storage
 from app.errors import APIError, register_error_handlers
 from inference.base import EditParams, GenerationParams
 from inference.manager import get_manager
@@ -164,6 +167,7 @@ class SystemResponse(BaseModel):
     defaults: dict
     limits: dict
     memory: dict
+    storage: dict | None = None
 
 
 class ReadyResponse(BaseModel):
@@ -204,6 +208,27 @@ def health() -> HealthResponse:
 
 @app.get("/ready", response_model=ReadyResponse)
 def ready_check() -> ReadyResponse:
+    if config.INFERENCE_MODE == "worker":
+        url = config.WORKER_URL.rstrip("/") + "/health"
+        try:
+            with urllib.request.urlopen(url, timeout=config.WORKER_HEALTH_TIMEOUT_SEC) as response:
+                payload = {}
+                if response.status >= 400:
+                    raise RuntimeError(f"Worker returned status {response.status}.")
+                raw = response.read().decode("utf-8").strip()
+                if raw:
+                    payload = json.loads(raw)
+            return ReadyResponse(
+                ready=True,
+                status="worker_ready",
+                details={"worker_url": config.WORKER_URL, "worker_status": payload.get("status")},
+            )
+        except Exception as exc:
+            return ReadyResponse(
+                ready=False,
+                status="worker_unavailable",
+                details={"worker_url": config.WORKER_URL, "error": str(exc)},
+            )
     state = ready.get_state()
     return ReadyResponse(ready=state["ready"], status=state["status"], details=state["details"])
 
@@ -220,7 +245,9 @@ def list_models() -> list[ModelStatus]:
 
 @app.get("/api/system", response_model=SystemResponse)
 def get_system() -> SystemResponse:
-    return config.SYSTEM_INFO
+    system = dict(config.SYSTEM_INFO)
+    system["storage"] = storage.get_storage_info()
+    return system
 
 
 @app.post("/api/jobs/t2i", response_model=JobSubmitResponse)
@@ -301,7 +328,7 @@ def list_runs(limit: int = 50, status: str | None = None) -> list[RunResponse]:
 
 
 @app.delete("/api/runs/{run_id}", response_model=DeleteRunsResponse)
-def delete_run(run_id: str) -> DeleteRunsResponse:
+def delete_run(run_id: str, delete_images: bool = False) -> DeleteRunsResponse:
     run = jobs.get_run(run_id)
     if not run:
         raise APIError("not_found", "Run not found.", status_code=404)
@@ -311,15 +338,19 @@ def delete_run(run_id: str) -> DeleteRunsResponse:
             "Cannot delete a queued or running run.",
             status_code=409,
         )
-    if not jobs.delete_run(run_id):
+    if not jobs.delete_run(run_id, delete_images=delete_images):
         raise APIError("not_found", "Run not found.", status_code=404)
     return DeleteRunsResponse(deleted=1)
 
 
 @app.delete("/api/runs", response_model=DeleteRunsResponse)
-def delete_runs(status: str | None = None, limit: int | None = None) -> DeleteRunsResponse:
+def delete_runs(
+    status: str | None = None,
+    limit: int | None = None,
+    delete_images: bool = False,
+) -> DeleteRunsResponse:
     try:
-        deleted = jobs.delete_runs(status=status, limit=limit)
+        deleted = jobs.delete_runs(status=status, limit=limit, delete_images=delete_images)
     except ValueError as exc:
         raise APIError("invalid_request", str(exc), status_code=400) from exc
     return DeleteRunsResponse(deleted=deleted)

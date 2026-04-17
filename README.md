@@ -18,6 +18,7 @@ Available model IDs (use these in `ENABLED_MODELS` and API requests):
 - `qwen-image-2512` (text-to-image)
 - `qwen-image-edit-2511` (image editing)
 - `flux2-klein-9b-gguf` (text-to-image + edit via stable-diffusion.cpp)
+- `sdxl-openvino` (text-to-image via OpenVINO, optional refiner)
 
 Note: models only show as `present` in `/api/models` after their assets are mirrored locally.
 
@@ -36,6 +37,7 @@ Backend:
    - macOS/Linux: `source .venv/bin/activate`
 3) `pip install -r backend/requirements.txt` (CPU, requires `git` on PATH)
    - GPU: `pip install -r backend/requirements-gpu.txt` (edit CUDA version if needed)
+   - OpenVINO (optional): `pip install -r backend/requirements-openvino.txt`
 4) Copy env vars: `copy backend/.env.example backend/.env`
 5) Run: `make dev-backend` (backend auto-loads `backend/.env` via python-dotenv)
 
@@ -226,7 +228,7 @@ Tip: you can download both fp4 and fp8 encoders ahead of time and switch later b
 `FLUX2_TEXT_ENCODER_PRECISION` in `backend/.env` without re-downloading.
 
 Memory tip: if you only want one model loaded, set `ENABLED_MODELS` to a single id (for example,
-`qwen-image-2512` or `flux2-klein-9b-gguf`). Valid IDs are listed under “Current models.”
+`qwen-image-2512`, `flux2-klein-9b-gguf`, or `sdxl-openvino`). Valid IDs are listed under “Current models.”
 Only those models are registered, warmed, and shown in the UI.
 
 Manual review gate:
@@ -265,8 +267,8 @@ Examples (replace `cu121` with your CUDA version):
 - `GET /api/jobs/{job_id}` -> job + run metadata
 - `GET /api/jobs/{job_id}/events` -> SSE stream
 - `GET /api/runs` -> recent runs (supports `status=failed`)
-- `DELETE /api/runs/{run_id}` -> remove a run (and its job record)
-- `DELETE /api/runs` -> bulk delete runs (supports `status=failed` and/or `limit=...`)
+- `DELETE /api/runs/{run_id}` -> remove a run (and its job record). Optional `delete_images=1`.
+- `DELETE /api/runs` -> bulk delete runs (supports `status=failed` and/or `limit=...`, optional `delete_images=1`)
 - `GET /api/runs/{run_id}/export` -> reproducibility export JSON
 - `GET /api/stats` -> queue + latency summary
 - `GET /api/diagnostics/engines` -> optional engine diagnostics
@@ -317,6 +319,12 @@ See `backend/ENV.md` for full descriptions and tuning recipes.
 - `FLUX2_DEFAULT_GUIDANCE` default guidance for FLUX (default `4.0`)
 - `FLUX2_DEFAULT_SIZE` default size for FLUX (default `1024`)
 - `FLUX2_DEFAULT_STRENGTH` default edit strength (default `0.65`)
+- `SDXL_OV_BASE_DIR` local path to SDXL OpenVINO base IR
+- `SDXL_OV_REFINER_DIR` local path to SDXL OpenVINO refiner IR
+- `SDXL_OV_DEVICE` OpenVINO device (default `CPU`)
+- `SDXL_OV_COMPILE` enable OpenVINO compile step (default `1`)
+- `SDXL_REFINER_ENABLED` enable SDXL refiner (default `0`)
+- `SDXL_REFINER_DENOISING_START` refiner denoising start (default `0.8`)
 
 Frontend (`frontend/.env.example`):
 - `NEXT_PUBLIC_BACKEND_URL` backend base URL (default `http://localhost:8000`)

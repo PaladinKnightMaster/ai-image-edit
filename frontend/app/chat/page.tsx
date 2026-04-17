@@ -27,6 +27,17 @@ type SystemInfo = {
     vae_slicing: boolean;
     vae_tiling: boolean;
   };
+  storage?: {
+    data_root?: string;
+    images_bytes?: number;
+    flux_outputs_bytes?: number;
+    db_bytes?: number;
+    db_wal_bytes?: number;
+    db_shm_bytes?: number;
+    total_bytes?: number;
+    disk_free_bytes?: number;
+    disk_total_bytes?: number;
+  };
 };
 
 type ModelInfo = {
@@ -110,6 +121,7 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   createdAt: number;
+  startedAt?: number;
   mode?: "generate" | "edit";
   prompt?: string;
   attachments?: AttachmentSnapshot[];
@@ -117,6 +129,8 @@ type ChatMessage = {
   status?: string;
   stage?: string;
   progress?: number;
+  stageElapsedMs?: number;
+  etaMs?: number;
   outputImageId?: string;
   requiresReview?: boolean;
   reviewNote?: string;
@@ -128,6 +142,23 @@ type ChatMessage = {
 const STORAGE_KEY = "ai-image-chat-thread-v1";
 const MODEL_PREF_KEY = "ai-image-chat-model-v1";
 const MODEL_T2I = "qwen-image-2512";
+const PROMPT_TEMPLATES = [
+  {
+    id: "portrait",
+    label: "Portrait (natural)",
+    text: "A realistic portrait photo with natural skin texture, subtle imperfections, soft diffused light, 50mm lens, balanced contrast, documentary style."
+  },
+  {
+    id: "product",
+    label: "Product (studio)",
+    text: "A clean studio product photo on a seamless backdrop, soft box lighting, crisp edges, realistic materials, minimal shadows."
+  },
+  {
+    id: "cinematic",
+    label: "Cinematic scene",
+    text: "A cinematic wide shot, atmospheric lighting, depth, subtle grain, realistic color grading, dramatic but natural shadows."
+  }
+];
 
 const makeId = () => `${Date.now().toString(36)}${Math.random().toString(16).slice(2)}`;
 
@@ -146,6 +177,33 @@ const formatLatency = (latency?: number | null) => {
     return `${latency} ms`;
   }
   return `${(latency / 1000).toFixed(2)} s`;
+};
+
+const formatBytes = (bytes?: number | null) => {
+  if (!bytes && bytes !== 0) {
+    return "n/a";
+  }
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let idx = 0;
+  while (value >= 1024 && idx < units.length - 1) {
+    value /= 1024;
+    idx += 1;
+  }
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${units[idx]}`;
+};
+
+const formatDuration = (ms?: number | null) => {
+  if (!ms && ms !== 0) {
+    return "n/a";
+  }
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
 };
 
 const readFileAsDataUrl = (file: File) =>
@@ -226,6 +284,7 @@ export default function ChatPage() {
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteImagesOnCleanup, setDeleteImagesOnCleanup] = useState(false);
   const eventSources = useRef<Map<string, EventSource>>(new Map());
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -376,9 +435,12 @@ export default function ChatPage() {
 
   const deleteRun = async (runId: string) => {
     try {
-      const response = await fetch(`${backendUrl}/api/runs/${runId}`, {
-        method: "DELETE"
-      });
+      const response = await fetch(
+        `${backendUrl}/api/runs/${runId}${deleteImagesOnCleanup ? "?delete_images=1" : ""}`,
+        {
+          method: "DELETE"
+        }
+      );
       if (!response.ok) {
         setError(await parseErrorMessage(response));
         return;
@@ -392,9 +454,12 @@ export default function ChatPage() {
 
   const clearRecentRuns = async () => {
     try {
-      const response = await fetch(`${backendUrl}/api/runs?limit=6`, {
-        method: "DELETE"
-      });
+      const response = await fetch(
+        `${backendUrl}/api/runs?limit=6${deleteImagesOnCleanup ? "&delete_images=1" : ""}`,
+        {
+          method: "DELETE"
+        }
+      );
       if (!response.ok) {
         setError(await parseErrorMessage(response));
         return;
@@ -408,9 +473,12 @@ export default function ChatPage() {
 
   const clearFailedRuns = async () => {
     try {
-      const response = await fetch(`${backendUrl}/api/runs?status=failed`, {
-        method: "DELETE"
-      });
+      const response = await fetch(
+        `${backendUrl}/api/runs?status=failed${deleteImagesOnCleanup ? "&delete_images=1" : ""}`,
+        {
+          method: "DELETE"
+        }
+      );
       if (!response.ok) {
         setError(await parseErrorMessage(response));
         return;
@@ -488,6 +556,66 @@ export default function ChatPage() {
     }
   };
 
+  const applyCpuFastPreset = () => {
+    if (activeModel?.id === "flux2-klein-9b-gguf") {
+      setSteps("4");
+      setGuidanceScale("3.5");
+      if (!attachments.length) {
+        setWidth("512");
+        setHeight("512");
+      }
+      if (attachments.length) {
+        setStrength("0.55");
+      }
+      return;
+    }
+
+    if (activeModel?.id?.startsWith("qwen-image")) {
+      setSteps("12");
+      setGuidanceScale("3.5");
+      setTrueCfgScale("1.1");
+      if (!attachments.length) {
+        setWidth("512");
+        setHeight("512");
+      }
+      if (attachments.length) {
+        setStrength("0.55");
+      }
+    }
+  };
+
+  const applyCpuMaxQualityPreset = () => {
+    if (activeModel?.id === "flux2-klein-9b-gguf") {
+      setSteps("12");
+      setGuidanceScale("4.5");
+      if (!attachments.length) {
+        setWidth("896");
+        setHeight("896");
+      }
+      if (attachments.length) {
+        setStrength("0.65");
+      }
+      return;
+    }
+
+    if (activeModel?.id?.startsWith("qwen-image")) {
+      setSteps("28");
+      setGuidanceScale("5.0");
+      setTrueCfgScale("1.4");
+      if (!attachments.length) {
+        setWidth("768");
+        setHeight("768");
+      }
+      if (attachments.length) {
+        setStrength("0.65");
+      }
+    }
+  };
+
+  const applyPromptTemplate = (template: string) => {
+    setPrompt((current) => (current ? `${current}\n\n${template}` : template));
+  };
+
   useEffect(() => {
     const nextDefaults = {
       steps: String(activeDefaults.steps),
@@ -561,15 +689,33 @@ export default function ChatPage() {
     const source = new EventSource(`${backendUrl}/api/jobs/${jobId}/events`);
     source.addEventListener("status", (event) => {
       const payload = JSON.parse((event as MessageEvent).data);
-      updateMessageByJob(jobId, { status: payload.status });
+      const patch: Partial<ChatMessage> = { status: payload.status };
+      if (payload.status === "running") {
+        patch.startedAt = Date.now();
+      }
+      updateMessageByJob(jobId, patch);
     });
     source.addEventListener("stage", (event) => {
       const payload = JSON.parse((event as MessageEvent).data);
-      updateMessageByJob(jobId, { stage: payload.stage });
+      updateMessageByJob(jobId, {
+        stage: payload.stage,
+        stageElapsedMs:
+          typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined
+      });
     });
     source.addEventListener("progress", (event) => {
       const payload = JSON.parse((event as MessageEvent).data);
-      updateMessageByJob(jobId, { progress: payload.percent });
+      const elapsedMs =
+        typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined;
+      const etaMs =
+        elapsedMs && payload.percent > 0
+          ? Math.max(0, (elapsedMs / payload.percent) * (100 - payload.percent))
+          : undefined;
+      updateMessageByJob(jobId, {
+        progress: payload.percent,
+        etaMs,
+        stageElapsedMs: elapsedMs
+      });
     });
     source.addEventListener("result", (event) => {
       const payload = JSON.parse((event as MessageEvent).data);
@@ -1187,9 +1333,35 @@ export default function ChatPage() {
                 <div>VRAM: {systemInfo.hardware.vram_gb ?? "n/a"} GB</div>
               </div>
             ) : null}
+            {systemInfo?.storage ? (
+              <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white/90 px-3 py-2 text-xs text-slate-600">
+                <div className="flex items-center justify-between">
+                  <span>Data total</span>
+                  <span className="font-semibold text-slate-800">
+                    {formatBytes(systemInfo.storage.total_bytes)}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between">
+                  <span>Images</span>
+                  <span>{formatBytes(systemInfo.storage.images_bytes)}</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between">
+                  <span>Flux outputs</span>
+                  <span>{formatBytes(systemInfo.storage.flux_outputs_bytes)}</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between">
+                  <span>DB</span>
+                  <span>{formatBytes(systemInfo.storage.db_bytes)}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-slate-500">
+                  <span>Disk free</span>
+                  <span>{formatBytes(systemInfo.storage.disk_free_bytes)}</span>
+                </div>
+              </div>
+            ) : null}
           </div>
 
-          <div className="rounded-3xl border border-rose-100/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
+          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Models
             </h3>
@@ -1246,32 +1418,59 @@ export default function ChatPage() {
             <div className="mt-4 space-y-4">
               {recentRuns.length ? (
                 recentRuns.map((run) => (
-                  <div key={run.id} className="rounded-2xl border border-slate-200/70 bg-white/90 p-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        {run.model_id}
+                  <div
+                    key={run.id}
+                    className="group flex gap-3 rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
+                  >
+                    <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                      {run.output_image_id ? (
+                        <img
+                          src={`${backendUrl}/api/images/${run.output_image_id}`}
+                          alt="recent output"
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                          n/a
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                          {run.model_id}
+                        </p>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                          {run.status ?? "done"}
+                        </span>
+                      </div>
+                      <p className="mt-1 max-h-10 overflow-hidden text-sm text-slate-700">
+                        {run.prompt}
                       </p>
-                      <button
-                        type="button"
-                        className="text-[10px] uppercase tracking-[0.2em] text-slate-400 underline underline-offset-4"
-                        onClick={() => deleteRun(run.id)}
-                      >
-                        Remove
-                      </button>
+                      <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                        <span>{run.created_at ? formatTime(run.created_at) : ""}</span>
+                        <span>{formatLatency(run.latency_ms)}</span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 text-[11px]">
+                        {run.output_image_id ? (
+                          <button
+                            type="button"
+                            className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                            onClick={() => addHistoryAttachment(run.output_image_id!)}
+                          >
+                            Use
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                          onClick={() => deleteRun(run.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-slate-700">{run.prompt}</p>
-                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-                      <span>{run.status ?? "done"}</span>
-                      <span>{formatLatency(run.latency_ms)}</span>
-                    </div>
-                    {run.output_image_id ? (
-                      <img
-                        src={`${backendUrl}/api/images/${run.output_image_id}`}
-                        alt="recent output"
-                        className="mt-3 h-28 w-full rounded-xl object-cover"
-                        loading="lazy"
-                      />
-                    ) : null}
                   </div>
                 ))
               ) : (
@@ -1335,6 +1534,24 @@ export default function ChatPage() {
                 <p className="text-sm text-slate-500">No failed runs.</p>
               )}
             </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Cleanup
+            </h3>
+            <label className="mt-3 flex items-center gap-3 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={deleteImagesOnCleanup}
+                onChange={(event) => setDeleteImagesOnCleanup(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900"
+              />
+              Also delete output images
+            </label>
+            <p className="mt-2 text-xs text-slate-500">
+              Removes PNGs from <code className="font-mono">data/images</code> when you clear runs.
+            </p>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -1457,6 +1674,12 @@ export default function ChatPage() {
                           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
                             <span>Status: {message.status ?? "queued"}</span>
                             {message.stage ? <span>Stage: {message.stage}</span> : null}
+                            {typeof message.stageElapsedMs === "number" ? (
+                              <span>Elapsed: {formatDuration(message.stageElapsedMs)}</span>
+                            ) : null}
+                            {typeof message.etaMs === "number" ? (
+                              <span>ETA: {formatDuration(message.etaMs)}</span>
+                            ) : null}
                           </div>
                           {typeof message.progress === "number" ? (
                             <div className="h-2 w-full rounded-full bg-slate-200">
@@ -1604,6 +1827,21 @@ export default function ChatPage() {
                 ) : null}
               </div>
             </div>
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                Templates
+              </span>
+              {PROMPT_TEMPLATES.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
+                  onClick={() => applyPromptTemplate(template.text)}
+                >
+                  {template.label}
+                </button>
+              ))}
+            </div>
             <div className="flex items-start justify-between gap-4">
               <textarea
                 value={prompt}
@@ -1688,13 +1926,29 @@ export default function ChatPage() {
                   <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
                     Presets
                   </div>
-                  <button
-                    type="button"
-                    className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                    onClick={applyCpuRealisticPreset}
-                  >
-                    CPU Realistic
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                      onClick={applyCpuFastPreset}
+                    >
+                      CPU Fast
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                      onClick={applyCpuRealisticPreset}
+                    >
+                      CPU Realistic
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                      onClick={applyCpuMaxQualityPreset}
+                    >
+                      CPU Max Quality
+                    </button>
+                  </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">

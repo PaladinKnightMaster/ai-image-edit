@@ -110,3 +110,21 @@ def load_image(image_id: str) -> Image.Image:
     with Image.open(path) as image:
         image.load()
         return image.convert("RGB")
+
+
+def delete_image(image_id: str) -> bool:
+    path = _image_path(image_id)
+    deleted = False
+    if path.exists():
+        try:
+            path.unlink()
+            deleted = True
+        except OSError:
+            pass
+    try:
+        with db.get_connection() as conn:
+            conn.execute("DELETE FROM images WHERE id = ?", (image_id,))
+            conn.commit()
+    except Exception:
+        pass
+    return deleted

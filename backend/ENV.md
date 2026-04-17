@@ -51,6 +51,7 @@ Use this when you want the API server to stay light while a worker does model lo
 - `WORKER_URL` worker base URL (default `http://127.0.0.1:8001`).
 - `WORKER_CALLBACK_URL` API base URL for worker event callbacks (default `http://127.0.0.1:8000`).
 - `WORKER_TOKEN` optional shared token (set in both API + worker to authorize callbacks/dispatch).
+- `WORKER_HEALTH_TIMEOUT_SEC` timeout for worker health checks (seconds).
 
 ## Quality profile (auto tuning)
 
@@ -78,6 +79,7 @@ Supported model ids:
 - `qwen-image-2512`
 - `qwen-image-edit-2511`
 - `flux2-klein-9b-gguf`
+- `sdxl-openvino`
 
 ## Safety gate
 
@@ -101,6 +103,17 @@ Supported model ids:
 Windows default:
 - If `FLUX2_USE_PY_BINDINGS` is unset, the backend defaults to `0` on Windows
   to avoid access-violation crashes in stable-diffusion.cpp.
+
+## OpenVINO SDXL (optional)
+
+These expect pre-exported OpenVINO IR folders for SDXL base/refiner.
+
+- `SDXL_OV_BASE_DIR` path to SDXL base OpenVINO IR (default `models/openvino/sdxl_base`).
+- `SDXL_OV_REFINER_DIR` path to SDXL refiner OpenVINO IR (default `models/openvino/sdxl_refiner`).
+- `SDXL_OV_DEVICE` OpenVINO device name (default `CPU`).
+- `SDXL_OV_COMPILE` set `0` to skip OpenVINO compile step (default `1`).
+- `SDXL_REFINER_ENABLED` set `1` to run the refiner after base (default `0`).
+- `SDXL_REFINER_DENOISING_START` refiner denoising start (default `0.8`).
 
 ## HF cache overrides (optional)
 
