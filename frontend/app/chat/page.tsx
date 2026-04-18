@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+/* eslint-disable @next/next/no-img-element */
+
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
 type SystemInfo = {
   profile: string;
@@ -308,9 +310,10 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
+    const activeEventSources = eventSources.current;
     return () => {
-      eventSources.current.forEach((source) => source.close());
-      eventSources.current.clear();
+      activeEventSources.forEach((source) => source.close());
+      activeEventSources.clear();
     };
   }, []);
 
@@ -336,7 +339,7 @@ export default function ChatPage() {
     container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const loadSystem = async () => {
+  const loadSystem = useCallback(async () => {
     try {
       const response = await fetch(`${backendUrl}/api/system`, { cache: "no-store" });
       if (!response.ok) {
@@ -350,9 +353,9 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl]);
 
-  const loadReady = async () => {
+  const loadReady = useCallback(async () => {
     try {
       const response = await fetch(`${backendUrl}/ready`, { cache: "no-store" });
       if (!response.ok) {
@@ -363,9 +366,9 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl]);
 
-  const loadModels = async () => {
+  const loadModels = useCallback(async () => {
     try {
       const response = await fetch(`${backendUrl}/api/models`, { cache: "no-store" });
       if (!response.ok) {
@@ -383,9 +386,9 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl]);
 
-  const loadRuns = async () => {
+  const loadRuns = useCallback(async () => {
     try {
       const response = await fetch(`${backendUrl}/api/runs?limit=6`, { cache: "no-store" });
       if (!response.ok) {
@@ -396,9 +399,9 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl]);
 
-  const loadHistoryRuns = async () => {
+  const loadHistoryRuns = useCallback(async () => {
     try {
       const response = await fetch(`${backendUrl}/api/runs?limit=50`, { cache: "no-store" });
       if (!response.ok) {
@@ -409,9 +412,9 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl]);
 
-  const loadFailedRuns = async () => {
+  const loadFailedRuns = useCallback(async () => {
     try {
       const response = await fetch(
         `${backendUrl}/api/runs?status=failed&limit=6`,
@@ -425,7 +428,7 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl]);
 
   const removeRunFromState = (runId: string) => {
     setRecentRuns((runs) => runs.filter((run) => run.id !== runId));
@@ -491,12 +494,12 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
-    loadSystem();
-    loadModels();
-    loadRuns();
-    loadReady();
-    loadFailedRuns();
-  }, [backendUrl]);
+    void loadSystem();
+    void loadModels();
+    void loadRuns();
+    void loadReady();
+    void loadFailedRuns();
+  }, [loadSystem, loadModels, loadRuns, loadReady, loadFailedRuns]);
 
   useEffect(() => {
     if (!models.length) {
@@ -645,19 +648,19 @@ export default function ChatPage() {
     lastDefaultsRef.current = nextDefaults;
   }, [activeDefaults.steps, activeDefaults.width, activeDefaults.height, activeDefaults.strength, activeModel?.id]);
 
-  const updateMessageByJob = (jobId: string, patch: Partial<ChatMessage>) => {
+  const updateMessageByJob = useCallback((jobId: string, patch: Partial<ChatMessage>) => {
     setMessages((current) =>
       current.map((message) => (message.jobId === jobId ? { ...message, ...patch } : message))
     );
-  };
+  }, []);
 
-  const updateMessageById = (id: string, patch: Partial<ChatMessage>) => {
+  const updateMessageById = useCallback((id: string, patch: Partial<ChatMessage>) => {
     setMessages((current) =>
       current.map((message) => (message.id === id ? { ...message, ...patch } : message))
     );
-  };
+  }, []);
 
-  const fetchJob = async (jobId: string) => {
+  const fetchJob = useCallback(async (jobId: string) => {
     try {
       const response = await fetch(`${backendUrl}/api/jobs/${jobId}`, { cache: "no-store" });
       if (!response.ok) {
@@ -680,9 +683,9 @@ export default function ChatPage() {
     } catch {
       // ignore
     }
-  };
+  }, [backendUrl, loadRuns, updateMessageByJob]);
 
-  const attachEventSource = (jobId: string) => {
+  const attachEventSource = useCallback((jobId: string) => {
     if (eventSources.current.has(jobId)) {
       return;
     }
@@ -753,7 +756,7 @@ export default function ChatPage() {
       updateMessageByJob(jobId, { error: "Stream disconnected." });
     };
     eventSources.current.set(jobId, source);
-  };
+  }, [backendUrl, fetchJob, loadRuns, updateMessageByJob]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -771,7 +774,7 @@ export default function ChatPage() {
         fetchJob(message.jobId);
         attachEventSource(message.jobId);
       });
-  }, [hydrated, messages]);
+  }, [attachEventSource, fetchJob, hydrated, messages]);
 
   const handleAttachImages = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
@@ -1596,9 +1599,9 @@ export default function ChatPage() {
           <header className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_25px_70px_-50px_rgba(15,23,42,0.6)] backdrop-blur motion-safe:animate-fade-up">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Chat arena</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Studio session</p>
                 <h1 className="mt-2 font-display text-3xl text-slate-900">
-                  Generate or edit in a single creative thread.
+                  Generate or edit in a single local session.
                 </h1>
               </div>
               <div className="rounded-2xl border border-slate-200/70 bg-white/90 px-4 py-3 text-xs text-slate-600">

@@ -16,16 +16,27 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Start Sprint 1 execution with:
-1. fix `backend/app/config.py` indentation at the `FLUX2_ALLOW_SAFETENSORS_LLM` `else:` branch so the backend imports again
-2. validate `backend/.env.fast-check`
-3. add launcher commands for normal vs fast-check modes
+Continue Sprint 1 with:
+1. normalize model registration behavior
+2. reduce non-MVP UI clutter
+3. define smoke/draft/acceptance ladder
 4. keep the new documentation set in sync with implementation changes
 
-## Exact first execution target
-- file: `backend/app/config.py`
-- problem: backend startup is blocked by an indentation error around the `else:` branch for `FLUX2_ALLOW_SAFETENSORS_LLM`
-- success condition: backend imports cleanly and `/health` can start again
+## Completed in this session
+- fixed `backend/app/config.py` indentation for `FLUX2_ALLOW_SAFETENSORS_LLM`
+- verified `import app.config` succeeds
+- verified `app.main` loads and exposes `/health`
+- verified `DOTENV_PATH=backend/.env.fast-check` resolves to `app.fast-check.db`
+- verified `/health` and `/api/models` return `200` in fast-check mode
+- added `scripts/start_backend.ps1` for explicit `main` vs `fast-check` startup
+- added `scripts/smoke_backend.ps1` and `backend/tests/test_startup_smoke.py`
+- verified `.\scripts\smoke_backend.ps1 -Mode fast-check` passes
+- added frontend `typecheck` and `validate` scripts
+- fixed frontend lint warnings in `frontend/app/arena/page.tsx` and `frontend/app/chat/page.tsx`
+- verified `npm run lint`, `npm run typecheck`, and `npm run build` all pass
+- aligned README/Makefile notes around the canonical Windows backend launch path
+- simplified the smoke command to `.\scripts\smoke_backend.ps1`
+- reduced the most visible arena-first shell wording in the frontend metadata and headers
 
 ## Open caution
 Do not broaden scope into new engines or major feature work before Sprint 1 stabilization is complete.

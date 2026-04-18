@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "AI Image Arena",
-  description: "Offline-first AI image generator and editor arena."
+  title: "AI Image Edit Studio",
+  description: "Offline-first AI image generator and editor for local studio workflows."
 };
 
 export default function RootLayout({

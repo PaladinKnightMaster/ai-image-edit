@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type HealthResponse = {
   status: string;
@@ -24,7 +24,7 @@ export default function ArenaPage() {
   );
   const [health, setHealth] = useState<HealthState>(defaultState);
 
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     setHealth({ status: "loading", message: "Contacting backend..." });
     try {
       const response = await fetch(`${backendUrl}/health`, { cache: "no-store" });
@@ -41,11 +41,11 @@ export default function ArenaPage() {
       const message = error instanceof Error ? error.message : "Unknown error";
       setHealth({ status: "error", message, checkedAt: new Date().toLocaleTimeString() });
     }
-  };
+  }, [backendUrl]);
 
   useEffect(() => {
-    checkHealth();
-  }, []);
+    void checkHealth();
+  }, [checkHealth]);
 
   const badgeClasses = {
     idle: "bg-slate-200 text-slate-600",
@@ -58,16 +58,16 @@ export default function ArenaPage() {
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16">
       <header className="space-y-6 motion-safe:animate-fade-up">
         <div className="inline-flex items-center gap-3 rounded-full border border-white/70 bg-white/60 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
-          Arena status
+          System status
         </div>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-4">
             <h1 className="font-display text-4xl leading-tight text-slate-900 sm:text-5xl">
-              LMArena-inspired image showdown, now running locally.
+              Local backend status for your editing studio.
             </h1>
             <p className="max-w-2xl text-lg text-slate-600">
-              Pair two models, generate variations, and capture the winning edits. This V1 shell proves
-              the frontend-backend handshake before we wire in inference.
+              Use this page to verify the frontend-backend handshake before starting local generation
+              or edit runs.
             </p>
           </div>
           <div className="rounded-3xl border border-white/70 bg-white/70 px-6 py-4 shadow-soft backdrop-blur">

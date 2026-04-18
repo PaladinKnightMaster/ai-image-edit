@@ -9,8 +9,19 @@ Last updated: 2026-04-17
 - war-room operating layer added as project-local architecture
 - durable ADR, architecture, workflow, model, design, and testing docs added under `docs/`
 
-## Known Critical Blocker
-- backend startup is currently blocked by a syntax error in `backend/app/config.py`
+## Resolved Sprint 1 Work
+- backend startup blocker in `backend/app/config.py` is fixed
+- fast-check backend profile has been validated against `/health` and `/api/models`
+- Windows-friendly backend launcher command now exists for `main` vs `fast-check`
+- backend fast-check smoke command now exists and passes
+- frontend validation path now exists with `npm run lint`, `npm run typecheck`, and `npm run build`
+- launch-path docs and smoke command interface have been aligned
+- highest-visibility arena-first shell copy has been reduced
+
+## Current Primary Sprint 1 Focus
+- normalize model registration behavior
+- reduce non-MVP UI clutter
+- define smoke/draft/acceptance ladder
 
 ## Active Planning Docs
 - `docs/planning/mvp-war-room-plan.md`
@@ -22,10 +33,10 @@ Last updated: 2026-04-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. fix backend startup blocker
-2. validate fast-check environment
-3. add launch scripts for main vs fast-check modes
-4. reduce non-MVP UI clutter
+1. normalize model registration behavior
+2. reduce non-MVP UI clutter
+3. define smoke/draft/acceptance ladder
+4. keep Sprint 1 docs in sync with implementation
 
 ## Supported Runtime Lanes
 - `qwen-image-2512`

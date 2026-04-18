@@ -104,7 +104,7 @@ _flux2_allow_safetensors = os.getenv("FLUX2_ALLOW_SAFETENSORS_LLM")
 if _flux2_allow_safetensors is None:
     FLUX2_ALLOW_SAFETENSORS_LLM = os.name != "nt"
 else:
-FLUX2_ALLOW_SAFETENSORS_LLM = _flux2_allow_safetensors.lower() not in {
+    FLUX2_ALLOW_SAFETENSORS_LLM = _flux2_allow_safetensors.lower() not in {
         "0",
         "false",
         "no",

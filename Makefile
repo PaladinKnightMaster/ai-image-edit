@@ -1,5 +1,9 @@
 .PHONY: dev dev-backend dev-frontend dev-worker lint test
 
+# Convenience targets only. On Windows, the profile-aware backend entrypoints are:
+#   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start_backend.ps1 -Mode main
+#   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start_backend.ps1 -Mode fast-check
+
 dev:
 	@$(MAKE) -j 2 dev-backend dev-frontend
 

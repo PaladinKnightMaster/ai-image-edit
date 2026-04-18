@@ -1,6 +1,7 @@
 # Node
 node_modules/
 .next/
+frontend/tsconfig.tsbuildinfo
 
 # Python
 .venv/
@@ -18,6 +19,9 @@ data/images/
 data/app.db
 data/app.db-shm
 data/app.db-wal
+data/app.fast-check.db
+data/app.fast-check.db-shm
+data/app.fast-check.db-wal
 data/flux2_outputs/
 
 # Tools/binaries

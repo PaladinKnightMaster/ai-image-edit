@@ -1,8 +1,8 @@
 # AI Image Edit (V1)
 
-Offline-first, self-hosted AI image generator/editor with an LMArena-style UI. This step delivers a
-clean monorepo skeleton with a Next.js frontend and FastAPI backend, plus a hello-world health check
-between them.
+Offline-first, self-hosted AI image generator/editor oriented around a local studio workflow. The
+current build ships a Next.js frontend and FastAPI backend with local-first job flows, health checks,
+and Sprint 1 developer tooling for normal vs fast-check operation.
 
 ## Repo layout
 
@@ -39,20 +39,27 @@ Backend:
    - GPU: `pip install -r backend/requirements-gpu.txt` (edit CUDA version if needed)
    - OpenVINO (optional): `pip install -r backend/requirements-openvino.txt`
 4) Copy env vars: `copy backend/.env.example backend/.env`
-5) Run: `make dev-backend` (backend auto-loads `backend/.env` via python-dotenv)
+5) Run: `.\scripts\start_backend.ps1 -Mode main`
 
 Frontend:
 1) `cd frontend`
 2) `npm install`
 3) Copy env vars: `copy .env.example .env.local`
-4) Run: `make dev-frontend`
+4) Run: `cd frontend && npm run dev`
 5) Open `http://localhost:3000/chat`
 
-Run both:
+Run both (optional convenience path, default backend env only):
 - `make dev`
 
+Windows backend launcher commands:
+- Main mode: `.\scripts\start_backend.ps1 -Mode main`
+- Fast-check mode: `.\scripts\start_backend.ps1 -Mode fast-check`
+
+Windows backend smoke command:
+- `.\scripts\smoke_backend.ps1`
+
 If you do not have GNU Make installed, run these directly:
-- Backend: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+- Backend: `.\scripts\start_backend.ps1 -Mode main`
 - Frontend: `cd frontend && npm run dev`
 
 ## Cloning to a new machine (same path notes)

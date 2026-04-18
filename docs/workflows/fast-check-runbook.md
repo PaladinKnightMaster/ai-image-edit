@@ -9,6 +9,23 @@
 - backend: `backend/.env.fast-check`
 - frontend: `frontend/.env.fast-check`
 
+## Startup commands
+
+Backend main mode:
+`.\scripts\start_backend.ps1 -Mode main`
+
+Backend fast-check mode:
+`.\scripts\start_backend.ps1 -Mode fast-check`
+
+Frontend:
+`cd frontend && npm run dev`
+
+Frontend note:
+Next.js does not auto-load `frontend/.env.fast-check`. The current fast-check frontend expectation is the normal local dev server, because the backend URL remains `http://localhost:8000`.
+
+Backend smoke check:
+`.\scripts\smoke_backend.ps1`
+
 ## Current backend fast-check defaults
 
 - local inference mode
@@ -55,3 +72,11 @@
 ## Operational note
 
 The fast-check profile is a developer productivity tool. It is not a substitute for acceptance validation.
+
+## Validated Sprint 1 baseline
+
+- backend loads with `DOTENV_PATH=backend/.env.fast-check`
+- database resolves to `data/app.fast-check.db`
+- `/health` returns `200`
+- `/api/models` returns `200`
+- fast-check currently scopes to one active model: `qwen-image-2512`

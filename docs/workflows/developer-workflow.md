@@ -36,8 +36,17 @@ This project should be developed with two separate loops:
 - `/health`
 - `/ready`
 - `/api/models`
-- basic frontend build/lint
+- frontend lint
+- frontend typecheck
+- frontend production build
 - one fast local job smoke where practical
+
+## Frontend validation command set
+
+- `cd frontend && npm run lint`
+- `cd frontend && npm run typecheck`
+- `cd frontend && npm run build`
+- optional combined path: `cd frontend && npm run validate`
 
 ## Expected checkpoint validation
 
