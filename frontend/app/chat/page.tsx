@@ -49,6 +49,7 @@ type ModelInfo = {
   present: boolean;
   local_path?: string | null;
   revision?: string | null;
+  detail?: string | null;
   defaults?: {
     steps?: number;
     width?: number;
@@ -911,7 +912,10 @@ export default function ChatPage() {
         throw new Error(`No model available for ${mode}.`);
       }
       if (!modelForMode.present) {
-        throw new Error(`Model files missing for ${modelForMode.label ?? modelForMode.id}.`);
+        const detail = modelForMode.detail ? ` ${modelForMode.detail}` : "";
+        throw new Error(
+          `Model files missing for ${modelForMode.label ?? modelForMode.id}.${detail}`
+        );
       }
       if (modelForMode.id !== selectedModelId) {
         setSelectedModelId(modelForMode.id);
@@ -1371,7 +1375,7 @@ export default function ChatPage() {
             <div className="mt-4 space-y-3 text-sm text-slate-700">
               {models.length ? (
                 models.map((model) => (
-                  <div key={model.id} className="flex items-center justify-between gap-2">
+                  <div key={model.id} className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold text-slate-800">
                         {model.label ?? model.id}
@@ -1380,6 +1384,9 @@ export default function ChatPage() {
                         {model.capabilities.join(", ")}
                         {model.review_mode === "manual" ? " · manual review" : ""}
                       </p>
+                      {!model.present && model.detail ? (
+                        <p className="mt-1 text-xs text-rose-600">{model.detail}</p>
+                      ) : null}
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] ${
@@ -1830,6 +1837,9 @@ export default function ChatPage() {
                 ) : null}
               </div>
             </div>
+            {activeModel && !activeModel.present && activeModel.detail ? (
+              <p className="mb-4 text-xs text-rose-700">{activeModel.detail}</p>
+            ) : null}
             <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
                 Templates

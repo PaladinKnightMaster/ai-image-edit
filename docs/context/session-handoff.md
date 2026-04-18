@@ -17,9 +17,9 @@ The repo now has:
 
 ## Immediate next action
 Continue Sprint 1 with:
-1. normalize model registration behavior
-2. reduce non-MVP UI clutter
-3. define smoke/draft/acceptance ladder
+1. reduce non-MVP UI clutter
+2. define smoke/draft/acceptance ladder
+3. pick and document one-engine smoke validation path
 4. keep the new documentation set in sync with implementation changes
 
 ## Completed in this session
@@ -37,6 +37,11 @@ Continue Sprint 1 with:
 - aligned README/Makefile notes around the canonical Windows backend launch path
 - simplified the smoke command to `.\scripts\smoke_backend.ps1`
 - reduced the most visible arena-first shell wording in the frontend metadata and headers
+- normalized model registration behavior across `backend/inference/manager.py`, `/api/models`, and
+  job submission errors
+- made invalid `ENABLED_MODELS` values fail fast during startup
+- fixed FLUX availability reporting so it matches the active backend path
+- surfaced model status detail in the frontend model list and composer state
 
 ## Open caution
 Do not broaden scope into new engines or major feature work before Sprint 1 stabilization is complete.

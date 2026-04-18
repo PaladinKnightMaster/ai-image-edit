@@ -145,9 +145,10 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
 
     status = runner.model_status()
     if not status.get("present", True):
-        raise ValueError(
-            f"Model files missing for '{model_id}'. Check local assets and try again."
-        )
+        message = f"Model files missing for '{model_id}'. Check local assets and try again."
+        if status.get("detail"):
+            message = f"{message} {status['detail']}"
+        raise ValueError(message)
 
     if job_type == "edit" and isinstance(params, EditParams):
         for image_id in params.image_ids:

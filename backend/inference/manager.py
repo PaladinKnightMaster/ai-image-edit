@@ -19,6 +19,15 @@ class InferenceManager:
             SDXLOpenVINORunner(),
         ]
         if config.ENABLED_MODELS:
+            known_runner_ids = {runner.id for runner in runners}
+            unknown_model_ids = sorted(config.ENABLED_MODELS - known_runner_ids)
+            if unknown_model_ids:
+                supported_ids = ", ".join(sorted(known_runner_ids))
+                unknown_ids = ", ".join(unknown_model_ids)
+                raise ValueError(
+                    f"Unknown ENABLED_MODELS value(s): {unknown_ids}. "
+                    f"Supported model ids: {supported_ids}."
+                )
             runners = [runner for runner in runners if runner.id in config.ENABLED_MODELS]
         self._runners = {runner.id: runner for runner in runners}
 
@@ -42,6 +51,7 @@ class InferenceManager:
                     "present": bool(status.get("present", False)),
                     "local_path": status.get("local_path"),
                     "revision": status.get("revision"),
+                    "detail": status.get("detail"),
                     "defaults": runner.defaults or {},
                     "review_mode": review_mode,
                 }

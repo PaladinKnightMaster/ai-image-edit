@@ -102,6 +102,7 @@ class ModelStatus(BaseModel):
     present: bool
     local_path: str | None = None
     revision: str | None = None
+    detail: str | None = None
     defaults: dict | None = None
     review_mode: str | None = None
 

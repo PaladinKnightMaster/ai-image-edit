@@ -81,6 +81,13 @@ Supported model ids:
 - `flux2-klein-9b-gguf`
 - `sdxl-openvino`
 
+Invalid `ENABLED_MODELS` values now fail startup so typos are caught immediately.
+
+Presence rules:
+- Qwen models become `present` when their mirrored snapshots exist under `MODEL_ROOT`.
+- FLUX and SDXL become `present` when the active backend path has the required local assets at their
+  configured directories.
+
 ## Safety gate
 
 - `SAFETY_REVIEW_MODE` `manual` or `off`.

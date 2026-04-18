@@ -17,11 +17,14 @@ Last updated: 2026-04-17
 - frontend validation path now exists with `npm run lint`, `npm run typecheck`, and `npm run build`
 - launch-path docs and smoke command interface have been aligned
 - highest-visibility arena-first shell copy has been reduced
+- model registration/runtime status is now normalized across `/api/models`, job submission, and docs
+- invalid `ENABLED_MODELS` values now fail fast instead of silently hiding all runners
+- FLUX status now reflects the active backend path instead of optimistic asset detection
 
 ## Current Primary Sprint 1 Focus
-- normalize model registration behavior
 - reduce non-MVP UI clutter
 - define smoke/draft/acceptance ladder
+- pick and document one-engine smoke validation path
 
 ## Active Planning Docs
 - `docs/planning/mvp-war-room-plan.md`
@@ -33,9 +36,9 @@ Last updated: 2026-04-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. normalize model registration behavior
-2. reduce non-MVP UI clutter
-3. define smoke/draft/acceptance ladder
+1. reduce non-MVP UI clutter
+2. define smoke/draft/acceptance ladder
+3. pick and document one-engine smoke validation path
 4. keep Sprint 1 docs in sync with implementation
 
 ## Supported Runtime Lanes

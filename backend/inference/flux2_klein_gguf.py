@@ -47,7 +47,7 @@ def _assets() -> Flux2Assets:
     )
 
 
-def _validate_assets(use_py_bindings: bool, use_sdcli: bool) -> Flux2Assets:
+def _missing_asset_items(use_py_bindings: bool, use_sdcli: bool) -> list[str]:
     assets = _assets()
     missing: list[str] = []
     if not assets.diffusion_gguf.exists():
@@ -65,9 +65,30 @@ def _validate_assets(use_py_bindings: bool, use_sdcli: bool) -> Flux2Assets:
         text_encoder_exists = assets.text_encoder.exists()
         if not text_encoder_exists and not llm_exists:
             missing.append(str(assets.text_encoder))
+        if not llm_exists and not config.FLUX2_ALLOW_SAFETENSORS_LLM:
+            missing.append(
+                "FLUX2_LLM_GGUF or FLUX2_TEXT_ENCODER_GGUF "
+                "(required when FLUX2_ALLOW_SAFETENSORS_LLM=0)"
+            )
 
     if use_sdcli and not llm_exists:
-        missing.append("FLUX2_LLM_GGUF (required for sd-cli)")
+        missing.append(
+            "FLUX2_LLM_GGUF or FLUX2_TEXT_ENCODER_GGUF (required for sd-cli)"
+        )
+
+    return missing
+
+
+def _backend_asset_detail(name: str, use_py_bindings: bool, use_sdcli: bool) -> str | None:
+    missing = _missing_asset_items(use_py_bindings=use_py_bindings, use_sdcli=use_sdcli)
+    if not missing:
+        return None
+    return f"{name}: missing " + "; ".join(missing)
+
+
+def _validate_assets(use_py_bindings: bool, use_sdcli: bool) -> Flux2Assets:
+    assets = _assets()
+    missing = _missing_asset_items(use_py_bindings=use_py_bindings, use_sdcli=use_sdcli)
 
     if missing:
         hint = "Missing FLUX.2 klein assets:\n" + "\n".join(f"- {item}" for item in missing)
@@ -458,18 +479,44 @@ class Flux2KleinGGUFRunner(Runner):
 
     def model_status(self) -> dict[str, Any]:
         assets = _assets()
-        present = assets.diffusion_gguf.exists() and assets.vae.exists()
-        text_encoder_ok = assets.text_encoder.exists()
-        if assets.text_encoder_gguf is not None and assets.text_encoder_gguf.exists():
-            text_encoder_ok = True
-        if assets.llm_gguf is not None and assets.llm_gguf.exists():
-            text_encoder_ok = True
-        if not text_encoder_ok:
-            present = False
+        detail_parts: list[str] = []
+
+        if config.FLUX2_USE_PY_BINDINGS and not self._pybindings_disabled:
+            detail = _backend_asset_detail("pybindings", use_py_bindings=True, use_sdcli=False)
+            if detail is None:
+                return {
+                    "present": True,
+                    "local_path": str(assets.model_dir),
+                    "revision": None,
+                    "detail": None,
+                }
+            detail_parts.append(detail)
+
+        if config.FLUX2_USE_SDCLI_FALLBACK:
+            detail = _backend_asset_detail("sd-cli", use_py_bindings=False, use_sdcli=True)
+            if detail is None:
+                return {
+                    "present": True,
+                    "local_path": str(assets.model_dir),
+                    "revision": None,
+                    "detail": None,
+                }
+            detail_parts.append(detail)
+
+        detail = None
+        if detail_parts:
+            detail = " | ".join(detail_parts)
+        elif not config.FLUX2_USE_PY_BINDINGS and not config.FLUX2_USE_SDCLI_FALLBACK:
+            detail = (
+                "No FLUX2 backend enabled. Set FLUX2_USE_PY_BINDINGS=1 or "
+                "FLUX2_USE_SDCLI_FALLBACK=1."
+            )
+
         return {
-            "present": present,
+            "present": False,
             "local_path": str(assets.model_dir),
             "revision": None,
+            "detail": detail,
         }
 
     def _load_pipeline(self) -> Any:

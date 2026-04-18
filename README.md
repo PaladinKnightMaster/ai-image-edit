@@ -20,7 +20,9 @@ Available model IDs (use these in `ENABLED_MODELS` and API requests):
 - `flux2-klein-9b-gguf` (text-to-image + edit via stable-diffusion.cpp)
 - `sdxl-openvino` (text-to-image via OpenVINO, optional refiner)
 
-Note: models only show as `present` in `/api/models` after their assets are mirrored locally.
+`/api/models` marks a model as `present` only when the currently configured runtime path has the
+required local assets. Qwen uses mirrored Hugging Face snapshots under `MODEL_ROOT`; FLUX and SDXL
+use their own env-configured local asset paths.
 
 ## Recent updates (rolling)
 
