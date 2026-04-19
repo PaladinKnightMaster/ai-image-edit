@@ -50,7 +50,7 @@ Frontend:
 4) Run: `cd frontend && npm run dev`
 5) Open `http://localhost:3000/chat`
 
-Run both (optional convenience path, default backend env only):
+Run both (optional convenience path, Windows uses the launcher-backed main profile):
 - `make dev`
 
 Windows backend launcher commands:
@@ -59,6 +59,7 @@ Windows backend launcher commands:
 
 Windows backend smoke command:
 - `.\scripts\smoke_backend.ps1`
+  - startup smoke for import, `/health`, `/ready`, and `/api/models`
 
 Windows backend inference smoke command (requires mirrored Qwen assets and a running fast-check backend):
 - `.\scripts\smoke_qwen_t2i.ps1`

@@ -9,23 +9,13 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendRoot = Join-Path $repoRoot "backend"
+. (Join-Path $PSScriptRoot "python_runtime.ps1")
 
-function Resolve-PythonPath {
-  $candidates = @(
-    (Join-Path $backendRoot ".venv\Scripts\python.exe"),
-    (Join-Path $repoRoot ".venv\Scripts\python.exe")
-  )
-
-  foreach ($candidate in $candidates) {
-    if (Test-Path $candidate) {
-      return $candidate
-    }
-  }
-
-  throw "No Windows venv Python found. Expected one of: $($candidates -join ', ')"
-}
-
-$python = Resolve-PythonPath
+$python = Resolve-PythonSpec -RepoRoot $repoRoot -BackendRoot $backendRoot -RequiredImports @(
+  "dotenv",
+  "fastapi",
+  "uvicorn"
+)
 $dotenvPath = if ($Mode -eq "fast-check") {
   Join-Path $backendRoot ".env.fast-check"
 } else {
@@ -46,7 +36,10 @@ Write-Host "Starting backend mode=$Mode dotenv=$dotenvPath python=$python port=$
 Push-Location $backendRoot
 try {
   $env:DOTENV_PATH = $dotenvPath
-  & $python -m uvicorn app.main:app @reloadArgs --host 0.0.0.0 --port $Port
+  Write-Host "Resolved runtime source=$($python.Source) executable=$($python.Executable)"
+  Invoke-WithPythonSitePackages -SitePackages $python.SitePackages -ScriptBlock {
+    & $python.Executable -m uvicorn app.main:app @reloadArgs --host 0.0.0.0 --port $Port
+  }
 }
 finally {
   Pop-Location

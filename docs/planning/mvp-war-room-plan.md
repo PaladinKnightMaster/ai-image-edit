@@ -30,11 +30,11 @@ The development sequence is different from the product message:
 
 ### 2.2 Current Blockers
 
-- Backend startup is blocked by a syntax error in `backend/app/config.py`.
+- Windows launcher and smoke entrypoints must stay aligned with a working project Python path.
 - OpenVINO is partially integrated but not first-class across docs, registry, and bootstrap flow.
 - Job execution and recovery are too fragile for long CPU runs.
 - The main frontend surface is still chat/arena shaped, not editor shaped.
-- Test and release gates are too thin for predictable iteration.
+- Test and release gates are still thin beyond startup and model-availability smoke coverage.
 
 ### 2.3 Hard Constraints
 
@@ -455,12 +455,11 @@ Mitigation:
 
 ## 15. Immediate Next Actions
 
-1. Fix backend startup blocker
-2. Add launch scripts for normal vs fast-check modes
-3. Split product modes in the frontend
-4. Remove arena positioning from the visible product shell
-5. Build the benchmark fixture pack
-6. Add one-click generated-image-to-edit handoff
+1. Finish Sprint 1 hardening on launcher and smoke reliability
+2. Split product modes in the frontend
+3. Remove implicit mode inference from the main shell
+4. Use the benchmark fixture pack for Sprint 2 preset validation
+5. Add one-click generated-image-to-edit handoff
 
 ## 16. Change Control
 

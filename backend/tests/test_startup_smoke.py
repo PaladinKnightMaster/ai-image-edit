@@ -30,6 +30,9 @@ payload = {
 
 with TestClient(app) as client:
     payload["health_status"] = client.get("/health").status_code
+    ready = client.get("/ready")
+    payload["ready_status"] = ready.status_code
+    payload["ready_ready"] = ready.json()["ready"]
     models = client.get("/api/models")
     payload["models_status"] = models.status_code
     payload["model_ids"] = [item["id"] for item in models.json()]
@@ -61,6 +64,8 @@ print(json.dumps(payload))
         self.assertEqual(payload["inference_mode"], "local")
         self.assertEqual(payload["enabled_models"], ["qwen-image-2512"])
         self.assertEqual(payload["health_status"], 200)
+        self.assertEqual(payload["ready_status"], 200)
+        self.assertTrue(payload["ready_ready"])
         self.assertEqual(payload["models_status"], 200)
         self.assertEqual(payload["model_ids"], ["qwen-image-2512"])
 

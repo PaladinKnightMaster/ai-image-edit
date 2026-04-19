@@ -4,11 +4,17 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start_backend.ps1 -Mode main
 #   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start_backend.ps1 -Mode fast-check
 
+ifeq ($(OS),Windows_NT)
+BACKEND_DEV_CMD = powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start_backend.ps1 -Mode main
+else
+BACKEND_DEV_CMD = cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+endif
+
 dev:
 	@$(MAKE) -j 2 dev-backend dev-frontend
 
 dev-backend:
-	@cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	@$(BACKEND_DEV_CMD)
 
 dev-frontend:
 	@cd frontend && npm run dev

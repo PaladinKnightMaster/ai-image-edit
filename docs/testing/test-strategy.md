@@ -9,7 +9,8 @@ Keep the project testable on a CPU-only machine while preserving a real quality 
 ### Backend
 
 - current automated tests are mostly inference-dependent
-- there is no fast smoke suite for core API and queue behavior
+- a fast startup and model-availability smoke suite now exists
+- queue and inference smoke coverage is still thinner than startup smoke coverage
 - the current suite is too slow and environment-sensitive for day-to-day regression safety
 
 ### Frontend

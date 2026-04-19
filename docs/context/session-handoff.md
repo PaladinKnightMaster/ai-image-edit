@@ -18,8 +18,8 @@ The repo now has:
 ## Immediate next action
 Close Sprint 1 and hand off to Sprint 2:
 1. confirm Sprint 1 backlog closeout from the current clean boundary
-2. start Sprint 2 with the explicit edit-vs-create workflow work
-3. use the benchmark pack v0 as the fixed quality reference for preset and acceptance work
+2. stage local private benchmark assets for `benchmark-pack-v0`
+3. start Sprint 2 with the explicit edit-vs-create workflow work
 
 ## Completed in this session
 - fixed `backend/app/config.py` indentation for `FLUX2_ALLOW_SAFETENSORS_LLM`
@@ -51,6 +51,8 @@ Close Sprint 1 and hand off to Sprint 2:
   remains the primary workflow surface
 - created benchmark fixture pack v0 with fixed seeds, stable case ids, and local private asset slot
   conventions for Sprint 2 and Sprint 3 validation work
+- hardened backend launcher and startup smoke scripts so they can fall back to the base interpreter
+  plus venv site-packages when the Windows venv launcher is stale
 
 ## Open caution
 Do not broaden scope into new engines or major feature work before Sprint 1 stabilization is complete.

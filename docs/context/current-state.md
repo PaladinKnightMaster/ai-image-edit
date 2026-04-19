@@ -28,11 +28,14 @@ Last updated: 2026-04-19
   surfaces and docs
 - benchmark fixture pack v0 now exists with fixed seeds, case ids, and local asset slot conventions
   for Sprint 2 and Sprint 3 validation work
+- backend launcher and startup smoke scripts now validate Python runtime viability and can fall back
+  to the base interpreter plus venv site-packages when the Windows venv launcher is stale
 
 ## Current Primary Sprint 1 Focus
 - close Sprint 1 against the backlog and hand off to Sprint 2 from a clean diff
 - start Sprint 2 with explicit edit-vs-create workflow work
 - keep benchmark pack usage aligned with preset and acceptance review changes
+- stage local private benchmark assets before full Sprint 2 preset validation
 
 ## Active Planning Docs
 - `docs/planning/mvp-war-room-plan.md`
@@ -46,7 +49,7 @@ Last updated: 2026-04-19
 ## Current Recommended Immediate Work
 1. close Sprint 1 against the backlog and hand off to Sprint 2 from a clean diff
 2. start Sprint 2 with explicit edit-vs-create workflow work
-3. keep benchmark pack usage aligned with preset and acceptance review changes
+3. stage local private benchmark assets before full Sprint 2 preset validation
 
 ## Supported Runtime Lanes
 - `qwen-image-2512`
