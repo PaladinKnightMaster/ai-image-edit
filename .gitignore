@@ -23,6 +23,7 @@ data/app.fast-check.db
 data/app.fast-check.db-shm
 data/app.fast-check.db-wal
 data/flux2_outputs/
+fixtures/private/
 
 # Tools/binaries
 tools/

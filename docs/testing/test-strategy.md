@@ -15,8 +15,9 @@ Keep the project testable on a CPU-only machine while preserving a real quality 
 ### Frontend
 
 - `lint` exists
+- `typecheck` exists
 - `build` exists
-- there is no explicit `typecheck` or `test` script
+- there is no automated frontend flow test suite yet
 - most flow validation is currently manual
 
 ## Test pyramid for this repo
@@ -52,7 +53,8 @@ Runs during feature work.
 
 Runs at milestone gates.
 
-- benchmark pack execution
+- benchmark pack execution using `docs/testing/benchmark-pack.md`
+- fixed-case manifest review via `docs/testing/benchmark-pack.v0.json`
 - before/after product walkthrough
 - manual visual review
 - engine-specific validation for active MVP lanes
@@ -72,6 +74,5 @@ Do not make CI depend on full local inference or multi-hour CPU runs.
 ## Current gaps to close
 
 - add backend smoke tests that do not require real model loading
-- add frontend typecheck script
-- add a benchmark-driven acceptance checklist
+- add lightweight benchmark execution notes on top of the benchmark pack v0
 - separate smoke and acceptance responsibilities clearly in docs and scripts

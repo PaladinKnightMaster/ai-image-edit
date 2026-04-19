@@ -16,10 +16,10 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Continue Sprint 1 with:
-1. define benchmark fixture pack v0
-2. keep the new documentation set in sync with implementation changes
-3. prepare the remaining Sprint 1 work for a clean commit boundary
+Close Sprint 1 and hand off to Sprint 2:
+1. confirm Sprint 1 backlog closeout from the current clean boundary
+2. start Sprint 2 with the explicit edit-vs-create workflow work
+3. use the benchmark pack v0 as the fixed quality reference for preset and acceptance work
 
 ## Completed in this session
 - fixed `backend/app/config.py` indentation for `FLUX2_ALLOW_SAFETENSORS_LLM`
@@ -49,6 +49,8 @@ Continue Sprint 1 with:
   `.\scripts\smoke_qwen_t2i.ps1` as the repeatable smoke command
 - reduced the remaining arena-first shell wording so `/arena` is framed as diagnostics and `/chat`
   remains the primary workflow surface
+- created benchmark fixture pack v0 with fixed seeds, stable case ids, and local private asset slot
+  conventions for Sprint 2 and Sprint 3 validation work
 
 ## Open caution
 Do not broaden scope into new engines or major feature work before Sprint 1 stabilization is complete.

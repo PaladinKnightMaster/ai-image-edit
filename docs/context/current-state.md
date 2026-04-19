@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 
 ## Product Status
 - MVP roadmap drafted
@@ -26,11 +26,13 @@ Last updated: 2026-04-18
 - Sprint 1 now has a standard smoke inference engine and run recipe: `qwen-image-2512`
 - remaining arena-first shell language has been reduced to diagnostics-first wording on secondary
   surfaces and docs
+- benchmark fixture pack v0 now exists with fixed seeds, case ids, and local asset slot conventions
+  for Sprint 2 and Sprint 3 validation work
 
 ## Current Primary Sprint 1 Focus
-- define benchmark fixture pack v0
-- keep Sprint 1 docs in sync with implementation
-- prepare the remaining Sprint 1 work for a clean commit boundary
+- close Sprint 1 against the backlog and hand off to Sprint 2 from a clean diff
+- start Sprint 2 with explicit edit-vs-create workflow work
+- keep benchmark pack usage aligned with preset and acceptance review changes
 
 ## Active Planning Docs
 - `docs/planning/mvp-war-room-plan.md`
@@ -42,9 +44,9 @@ Last updated: 2026-04-18
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. define benchmark fixture pack v0
-2. keep Sprint 1 docs in sync with implementation
-3. prepare the remaining Sprint 1 work for a clean commit boundary
+1. close Sprint 1 against the backlog and hand off to Sprint 2 from a clean diff
+2. start Sprint 2 with explicit edit-vs-create workflow work
+3. keep benchmark pack usage aligned with preset and acceptance review changes
 
 ## Supported Runtime Lanes
 - `qwen-image-2512`

@@ -237,7 +237,7 @@ Avoid:
 - define preset prompt patterns
 - define draft defaults for edit flows
 - define reference-guided examples
-- validate outputs on the benchmark pack
+- validate outputs on the benchmark pack defined in `docs/testing/benchmark-pack.md`
 
 ### Quality Review Criteria
 
@@ -305,7 +305,7 @@ Use draft-tier settings for normal tuning and acceptance-tier settings only at m
 
 - Owner: AI/ML
 - Priority: P1
-- Outcome: presets are directionally consistent
+- Outcome: presets are directionally consistent on `benchmark-pack-v0`
 
 ### WR2-010 - Update product copy and onboarding hints
 

@@ -42,6 +42,8 @@ This repository now has four documentation layers:
 - Test strategy: `docs/testing/test-strategy.md`
 - Smoke validation path: `docs/testing/smoke-validation-path.md`
 - Benchmark pack: `docs/testing/benchmark-pack.md`
+- Benchmark manifest: `docs/testing/benchmark-pack.v0.json`
+- Fixture asset convention: `fixtures/README.md`
 
 ## ADRs
 

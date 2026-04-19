@@ -1,0 +1,221 @@
+{
+  "id": "benchmark-pack-v0",
+  "version": "v0",
+  "last_updated": "2026-04-19",
+  "asset_root": "fixtures/private/benchmark-pack-v0",
+  "evaluation_dimensions": [
+    "identity_preservation",
+    "skin_realism",
+    "eye_detail",
+    "hair_detail",
+    "lighting_coherence",
+    "background_cleanliness",
+    "prompt_or_instruction_adherence",
+    "artifact_absence"
+  ],
+  "assets": [
+    {
+      "id": "portrait-base-01-studio-headshot",
+      "filename": "portrait-base-01-studio-headshot.png",
+      "kind": "base_portrait",
+      "requirements": [
+        "adult subject",
+        "head-and-shoulders crop",
+        "neutral background",
+        "sharp eyes",
+        "visible hair detail",
+        "well-exposed identity baseline"
+      ]
+    },
+    {
+      "id": "portrait-base-02-window-light-three-quarter",
+      "filename": "portrait-base-02-window-light-three-quarter.png",
+      "kind": "base_portrait",
+      "requirements": [
+        "adult subject",
+        "three-quarter angle",
+        "indoor window light",
+        "moderate background detail",
+        "useful for relight checks"
+      ]
+    },
+    {
+      "id": "portrait-base-03-outdoor-city-walkup",
+      "filename": "portrait-base-03-outdoor-city-walkup.png",
+      "kind": "base_portrait",
+      "requirements": [
+        "adult subject",
+        "outdoor or mixed background",
+        "visible flyaway hair",
+        "background distractions suitable for cleanup checks"
+      ]
+    },
+    {
+      "id": "reference-lighting-01-softbox",
+      "filename": "reference-lighting-01-softbox.png",
+      "kind": "reference_image",
+      "requirements": [
+        "clear soft studio lighting direction",
+        "usable for relight transfer"
+      ]
+    },
+    {
+      "id": "reference-style-02-editorial-cool",
+      "filename": "reference-style-02-editorial-cool.png",
+      "kind": "reference_image",
+      "requirements": [
+        "clear cool-toned editorial mood",
+        "usable for style and color transfer"
+      ]
+    },
+    {
+      "id": "reference-pose-03-three-quarter",
+      "filename": "reference-pose-03-three-quarter.png",
+      "kind": "reference_image",
+      "requirements": [
+        "clear portrait framing and pose feel",
+        "usable for composition guidance"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "t2i-001-natural-studio-headshot",
+      "status": "active",
+      "workflow": "text_to_image",
+      "model": "qwen-image-2512",
+      "seed": 1101,
+      "prompt": "a natural studio headshot of an adult woman, 85mm portrait, soft key light, neutral gray backdrop, realistic skin texture, sharp eyes, detailed hair, photorealistic",
+      "negative_prompt": "blurry, waxy skin, distorted eyes, extra face, extra limbs, low detail",
+      "review_focus": [
+        "skin_realism",
+        "eye_detail",
+        "background_cleanliness",
+        "prompt_or_instruction_adherence"
+      ]
+    },
+    {
+      "id": "t2i-002-cinematic-window-portrait",
+      "status": "active",
+      "workflow": "text_to_image",
+      "model": "qwen-image-2512",
+      "seed": 1102,
+      "prompt": "a cinematic portrait of an adult man beside a large window, warm practical lights in the background, natural skin, realistic hair, shallow depth of field, photorealistic",
+      "negative_prompt": "blurry, plastic skin, malformed hands, duplicate features, low detail",
+      "review_focus": [
+        "lighting_coherence",
+        "skin_realism",
+        "hair_detail",
+        "prompt_or_instruction_adherence"
+      ]
+    },
+    {
+      "id": "t2i-003-clean-editorial-beauty",
+      "status": "active",
+      "workflow": "text_to_image",
+      "model": "qwen-image-2512",
+      "seed": 1103,
+      "prompt": "a clean editorial beauty portrait of an adult subject, seamless light beige backdrop, balanced studio lighting, realistic skin, crisp eye detail, premium photo finish",
+      "negative_prompt": "blurry, oversmoothed skin, asymmetrical eyes, warped anatomy, cluttered background",
+      "review_focus": [
+        "skin_realism",
+        "eye_detail",
+        "background_cleanliness",
+        "prompt_or_instruction_adherence"
+      ]
+    },
+    {
+      "id": "edit-001-headshot-cleanup",
+      "status": "active",
+      "workflow": "portrait_edit",
+      "model": "qwen-image-edit-2511",
+      "seed": 2101,
+      "base_asset": "portrait-base-01-studio-headshot",
+      "instruction": "subtle headshot cleanup, reduce minor blemishes and shine, keep pores, keep identity unchanged, preserve hairline and background",
+      "review_focus": [
+        "identity_preservation",
+        "skin_realism",
+        "hair_detail",
+        "artifact_absence"
+      ]
+    },
+    {
+      "id": "edit-002-studio-relight",
+      "status": "active",
+      "workflow": "portrait_edit",
+      "model": "qwen-image-edit-2511",
+      "seed": 2102,
+      "base_asset": "portrait-base-02-window-light-three-quarter",
+      "instruction": "relight into a soft studio key light with gentle fill while keeping skin natural and identity unchanged",
+      "review_focus": [
+        "identity_preservation",
+        "skin_realism",
+        "eye_detail",
+        "lighting_coherence"
+      ]
+    },
+    {
+      "id": "edit-003-background-simplify",
+      "status": "active",
+      "workflow": "portrait_edit",
+      "model": "qwen-image-edit-2511",
+      "seed": 2103,
+      "base_asset": "portrait-base-03-outdoor-city-walkup",
+      "instruction": "simplify the background and reduce distractions while preserving subject realism, hair edges, clothing texture, and facial identity",
+      "review_focus": [
+        "identity_preservation",
+        "hair_detail",
+        "background_cleanliness",
+        "artifact_absence"
+      ]
+    },
+    {
+      "id": "ref-001-softbox-relight",
+      "status": "activate_when_reference_workflow_lands",
+      "workflow": "reference_guided_edit",
+      "model": "qwen-image-edit-2511",
+      "seed": 3101,
+      "base_asset": "portrait-base-01-studio-headshot",
+      "reference_asset": "reference-lighting-01-softbox",
+      "instruction": "match the softbox lighting direction and softness from the reference while preserving the subject's identity and natural skin texture",
+      "review_focus": [
+        "identity_preservation",
+        "lighting_coherence",
+        "skin_realism",
+        "artifact_absence"
+      ]
+    },
+    {
+      "id": "ref-002-editorial-look-transfer",
+      "status": "activate_when_reference_workflow_lands",
+      "workflow": "reference_guided_edit",
+      "model": "qwen-image-edit-2511",
+      "seed": 3102,
+      "base_asset": "portrait-base-02-window-light-three-quarter",
+      "reference_asset": "reference-style-02-editorial-cool",
+      "instruction": "apply the reference mood and cool editorial color palette while keeping facial identity, skin realism, and believable lighting",
+      "review_focus": [
+        "identity_preservation",
+        "skin_realism",
+        "lighting_coherence",
+        "prompt_or_instruction_adherence"
+      ]
+    },
+    {
+      "id": "ref-003-pose-and-crop-guidance",
+      "status": "activate_when_reference_workflow_lands",
+      "workflow": "reference_guided_edit",
+      "model": "qwen-image-edit-2511",
+      "seed": 3103,
+      "base_asset": "portrait-base-03-outdoor-city-walkup",
+      "reference_asset": "reference-pose-03-three-quarter",
+      "instruction": "nudge the portrait toward the reference framing and pose feel without changing identity, creating warped anatomy, or losing background plausibility",
+      "review_focus": [
+        "identity_preservation",
+        "prompt_or_instruction_adherence",
+        "artifact_absence",
+        "lighting_coherence"
+      ]
+    }
+  ]
+}
