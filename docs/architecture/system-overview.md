@@ -32,7 +32,7 @@ flowchart LR
 ## Current product shape
 
 - The public roadmap is edit-first.
-- The visible implementation is still chat/arena-shaped.
+- The visible implementation is still centered on a shared chat shell rather than explicit edit-first modes.
 - History, replay, image upload, and generated-image reuse are already implemented and provide the bridge into the intended editor workflow.
 
 ## Operational modes
@@ -44,9 +44,8 @@ Both modes share the same job table and API contract.
 
 ## Major known gaps
 
-- Backend import is currently blocked by an indentation error in `backend/app/config.py`.
 - Job execution is not durable across restart; queued and running jobs are marked failed.
-- The frontend shell and README still describe the product as an arena/chat experience.
+- The frontend shell still needs clearer explicit create vs edit workflow framing.
 - Model lifecycle is split across the registry, runner manager, env docs, and mirror scripts.
 
 ## Documentation map

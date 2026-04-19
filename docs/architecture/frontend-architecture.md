@@ -8,7 +8,7 @@ This document captures the current frontend shape and the architectural directio
 
 - `/` -> redirects to `/chat`
 - `/chat` -> main product shell
-- `/arena` -> backend-health placeholder page
+- `/arena` -> secondary backend-status diagnostics page
 
 ## Current implementation shape
 
@@ -43,7 +43,7 @@ There is no explicit app-level product mode yet. The page currently infers mode 
 - one oversized page is carrying too many responsibilities
 - product mode is inferred rather than declared
 - history, cleanup, and maintenance actions live beside core creation/editing actions
-- visible copy still reflects arena/chat positioning rather than edit-first positioning
+- visible copy still leans on shared session language rather than explicit edit-first positioning
 
 ## Intended architectural direction
 

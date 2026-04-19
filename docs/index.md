@@ -35,10 +35,12 @@ This repository now has four documentation layers:
 - User workflows: `docs/workflows/user-workflows.md`
 - Developer workflow: `docs/workflows/developer-workflow.md`
 - Fast-check runbook: `docs/workflows/fast-check-runbook.md`
+- Preset ladder: `docs/workflows/preset-ladder.md`
 
 ## Testing
 
 - Test strategy: `docs/testing/test-strategy.md`
+- Smoke validation path: `docs/testing/smoke-validation-path.md`
 - Benchmark pack: `docs/testing/benchmark-pack.md`
 
 ## ADRs

@@ -27,8 +27,8 @@ use their own env-configured local asset paths.
 ## Recent updates (rolling)
 
 - FLUX.2 sd-cli backend supports SSE progress streaming from live stdout parsing.
-- UI includes a “CPU Realistic” preset button to auto-fill settings per model.
-- Run cleanup endpoints + UI controls for removing recent/failed runs.
+- Sprint 1 now uses a smoke/draft/acceptance ladder for runtime presets and validation language.
+- Run cleanup, failed-run recovery, and thread maintenance now sit behind a secondary utilities surface.
 
 ## Quickstart
 
@@ -59,6 +59,9 @@ Windows backend launcher commands:
 
 Windows backend smoke command:
 - `.\scripts\smoke_backend.ps1`
+
+Windows backend inference smoke command (requires mirrored Qwen assets and a running fast-check backend):
+- `.\scripts\smoke_qwen_t2i.ps1`
 
 If you do not have GNU Make installed, run these directly:
 - Backend: `.\scripts\start_backend.ps1 -Mode main`
@@ -237,7 +240,7 @@ Tip: you can download both fp4 and fp8 encoders ahead of time and switch later b
 `FLUX2_TEXT_ENCODER_PRECISION` in `backend/.env` without re-downloading.
 
 Memory tip: if you only want one model loaded, set `ENABLED_MODELS` to a single id (for example,
-`qwen-image-2512`, `flux2-klein-9b-gguf`, or `sdxl-openvino`). Valid IDs are listed under “Current models.”
+`qwen-image-2512`, `flux2-klein-9b-gguf`, or `sdxl-openvino`). Valid IDs are listed under "Current models."
 Only those models are registered, warmed, and shown in the UI.
 
 Manual review gate:
@@ -343,7 +346,7 @@ See `frontend/ENV.md` for full frontend env documentation.
 ## Notes
 
 - CORS is enabled for `http://localhost:3000` in dev.
-- The `/arena` route calls the backend health check and displays the status.
+- The `/arena` route is a secondary backend-status diagnostics page, not the primary product flow.
 - The `/chat` route is the primary UI for generate/edit jobs (uses SSE + job queue).
 - Offline mode sets `HF_HOME`, `HF_HUB_CACHE`, and `TRANSFORMERS_CACHE` under `models/cache`.
 - Install dependencies (including diffusers from GitHub) before disabling the network.

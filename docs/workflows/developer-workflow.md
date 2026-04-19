@@ -15,6 +15,9 @@ This project should be developed with two separate loops:
 4. use smoke or draft settings for UI and API work
 5. reserve slow acceptance runs for milestones
 
+Preset ladder reference:
+- `docs/workflows/preset-ladder.md`
+
 ## Normal implementation order
 
 1. read current state and active sprint doc
@@ -29,6 +32,7 @@ This project should be developed with two separate loops:
 - do not rely on full Qwen runs as the normal feedback loop
 - do not expand model/runtime scope while Sprint 1 stabilization is unfinished
 - do not treat README alone as the system architecture source of truth
+- treat `fast-check` as the draft lane, not the acceptance lane
 
 ## Expected smoke checks
 

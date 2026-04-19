@@ -60,6 +60,6 @@ The visual language should move away from "arena" and toward "local studio":
 
 ## Current drift to resolve
 
-- shell title and copy still say `AI Image Arena`
+- shell language still leans on a shared chat surface instead of explicit create/edit workflow framing
 - mode is implicit instead of explicit
 - cleanup and debug actions are too close to core product actions

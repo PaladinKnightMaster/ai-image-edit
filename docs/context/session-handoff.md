@@ -17,10 +17,9 @@ The repo now has:
 
 ## Immediate next action
 Continue Sprint 1 with:
-1. reduce non-MVP UI clutter
-2. define smoke/draft/acceptance ladder
-3. pick and document one-engine smoke validation path
-4. keep the new documentation set in sync with implementation changes
+1. define benchmark fixture pack v0
+2. keep the new documentation set in sync with implementation changes
+3. prepare the remaining Sprint 1 work for a clean commit boundary
 
 ## Completed in this session
 - fixed `backend/app/config.py` indentation for `FLUX2_ALLOW_SAFETENSORS_LLM`
@@ -42,6 +41,14 @@ Continue Sprint 1 with:
 - made invalid `ENABLED_MODELS` values fail fast during startup
 - fixed FLUX availability reporting so it matches the active backend path
 - surfaced model status detail in the frontend model list and composer state
+- documented the smoke/draft/acceptance ladder and aligned fast-check defaults and frontend preset
+  language to that vocabulary
+- moved failed-run management, cleanup, and thread maintenance behind a collapsed utilities surface in
+  the main chat sidebar
+- standardized the Sprint 1 smoke inference lane on `qwen-image-2512` and added
+  `.\scripts\smoke_qwen_t2i.ps1` as the repeatable smoke command
+- reduced the remaining arena-first shell wording so `/arena` is framed as diagnostics and `/chat`
+  remains the primary workflow surface
 
 ## Open caution
 Do not broaden scope into new engines or major feature work before Sprint 1 stabilization is complete.

@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-04-17
+Last updated: 2026-04-18
 
 ## Product Status
 - MVP roadmap drafted
@@ -20,11 +20,17 @@ Last updated: 2026-04-17
 - model registration/runtime status is now normalized across `/api/models`, job submission, and docs
 - invalid `ENABLED_MODELS` values now fail fast instead of silently hiding all runners
 - FLUX status now reflects the active backend path instead of optimistic asset detection
+- smoke/draft/acceptance ladder is now documented and aligned with fast-check defaults and UI labels
+- maintenance, cleanup, failed-run recovery, and thread import/export controls are now collapsed behind
+  a secondary utilities surface in the main chat workflow
+- Sprint 1 now has a standard smoke inference engine and run recipe: `qwen-image-2512`
+- remaining arena-first shell language has been reduced to diagnostics-first wording on secondary
+  surfaces and docs
 
 ## Current Primary Sprint 1 Focus
-- reduce non-MVP UI clutter
-- define smoke/draft/acceptance ladder
-- pick and document one-engine smoke validation path
+- define benchmark fixture pack v0
+- keep Sprint 1 docs in sync with implementation
+- prepare the remaining Sprint 1 work for a clean commit boundary
 
 ## Active Planning Docs
 - `docs/planning/mvp-war-room-plan.md`
@@ -36,10 +42,9 @@ Last updated: 2026-04-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. reduce non-MVP UI clutter
-2. define smoke/draft/acceptance ladder
-3. pick and document one-engine smoke validation path
-4. keep Sprint 1 docs in sync with implementation
+1. define benchmark fixture pack v0
+2. keep Sprint 1 docs in sync with implementation
+3. prepare the remaining Sprint 1 work for a clean commit boundary
 
 ## Supported Runtime Lanes
 - `qwen-image-2512`

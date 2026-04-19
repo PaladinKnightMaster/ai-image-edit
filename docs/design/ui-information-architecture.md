@@ -47,7 +47,7 @@ This is implementation-convenient, but it is not the intended long-term product 
 - cleanup toggles
 - import/export thread controls
 - backend-health placeholder content
-- arena language
+- diagnostics surfaces presented too prominently
 
 ## Mode behavior
 

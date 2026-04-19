@@ -17,7 +17,7 @@ const defaultState: HealthState = {
   message: "Awaiting check..."
 };
 
-export default function ArenaPage() {
+export default function StudioStatusPage() {
   const backendUrl = useMemo(
     () => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000",
     []
@@ -58,7 +58,7 @@ export default function ArenaPage() {
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16">
       <header className="space-y-6 motion-safe:animate-fade-up">
         <div className="inline-flex items-center gap-3 rounded-full border border-white/70 bg-white/60 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
-          System status
+          Studio diagnostics
         </div>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-4">
@@ -111,20 +111,20 @@ export default function ArenaPage() {
 
         <div className="flex flex-col gap-6">
           <div className="rounded-3xl border border-white/70 bg-white/70 p-6 shadow-soft backdrop-blur">
-            <h3 className="font-display text-xl text-slate-900">Arena pairing</h3>
+            <h3 className="font-display text-xl text-slate-900">Diagnostics lane</h3>
             <p className="mt-2 text-sm text-slate-500">
-              Upcoming: pick two local checkpoints, compare outputs side-by-side, then vote for the best
-              edit.
+              Reserved for future side-by-side compare tooling. Sprint 1 keeps this route focused on
+              backend verification rather than primary editing work.
             </p>
             <div className="mt-4 space-y-3 text-sm text-slate-600">
               <div className="flex items-center justify-between">
-                <span>Model A</span>
+                <span>Backend health</span>
                 <span className="rounded-full bg-slate-200 px-3 py-1 text-xs uppercase text-slate-600">
                   placeholder
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Model B</span>
+                <span>Route role</span>
                 <span className="rounded-full bg-slate-200 px-3 py-1 text-xs uppercase text-slate-600">
                   placeholder
                 </span>
@@ -136,8 +136,8 @@ export default function ArenaPage() {
             <h3 className="font-display text-xl text-slate-900">Pipeline checklist</h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
               <li>1. Confirm backend health check is green.</li>
-              <li>2. Register local models in the registry (next step).</li>
-              <li>3. Start an arena session and stream results.</li>
+              <li>2. Start the fast-check backend profile when iterating locally.</li>
+              <li>3. Return to `/chat` for generate or edit work.</li>
             </ul>
           </div>
         </div>

@@ -58,6 +58,8 @@ Use this when you want the API server to stay light while a worker does model lo
 - `QUALITY_PROFILE` selects presets: `auto`, `low`, `balanced`, `high`, `ultra`,
   `cpu-low`, `cpu-balanced`.
 - In `auto` mode, the backend chooses defaults based on RAM/VRAM.
+- The team-level smoke/draft/acceptance contract is documented in
+  `docs/workflows/preset-ladder.md`.
 
 ## Memory tuning
 

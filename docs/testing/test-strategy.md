@@ -32,6 +32,7 @@ Backend:
 - `/api/models`
 - worker auth path
 - queue submission happy path with mocked or lightweight conditions
+- standard Sprint 1 inference smoke via `.\scripts\smoke_qwen_t2i.ps1`
 
 Frontend:
 - `npm run lint`
