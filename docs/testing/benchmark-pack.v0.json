@@ -171,7 +171,7 @@
     },
     {
       "id": "ref-001-softbox-relight",
-      "status": "activate_when_reference_workflow_lands",
+      "status": "active",
       "workflow": "reference_guided_edit",
       "model": "qwen-image-edit-2511",
       "seed": 3101,
@@ -187,7 +187,7 @@
     },
     {
       "id": "ref-002-editorial-look-transfer",
-      "status": "activate_when_reference_workflow_lands",
+      "status": "active",
       "workflow": "reference_guided_edit",
       "model": "qwen-image-edit-2511",
       "seed": 3102,
@@ -203,7 +203,7 @@
     },
     {
       "id": "ref-003-pose-and-crop-guidance",
-      "status": "activate_when_reference_workflow_lands",
+      "status": "active",
       "workflow": "reference_guided_edit",
       "model": "qwen-image-edit-2511",
       "seed": 3103,

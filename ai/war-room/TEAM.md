@@ -10,6 +10,7 @@ Ship the smallest credible product with the highest probability of user value, t
 - prefer evidence over opinion
 - prefer quality and confidence over shallow speed
 - use the minimum useful agent set, then expand when confidence requires it
+- all war-room agents must notify the user and get explicit approval before any heavy model run that can materially load CPU or memory
 
 ## Team layers
 

@@ -7,6 +7,7 @@ This project treats correctness and product quality as the governing objective. 
 - do not skip verification when quality risk is real
 - expand specialist coverage when confidence, domain judgment, or trust requires it
 - use benchmark-driven review for quality-sensitive outputs
+- do not start heavyweight model execution without explicit user approval after warning about likely memory and compute cost
 
 ## Efficiency guardrails
 - default to solo mode for small tasks
@@ -14,6 +15,7 @@ This project treats correctness and product quality as the governing objective. 
 - avoid duplicated role analysis
 - prefer durable docs over repeated rediscovery
 - stop once sufficient confidence is reached
+- prefer approval-gated runner scripts and dry-run paths for heavy local model work
 
 ## Context compression
 Use durable docs to reduce avoidable context load:

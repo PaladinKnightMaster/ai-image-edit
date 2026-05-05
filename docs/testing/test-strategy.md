@@ -75,5 +75,5 @@ Do not make CI depend on full local inference or multi-hour CPU runs.
 ## Current gaps to close
 
 - add backend smoke tests that do not require real model loading
-- add lightweight benchmark execution notes on top of the benchmark pack v0
+- keep `docs/testing/preset-benchmark-review.md` aligned with the active benchmark pack and preset metadata
 - separate smoke and acceptance responsibilities clearly in docs and scripts

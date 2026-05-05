@@ -183,7 +183,7 @@ Use acceptance-tier settings for milestone review:
 
 - text-to-image cases: active now
 - portrait edit cases: active for Sprint 2 preset and edit-flow work
-- reference-guided edit cases: defined now, required once Sprint 2 reference-image workflow lands
+- reference-guided edit cases: active now that the Sprint 2 reference-image workflow has landed
 
 ## Evaluation dimensions
 

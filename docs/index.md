@@ -43,6 +43,7 @@ This repository now has four documentation layers:
 - Smoke validation path: `docs/testing/smoke-validation-path.md`
 - Benchmark pack: `docs/testing/benchmark-pack.md`
 - Benchmark manifest: `docs/testing/benchmark-pack.v0.json`
+- Preset benchmark review: `docs/testing/preset-benchmark-review.md`
 - Fixture asset convention: `fixtures/README.md`
 
 ## ADRs
