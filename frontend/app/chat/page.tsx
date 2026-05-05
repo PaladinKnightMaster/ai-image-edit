@@ -5,6 +5,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
+import { EDIT_PRESETS } from "./edit-presets";
+import { ComposerPanel } from "./components/ComposerPanel";
+import { HistoryPickerModal } from "./components/HistoryPickerModal";
+import { MessageTimeline } from "./components/MessageTimeline";
+import { ModeSwitchHero } from "./components/ModeSwitchHero";
+import { UtilitiesPanel } from "./components/UtilitiesPanel";
+
 type SystemInfo = {
   profile: string;
   profile_reason: string;
@@ -46,6 +53,7 @@ type ModelInfo = {
   id: string;
   label?: string;
   capabilities: string[];
+  edit_input_limit?: number | null;
   present: boolean;
   local_path?: string | null;
   revision?: string | null;
@@ -84,6 +92,8 @@ type RunRecord = {
   finished_at?: number | null;
 };
 
+type AttachmentRole = "base" | "reference";
+
 type ReadyState = {
   ready: boolean;
   status: string;
@@ -95,6 +105,7 @@ type AttachmentDraft = {
   kind: "upload";
   file: File;
   previewUrl: string;
+  slot?: AttachmentRole;
 };
 
 type AttachmentHistory = {
@@ -102,6 +113,8 @@ type AttachmentHistory = {
   kind: "history";
   imageId: string;
   previewUrl: string;
+  origin?: "history" | "generated";
+  slot?: AttachmentRole;
 };
 
 type AttachmentItem = AttachmentDraft | AttachmentHistory;
@@ -109,9 +122,12 @@ type AttachmentItem = AttachmentDraft | AttachmentHistory;
 type AttachmentSnapshot = {
   id: string;
   previewUrl: string;
-  source?: "upload" | "history";
+  source?: "upload" | "history" | "generated";
   imageId?: string;
+  slot?: AttachmentRole;
 };
+
+type ProductMode = "edit" | "create";
 
 type JobRequest = {
   mode: "t2i" | "edit";
@@ -145,6 +161,7 @@ type ChatMessage = {
 const STORAGE_KEY = "ai-image-chat-thread-v1";
 const MODEL_PREF_KEY = "ai-image-chat-model-v1";
 const MODEL_T2I = "qwen-image-2512";
+const MODEL_EDIT_LOCAL_DRAFT = "flux2-klein-9b-gguf";
 const PROMPT_TEMPLATES = [
   {
     id: "portrait",
@@ -227,6 +244,116 @@ const parseFloatOr = (value: string) => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const getRequestMode = (mode: ProductMode): "t2i" | "edit" =>
+  mode === "edit" ? "edit" : "t2i";
+
+const getDefaultModelIdForMode = (mode: ProductMode) =>
+  mode === "edit" ? MODEL_EDIT_LOCAL_DRAFT : MODEL_T2I;
+
+const getSupportedModel = (
+  availableModels: ModelInfo[],
+  mode: ProductMode,
+  preferredId?: string
+) => {
+  const requestMode = getRequestMode(mode);
+  const compatibleModels = availableModels.filter((model) =>
+    model.capabilities.includes(requestMode)
+  );
+  if (!compatibleModels.length) {
+    return availableModels.find((model) => model.id === preferredId) ?? availableModels[0];
+  }
+  return (
+    compatibleModels.find((model) => model.id === preferredId) ??
+    compatibleModels.find((model) => model.id === getDefaultModelIdForMode(mode)) ??
+    compatibleModels[0]
+  );
+};
+
+const getEditInputLimitForModel = (model?: ModelInfo) =>
+  model?.capabilities.includes("edit") ? model.edit_input_limit ?? 2 : 0;
+
+const modelSupportsReferenceImage = (model?: ModelInfo) =>
+  getEditInputLimitForModel(model) > 1;
+
+const modelSupportsStrengthControl = (model?: ModelInfo) =>
+  model?.defaults?.strength !== undefined;
+
+const attachmentSlotRank: Record<AttachmentRole, number> = {
+  base: 0,
+  reference: 1
+};
+
+const getAttachmentSlot = (
+  item: { slot?: AttachmentRole },
+  fallbackIndex = 0
+): AttachmentRole => item.slot ?? (fallbackIndex === 0 ? "base" : "reference");
+
+const sortAttachmentsForEdit = <T extends { slot?: AttachmentRole }>(items: T[]) =>
+  [...items].sort(
+    (left, right) =>
+      attachmentSlotRank[getAttachmentSlot(left)] - attachmentSlotRank[getAttachmentSlot(right)]
+  );
+
+const ensureAttachmentSlot = (item: AttachmentItem, slot: AttachmentRole): AttachmentItem =>
+  item.slot === slot ? item : { ...item, slot };
+
+const normalizeAttachmentsForEditLimit = (
+  current: AttachmentItem[],
+  maxAttachments: number
+) => {
+  if (!current.length || maxAttachments < 1) {
+    return [];
+  }
+  const sorted = sortAttachmentsForEdit(current);
+  const baseAttachment =
+    sorted.find((item, index) => getAttachmentSlot(item, index) === "base") ?? sorted[0];
+  const normalized = [ensureAttachmentSlot(baseAttachment, "base")];
+  if (maxAttachments < 2) {
+    return normalized;
+  }
+  const referenceAttachment =
+    sorted.find(
+      (item, index) =>
+        item.id !== baseAttachment.id && getAttachmentSlot(item, index) === "reference"
+    ) ?? sorted.find((item) => item.id !== baseAttachment.id);
+  if (referenceAttachment) {
+    normalized.push(ensureAttachmentSlot(referenceAttachment, "reference"));
+  }
+  return normalized;
+};
+
+const attachmentsMatch = (left: AttachmentItem[], right: AttachmentItem[]) =>
+  left.length === right.length &&
+  left.every(
+    (item, index) =>
+      item.id === right[index]?.id &&
+      getAttachmentSlot(item, index) === getAttachmentSlot(right[index], index)
+  );
+
+const buildHistoryAttachment = (
+  imageId: string,
+  backendUrl: string,
+  slot: AttachmentRole,
+  origin: "history" | "generated" = "history"
+): AttachmentHistory => ({
+  id: makeId(),
+  kind: "history",
+  imageId,
+  previewUrl: `${backendUrl}/api/images/${imageId}`,
+  origin,
+  slot
+});
+
+const upsertAttachmentForSlot = (
+  current: AttachmentItem[],
+  nextItem: AttachmentItem,
+  maxAttachments: number
+) => {
+  const slot = getAttachmentSlot(nextItem);
+  const withoutSlot = current.filter((item, index) => getAttachmentSlot(item, index) !== slot);
+  return sortAttachmentsForEdit([...withoutSlot, nextItem]).slice(0, maxAttachments);
+};
+
 const parseErrorMessage = async (response: Response) => {
   const text = await response.text();
   if (!text) {
@@ -240,24 +367,6 @@ const parseErrorMessage = async (response: Response) => {
   }
 };
 
-type SettingLabelProps = {
-  label: string;
-  tooltip: string;
-};
-
-const SettingLabel = ({ label, tooltip }: SettingLabelProps) => (
-  <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-    <span>{label}</span>
-    <span
-      className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[10px] text-slate-500"
-      title={tooltip}
-      aria-label={tooltip}
-    >
-      i
-    </span>
-  </span>
-);
-
 export default function ChatPage() {
   const backendUrl = useMemo(
     () => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000",
@@ -270,7 +379,9 @@ export default function ChatPage() {
   const [failedRuns, setFailedRuns] = useState<RunRecord[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(MODEL_T2I);
+  const [workflowMode, setWorkflowMode] = useState<ProductMode>("edit");
+  const [selectedEditPresetId, setSelectedEditPresetId] = useState<string | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState(MODEL_EDIT_LOCAL_DRAFT);
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [seed, setSeed] = useState("");
@@ -282,10 +393,12 @@ export default function ChatPage() {
   const [strength, setStrength] = useState("");
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyTargetSlot, setHistoryTargetSlot] = useState<AttachmentRole>("base");
   const [historyRuns, setHistoryRuns] = useState<RunRecord[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const [editInputNotice, setEditInputNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteImagesOnCleanup, setDeleteImagesOnCleanup] = useState(false);
@@ -293,6 +406,7 @@ export default function ChatPage() {
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const lastDefaultsRef = useRef({ steps: "", width: "", height: "" });
+  const isEditMode = workflowMode === "edit";
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -507,19 +621,16 @@ export default function ChatPage() {
     if (!models.length) {
       return;
     }
-    const mode = attachments.length ? "edit" : "t2i";
-    const selected = models.find((model) => model.id === selectedModelId);
-    const supportsMode = selected?.capabilities.includes(mode);
-    if (supportsMode) {
-      return;
-    }
-    const fallback = models.find((model) => model.capabilities.includes(mode));
-    if (fallback) {
+    const fallback = getSupportedModel(models, workflowMode, selectedModelId);
+    if (fallback && fallback.id !== selectedModelId) {
       setSelectedModelId(fallback.id);
     }
-  }, [attachments.length, models, selectedModelId]);
+  }, [models, selectedModelId, workflowMode]);
 
-  const activeModel = models.find((model) => model.id === selectedModelId);
+  const activeMode = getRequestMode(workflowMode);
+  const activeModel =
+    getSupportedModel(models, workflowMode, selectedModelId) ??
+    models.find((model) => model.id === selectedModelId);
   const activeDefaults = {
     steps: activeModel?.defaults?.steps ?? systemInfo?.defaults.steps ?? 24,
     width: activeModel?.defaults?.width ?? systemInfo?.defaults.width ?? 1024,
@@ -529,19 +640,62 @@ export default function ChatPage() {
     strength: activeModel?.defaults?.strength
   };
   const activeReviewMode = activeModel?.review_mode ?? "off";
-  const activeMode = attachments.length ? "edit" : "t2i";
   const selectableModels = models.filter((model) => model.capabilities.includes(activeMode));
-  const maxAttachments = activeModel?.id === "flux2-klein-9b-gguf" ? 1 : 2;
+  const modelOptions = selectableModels.length ? selectableModels : models;
+  const selectedModelValue = modelOptions.some((model) => model.id === selectedModelId)
+    ? selectedModelId
+    : activeModel?.id ?? selectedModelId;
+  const editModeModel = getSupportedModel(models, "edit", selectedModelId);
+  const maxAttachments = getEditInputLimitForModel(editModeModel);
+  const editModelConstraintNote =
+    isEditMode && !modelSupportsReferenceImage(editModeModel)
+      ? "Local draft lane. This model runs against one base image only. Reference-guided signoff stays on the Qwen edit lane."
+      : null;
+  const promptPlaceholder = isEditMode
+    ? "Describe the portrait edit you want..."
+    : "Describe the image you want to create...";
+  const submitLabel = isEditMode ? "Run edit" : "Create draft";
+
+  useEffect(() => {
+    if (!isEditMode) {
+      return;
+    }
+    const normalizedAttachments = normalizeAttachmentsForEditLimit(attachments, maxAttachments);
+    if (attachmentsMatch(attachments, normalizedAttachments)) {
+      return;
+    }
+    const hadReference = attachments.some(
+      (item, index) => getAttachmentSlot(item, index) === "reference"
+    );
+    const hadBase = attachments.some((item, index) => getAttachmentSlot(item, index) === "base");
+    setAttachments(normalizedAttachments);
+    if (hadReference && !modelSupportsReferenceImage(editModeModel)) {
+      setEditInputNotice(
+        "Reference removed. The selected local draft model runs with one base image only."
+      );
+    } else if (!hadBase && normalizedAttachments.length) {
+      setEditInputNotice("Selected image moved into the base slot for the edit run.");
+    }
+  }, [attachments, editModeModel, isEditMode, maxAttachments]);
+
+  const handleModeChange = (nextMode: ProductMode) => {
+    setWorkflowMode(nextMode);
+    setError(null);
+    const fallback = getSupportedModel(models, nextMode, selectedModelId);
+    if (fallback && fallback.id !== selectedModelId) {
+      setSelectedModelId(fallback.id);
+    }
+  };
 
   const applyDraftPreset = () => {
     if (activeModel?.id === "flux2-klein-9b-gguf") {
       setSteps("8");
       setGuidanceScale("4.0");
-      if (!attachments.length) {
+      if (!isEditMode) {
         setWidth("512");
         setHeight("512");
       }
-      if (attachments.length) {
+      if (isEditMode) {
         setStrength("0.6");
       }
       return;
@@ -551,11 +705,11 @@ export default function ChatPage() {
       setSteps("12");
       setGuidanceScale("4.0");
       setTrueCfgScale("1.2");
-      if (!attachments.length) {
+      if (!isEditMode) {
         setWidth("512");
         setHeight("512");
       }
-      if (attachments.length) {
+      if (isEditMode) {
         setStrength("0.6");
       }
     }
@@ -565,11 +719,11 @@ export default function ChatPage() {
     if (activeModel?.id === "flux2-klein-9b-gguf") {
       setSteps("4");
       setGuidanceScale("3.5");
-      if (!attachments.length) {
+      if (!isEditMode) {
         setWidth("512");
         setHeight("512");
       }
-      if (attachments.length) {
+      if (isEditMode) {
         setStrength("0.55");
       }
       return;
@@ -579,11 +733,11 @@ export default function ChatPage() {
       setSteps("8");
       setGuidanceScale("3.5");
       setTrueCfgScale("1.1");
-      if (!attachments.length) {
+      if (!isEditMode) {
         setWidth("512");
         setHeight("512");
       }
-      if (attachments.length) {
+      if (isEditMode) {
         setStrength("0.55");
       }
     }
@@ -593,11 +747,11 @@ export default function ChatPage() {
     if (activeModel?.id === "flux2-klein-9b-gguf") {
       setSteps("12");
       setGuidanceScale("4.5");
-      if (!attachments.length) {
+      if (!isEditMode) {
         setWidth("768");
         setHeight("768");
       }
-      if (attachments.length) {
+      if (isEditMode) {
         setStrength("0.65");
       }
       return;
@@ -607,11 +761,11 @@ export default function ChatPage() {
       setSteps("20");
       setGuidanceScale("5.0");
       setTrueCfgScale("1.4");
-      if (!attachments.length) {
+      if (!isEditMode) {
         setWidth("768");
         setHeight("768");
       }
-      if (attachments.length) {
+      if (isEditMode) {
         setStrength("0.65");
       }
     }
@@ -619,6 +773,27 @@ export default function ChatPage() {
 
   const applyPromptTemplate = (template: string) => {
     setPrompt((current) => (current ? `${current}\n\n${template}` : template));
+  };
+
+  const applyEditPreset = (preset: (typeof EDIT_PRESETS)[number]) => {
+    if (!isEditMode) {
+      handleModeChange("edit");
+    }
+    setSelectedEditPresetId(preset.id);
+    setPrompt(preset.promptTemplate);
+    applyDraftPreset();
+    if (preset.draftDefaults.steps !== undefined) {
+      setSteps(String(preset.draftDefaults.steps));
+    }
+    if (preset.draftDefaults.guidanceScale !== undefined) {
+      setGuidanceScale(String(preset.draftDefaults.guidanceScale));
+    }
+    if (preset.draftDefaults.trueCfgScale !== undefined) {
+      setTrueCfgScale(String(preset.draftDefaults.trueCfgScale));
+    }
+    if (preset.draftDefaults.strength !== undefined) {
+      setStrength(String(preset.draftDefaults.strength));
+    }
   };
 
   useEffect(() => {
@@ -642,13 +817,19 @@ export default function ChatPage() {
         ? nextDefaults.height
         : current
     );
-    if (activeModel?.id === "flux2-klein-9b-gguf" && activeDefaults.strength !== undefined) {
+    if (modelSupportsStrengthControl(activeModel) && activeDefaults.strength !== undefined) {
       setStrength((current) =>
         current === "" ? String(activeDefaults.strength) : current
       );
     }
     lastDefaultsRef.current = nextDefaults;
-  }, [activeDefaults.steps, activeDefaults.width, activeDefaults.height, activeDefaults.strength, activeModel?.id]);
+  }, [
+    activeDefaults.steps,
+    activeDefaults.width,
+    activeDefaults.height,
+    activeDefaults.strength,
+    activeModel
+  ]);
 
   const updateMessageByJob = useCallback((jobId: string, patch: Partial<ChatMessage>) => {
     setMessages((current) =>
@@ -778,56 +959,97 @@ export default function ChatPage() {
       });
   }, [attachEventSource, fetchJob, hydrated, messages]);
 
-  const handleAttachImages = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleAttachImages = async (
+    event: ChangeEvent<HTMLInputElement>,
+    slot: AttachmentRole
+  ) => {
     const files = Array.from(event.target.files ?? []);
     if (!files.length) {
       return;
     }
+    handleModeChange("edit");
     setError(null);
-    if (attachments.length + files.length > maxAttachments) {
-      setError(`Attach up to ${maxAttachments} image${maxAttachments > 1 ? "s" : ""}.`);
+    setEditInputNotice(null);
+    if (slot === "reference" && maxAttachments < 2) {
+      setError("This model only supports a single base image.");
       event.target.value = "";
       return;
     }
-    const previews = await Promise.all(
-      files.map(async (file) => ({
-        id: makeId(),
-        kind: "upload" as const,
-        file,
-        previewUrl: await readFileAsDataUrl(file)
-      }))
+    const file = files[0];
+    const preview = {
+      id: makeId(),
+      kind: "upload" as const,
+      file,
+      previewUrl: await readFileAsDataUrl(file),
+      slot
+    };
+    setAttachments((current) => upsertAttachmentForSlot(current, preview, maxAttachments));
+    setEditInputNotice(
+      slot === "base"
+        ? "Base image ready for editing."
+        : "Reference image added for look and lighting guidance."
     );
-    setAttachments((current) => [...current, ...previews]);
     event.target.value = "";
   };
 
   const removeAttachment = (id: string) => {
+    setEditInputNotice(null);
     setAttachments((current) => current.filter((item) => item.id !== id));
   };
 
   const addHistoryAttachment = (imageId: string) => {
+    handleModeChange("edit");
     setError(null);
+    if (historyTargetSlot === "reference" && maxAttachments < 2) {
+      setError("This model only supports a single base image.");
+      setHistoryOpen(false);
+      return;
+    }
+    let added = false;
     setAttachments((current) => {
-      if (current.length >= maxAttachments) {
-        setError(`Attach up to ${maxAttachments} image${maxAttachments > 1 ? "s" : ""}.`);
-        return current;
+      const duplicateSlotItem = current.find(
+        (item, index) => getAttachmentSlot(item, index) === historyTargetSlot
+      );
+      if (
+        duplicateSlotItem?.kind === "history" &&
+        duplicateSlotItem.imageId === imageId &&
+        duplicateSlotItem.origin === "history"
+      ) {
+        return sortAttachmentsForEdit(current);
       }
-      if (current.some((item) => item.kind === "history" && item.imageId === imageId)) {
-        return current;
-      }
-      return [
-        ...current,
-        {
-          id: makeId(),
-          kind: "history",
-          imageId,
-          previewUrl: `${backendUrl}/api/images/${imageId}`
-        }
-      ];
+      added = true;
+      return upsertAttachmentForSlot(
+        current,
+        buildHistoryAttachment(imageId, backendUrl, historyTargetSlot),
+        maxAttachments
+      );
     });
+    if (added) {
+      setEditInputNotice(
+        historyTargetSlot === "base"
+          ? "Library output staged as the base image."
+          : "Library output staged as the reference image."
+      );
+    }
+    setHistoryOpen(false);
   };
 
-  const openHistoryPicker = async () => {
+  const startEditFromOutput = (imageId: string) => {
+    const switchingFromCreate = !isEditMode;
+    handleModeChange("edit");
+    setError(null);
+    setAttachments([buildHistoryAttachment(imageId, backendUrl, "base", "generated")]);
+    setEditInputNotice("Generated result staged as the new base image for Edit Photo.");
+    setHistoryOpen(false);
+    if (switchingFromCreate) {
+      setPrompt("");
+      setSelectedEditPresetId(null);
+    }
+  };
+
+  const openHistoryPicker = async (slot: AttachmentRole) => {
+    handleModeChange("edit");
+    setHistoryTargetSlot(slot);
     await loadHistoryRuns();
     setHistoryOpen(true);
   };
@@ -887,16 +1109,23 @@ export default function ChatPage() {
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
-      setError("Add a prompt before generating.");
+      setError(isEditMode ? "Add an edit instruction before running." : "Add a prompt before generating.");
       return;
     }
-    const isEdit = attachments.length > 0;
-    if (isEdit && attachments.length === 0) {
-      setError("Attach at least one image to edit.");
+    const isEdit = isEditMode;
+    const hasBaseAttachment = attachments.some(
+      (item, index) => getAttachmentSlot(item, index) === "base"
+    );
+    if (isEdit && !hasBaseAttachment) {
+      setError("Add a base image before running the edit.");
       return;
     }
-    if (attachments.length > maxAttachments) {
-      setError(`This model supports up to ${maxAttachments} input image${maxAttachments > 1 ? "s" : ""}.`);
+    if (isEdit && attachments.length > maxAttachments) {
+      setError(
+        maxAttachments > 1
+          ? `This model supports up to ${maxAttachments} input images.`
+          : "This model supports only a base image. Remove the reference image or switch models."
+      );
       return;
     }
 
@@ -904,13 +1133,13 @@ export default function ChatPage() {
     setIsSubmitting(true);
 
     try {
-      const mode = isEdit ? "edit" : "t2i";
-      const modelForMode =
-        models.find(
-          (model) => model.id === selectedModelId && model.capabilities.includes(mode)
-        ) ?? models.find((model) => model.capabilities.includes(mode));
+      const modelForMode = getSupportedModel(
+        models,
+        isEdit ? "edit" : "create",
+        selectedModelId
+      );
       if (!modelForMode) {
-        throw new Error(`No model available for ${mode}.`);
+        throw new Error(`No model available for ${isEdit ? "edit" : "t2i"}.`);
       }
       if (!modelForMode.present) {
         const detail = modelForMode.detail ? ` ${modelForMode.detail}` : "";
@@ -954,16 +1183,24 @@ export default function ChatPage() {
       let imageIds: string[] = [];
       let attachmentSnapshots: AttachmentSnapshot[] = [];
       if (isEdit) {
+        const orderedAttachments = sortAttachmentsForEdit(attachments);
+        const hasOrderedBaseAttachment = orderedAttachments.some(
+          (item, index) => getAttachmentSlot(item, index) === "base"
+        );
+        if (!hasOrderedBaseAttachment) {
+          throw new Error("Add a base image before running the edit.");
+        }
         imageIds = await Promise.all(
-          attachments.map(async (item) =>
+          orderedAttachments.map(async (item) =>
             item.kind === "history" ? item.imageId : uploadImage(item)
           )
         );
-        attachmentSnapshots = attachments.map((item, index) => ({
+        attachmentSnapshots = orderedAttachments.map((item, index) => ({
           id: item.id,
           previewUrl: item.previewUrl,
-          source: item.kind,
-          imageId: imageIds[index]
+          source: item.kind === "history" ? item.origin ?? "history" : item.kind,
+          imageId: imageIds[index],
+          slot: getAttachmentSlot(item, index)
         }));
       }
 
@@ -992,7 +1229,7 @@ export default function ChatPage() {
       }
 
       if (isEdit) {
-        if (modelForMode.id === "flux2-klein-9b-gguf") {
+        if (modelSupportsStrengthControl(modelForMode)) {
           const parsedStrength = strength.trim()
             ? parseFloatOr(strength)
             : defaults.strength;
@@ -1027,7 +1264,10 @@ export default function ChatPage() {
 
       await submitJob(request, userMessage);
       setPrompt("");
-      setAttachments([]);
+      if (isEdit) {
+        setAttachments([]);
+      }
+      setEditInputNotice(null);
     } catch (submitError) {
       const message =
         submitError instanceof Error ? submitError.message : "Unable to submit job.";
@@ -1083,11 +1323,12 @@ export default function ChatPage() {
     }
 
     const attachmentSnapshots: AttachmentSnapshot[] | undefined =
-      run.input_image_ids?.map((imageId) => ({
+      run.input_image_ids?.map((imageId, index) => ({
         id: makeId(),
         previewUrl: `${backendUrl}/api/images/${imageId}`,
         source: "history",
-        imageId
+        imageId,
+        slot: index === 0 ? "base" : "reference"
       })) ?? undefined;
 
     const userMessage: ChatMessage = {
@@ -1202,7 +1443,7 @@ export default function ChatPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `chat-thread-${Date.now()}.json`;
+    link.download = `studio-session-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -1239,7 +1480,7 @@ export default function ChatPage() {
       }
     }
     setImportWarnings(
-      missing.length ? [`Missing image IDs: ${missing.slice(0, 4).join(", ")}`] : []
+      missing.length ? [`Missing studio image IDs: ${missing.slice(0, 4).join(", ")}`] : []
     );
   };
 
@@ -1252,13 +1493,13 @@ export default function ChatPage() {
       const text = await file.text();
       const payload = JSON.parse(text) as { messages?: ChatMessage[] };
       if (!payload.messages || !Array.isArray(payload.messages)) {
-        throw new Error("Invalid thread payload.");
+        throw new Error("Invalid studio session file.");
       }
       setMessages(payload.messages);
       await checkMissingImages(payload.messages);
     } catch (importError) {
       const message =
-        importError instanceof Error ? importError.message : "Failed to import thread.";
+        importError instanceof Error ? importError.message : "Failed to import studio session.";
       setError(message);
     } finally {
       event.target.value = "";
@@ -1461,9 +1702,9 @@ export default function ChatPage() {
                           <button
                             type="button"
                             className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                            onClick={() => addHistoryAttachment(run.output_image_id!)}
+                            onClick={() => startEditFromOutput(run.output_image_id!)}
                           >
-                            Use
+                            Edit this
                           </button>
                         ) : null}
                         <button
@@ -1483,719 +1724,116 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  Utilities
-                </h3>
-                <p className="mt-2 text-xs text-slate-500">
-                  Recovery, cleanup, and import/export stay available here without crowding the main flow.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                onClick={() => setMaintenanceOpen((current) => !current)}
-              >
-                {maintenanceOpen ? "Hide" : "Open"}
-              </button>
-            </div>
-
-            {maintenanceOpen ? (
-              <div className="mt-5 space-y-5">
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
-                      onClick={exportThread}
-                    >
-                      Export thread
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
-                      onClick={triggerImport}
-                    >
-                      Import thread
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
-                      onClick={clearHistory}
-                    >
-                      Clear local history
-                    </button>
-                  </div>
-                  <input
-                    ref={importInputRef}
-                    type="file"
-                    accept="application/json"
-                    className="hidden"
-                    onChange={handleImportThread}
-                  />
-                  {importWarnings.length ? (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                      {importWarnings.join(" ")}
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Cleanup
-                      </p>
-                      <p className="mt-2 text-xs text-slate-500">
-                        Destructive run cleanup stays out of the main workflow.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-full border border-rose-300 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:border-rose-500 hover:text-rose-700"
-                      onClick={clearRecentRuns}
-                    >
-                      Clear recent runs
-                    </button>
-                  </div>
-                  <label className="mt-4 flex items-center gap-3 text-xs text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={deleteImagesOnCleanup}
-                      onChange={(event) => setDeleteImagesOnCleanup(event.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-slate-900"
-                    />
-                    Also delete output images
-                  </label>
-                  <p className="mt-2 text-xs text-slate-500">
-                    Removes PNGs from <code className="font-mono">data/images</code> when you clear runs.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Failed runs
-                      </p>
-                      <p className="mt-2 text-xs text-slate-500">
-                        Replay or remove failed jobs only when you need recovery work.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs">
-                      <button
-                        type="button"
-                        className="text-slate-500 underline underline-offset-4"
-                        onClick={loadFailedRuns}
-                      >
-                        Refresh
-                      </button>
-                      <button
-                        type="button"
-                        className="text-rose-500 underline underline-offset-4"
-                        onClick={clearFailedRuns}
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-4">
-                    {failedRuns.length ? (
-                      failedRuns.map((run) => (
-                        <div key={run.id} className="rounded-2xl border border-rose-200 bg-rose-50 p-3">
-                          <p className="text-xs uppercase tracking-[0.2em] text-rose-500">
-                            {run.type ?? "run"}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-700">{run.prompt}</p>
-                          {run.error ? (
-                            <p className="mt-2 text-xs text-rose-600">{run.error}</p>
-                          ) : null}
-                          <div className="mt-2 flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="flex-1 rounded-full border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600"
-                              onClick={() => submitReplay(run)}
-                            >
-                              Replay
-                            </button>
-                            <button
-                              type="button"
-                              className="flex-1 rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600"
-                              onClick={() => deleteRun(run.id)}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-500">No failed runs.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          <UtilitiesPanel
+            deleteImagesOnCleanup={deleteImagesOnCleanup}
+            failedRuns={failedRuns}
+            importInputRef={importInputRef}
+            importWarnings={importWarnings}
+            maintenanceOpen={maintenanceOpen}
+            onClearFailedRuns={clearFailedRuns}
+            onClearHistory={clearHistory}
+            onClearRecentRuns={clearRecentRuns}
+            onDeleteImagesOnCleanupChange={setDeleteImagesOnCleanup}
+            onDeleteRun={deleteRun}
+            onExportThread={exportThread}
+            onHandleImportThread={handleImportThread}
+            onLoadFailedRuns={loadFailedRuns}
+            onSubmitReplay={submitReplay}
+            onToggleMaintenance={() => setMaintenanceOpen((current) => !current)}
+            onTriggerImport={triggerImport}
+          />
         </aside>
 
         <section className="flex min-h-[80vh] flex-col gap-6">
-          <header className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_25px_70px_-50px_rgba(15,23,42,0.6)] backdrop-blur motion-safe:animate-fade-up">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Studio session</p>
-                <h1 className="mt-2 font-display text-3xl text-slate-900">
-                  Generate or edit in a single local session.
-                </h1>
-              </div>
-              <div className="rounded-2xl border border-slate-200/70 bg-white/90 px-4 py-3 text-xs text-slate-600">
-                Backend: <span className="font-mono text-slate-800">{backendUrl}</span>
-              </div>
-            </div>
-          </header>
+          <ModeSwitchHero
+            attachmentsCount={attachments.length}
+            backendUrl={backendUrl}
+            isEditMode={isEditMode}
+            onModeChange={handleModeChange}
+          />
 
-          <div
-            ref={timelineRef}
-            className="flex-1 space-y-6 overflow-y-auto rounded-3xl border border-slate-200/70 bg-white/70 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur"
-          >
-            {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                <p className="font-display text-2xl text-slate-700">Start with a prompt.</p>
-                <p className="mt-2 text-sm">
-                  Generate a new scene or attach an image to edit.
-                </p>
-              </div>
-            ) : (
-              messages.map((message) => {
-                const isUser = message.role === "user";
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-[28px] border px-5 py-4 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.4)] ${
-                        isUser
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-200/70 bg-white text-slate-800"
-                      }`}
-                    >
-                      {isUser ? (
-                        <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-300">
-                          <span>{message.mode === "edit" ? "Edit" : "Generate"}</span>
-                          <span>{formatTime(message.createdAt)}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
-                          <span>Assistant</span>
-                          <span>{formatTime(message.createdAt)}</span>
-                        </div>
-                      )}
+          <MessageTimeline
+            attachmentsCount={attachments.length}
+            backendUrl={backendUrl}
+            formatDuration={formatDuration}
+            formatLatency={formatLatency}
+            formatTime={formatTime}
+            isEditMode={isEditMode}
+            messages={messages}
+            onStartEditFromOutput={startEditFromOutput}
+            onCopyDebugInfo={copyDebugInfo}
+            onCopyRunParams={copyRunParams}
+            onModeChange={handleModeChange}
+            onOpenHistory={() => {
+              void openHistoryPicker("base");
+            }}
+            onReveal={handleReveal}
+            onRetry={handleRetry}
+            timelineRef={timelineRef}
+          />
 
-                      {message.prompt ? (
-                        <p className="mt-3 text-sm leading-relaxed">{message.prompt}</p>
-                      ) : null}
-
-                      {message.attachments?.length ? (
-                        <div className="mt-4 grid grid-cols-2 gap-3">
-                          {message.attachments.map((item) => (
-                            <div key={item.id} className="relative">
-                              <img
-                                src={
-                                  item.previewUrl ||
-                                  (item.imageId ? `${backendUrl}/api/images/${item.imageId}` : "")
-                                }
-                                alt="attachment preview"
-                                className="h-28 w-full rounded-2xl object-cover"
-                              />
-                              <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-600">
-                                {item.source === "history" ? "History" : "Upload"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-
-                      {!isUser ? (
-                        <div className="mt-4 space-y-3">
-                          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                            <span>Status: {message.status ?? "queued"}</span>
-                            {message.stage ? <span>Stage: {message.stage}</span> : null}
-                            {typeof message.stageElapsedMs === "number" ? (
-                              <span>Elapsed: {formatDuration(message.stageElapsedMs)}</span>
-                            ) : null}
-                            {typeof message.etaMs === "number" ? (
-                              <span>ETA: {formatDuration(message.etaMs)}</span>
-                            ) : null}
-                          </div>
-                          {typeof message.progress === "number" ? (
-                            <div className="h-2 w-full rounded-full bg-slate-200">
-                              <div
-                                className="h-2 rounded-full bg-slate-900 transition-all"
-                                style={{ width: `${message.progress}%` }}
-                              />
-                            </div>
-                          ) : null}
-                          {message.requiresReview ? (
-                            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                              {message.reviewNote ?? "Manual review required."}
-                            </div>
-                          ) : null}
-                          {message.requiresReview ? (
-                            <button
-                              type="button"
-                              className="rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900 transition hover:-translate-y-0.5"
-                              onClick={() => handleReveal(message)}
-                            >
-                              Reveal result
-                            </button>
-                          ) : null}
-                          {message.outputImageId ? (
-                            <img
-                              src={`${backendUrl}/api/images/${message.outputImageId}`}
-                              alt="generated output"
-                              className="w-full rounded-2xl object-cover"
-                              loading="lazy"
-                            />
-                          ) : null}
-                          {message.outputImageId ? (
-                            <div className="flex flex-wrap gap-2 text-xs">
-                              <button
-                                type="button"
-                                className="rounded-full border border-slate-900 px-3 py-1 font-semibold text-slate-800"
-                                onClick={() => addHistoryAttachment(message.outputImageId!)}
-                              >
-                                Use as input
-                              </button>
-                              <a
-                                className="rounded-full border border-slate-900/60 px-3 py-1 font-semibold text-slate-700"
-                                href={`${backendUrl}/api/images/${message.outputImageId}`}
-                                download
-                              >
-                                Download
-                              </a>
-                              {message.run ? (
-                                <button
-                                  type="button"
-                                  className="rounded-full border border-slate-900/60 px-3 py-1 font-semibold text-slate-700"
-                                  onClick={() => copyRunParams(message.run)}
-                                >
-                                  Copy run params
-                                </button>
-                              ) : null}
-                            </div>
-                          ) : null}
-                          {message.error ? (
-                            <p className="text-sm text-rose-600">{message.error}</p>
-                          ) : null}
-                          {message.status === "failed" && message.request ? (
-                            <button
-                              type="button"
-                              className="rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
-                              onClick={() => handleRetry(message)}
-                            >
-                              Retry
-                            </button>
-                          ) : null}
-                          {message.status === "failed" ? (
-                            <button
-                              type="button"
-                              className="rounded-full border border-slate-900/60 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
-                              onClick={() => copyDebugInfo(message)}
-                            >
-                              Copy debug info
-                            </button>
-                          ) : null}
-                          {message.run ? (
-                            <details className="rounded-2xl border border-slate-200/70 bg-white/90 p-3 text-xs text-slate-600">
-                              <summary className="cursor-pointer text-xs uppercase tracking-[0.2em] text-slate-500">
-                                Metadata
-                              </summary>
-                              <div className="mt-3 grid gap-2">
-                                <div>Model: {message.run.model_id}</div>
-                                <div>Seed: {message.run.seed}</div>
-                                <div>Steps: {message.run.steps}</div>
-                                <div>
-                                  Size:{" "}
-                                  {message.run.width && message.run.height
-                                    ? `${message.run.width}x${message.run.height}`
-                                    : "n/a"}
-                                </div>
-                                <div>
-                                  Guidance: {message.run.guidance_scale ?? "n/a"}
-                                </div>
-                                <div>
-                                  True CFG: {message.run.true_cfg_scale ?? "n/a"}
-                                </div>
-                                <div>
-                                  Strength: {message.run.strength ?? "n/a"}
-                                </div>
-                                <div>Latency: {formatLatency(message.run.latency_ms)}</div>
-                              </div>
-                            </details>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          <div className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur lg:sticky lg:bottom-6">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
-              <div className="flex items-center gap-3">
-                <span>Model</span>
-                <select
-                  value={selectedModelId}
-                  onChange={(event) => setSelectedModelId(event.target.value)}
-                  disabled={!models.length}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm"
-                >
-                  {(selectableModels.length ? selectableModels : models).map((model) => (
-                    <option key={model.id} value={model.id} disabled={!model.present}>
-                      {model.label ?? model.id}
-                      {model.present ? "" : " (missing)"}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                {activeReviewMode === "manual" ? (
-                  <span className="rounded-full bg-amber-200 px-3 py-1 text-[10px] font-semibold text-amber-900">
-                    Manual review
-                  </span>
-                ) : null}
-                {activeModel && !activeModel.present ? (
-                  <span className="rounded-full bg-rose-200 px-3 py-1 text-[10px] font-semibold text-rose-900">
-                    Missing files
-                  </span>
-                ) : null}
-              </div>
-            </div>
-            {activeModel && !activeModel.present && activeModel.detail ? (
-              <p className="mb-4 text-xs text-rose-700">{activeModel.detail}</p>
-            ) : null}
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
-                Templates
-              </span>
-              {PROMPT_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-                  onClick={() => applyPromptTemplate(template.text)}
-                >
-                  {template.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <textarea
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                placeholder="Describe the scene or edit you want..."
-                className="min-h-[120px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-              />
-              <div className="flex flex-col gap-3">
-                <label className="cursor-pointer rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white">
-                  Attach images
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple={maxAttachments > 1}
-                    className="hidden"
-                    onChange={handleAttachImages}
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={openHistoryPicker}
-                  className="rounded-full border border-slate-900/60 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-900 hover:text-slate-900"
-                >
-                  Pick from history
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_40px_-28px_rgba(15,23,42,0.6)] transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  onClick={handleSubmit}
-                >
-                  {attachments.length ? "Edit" : "Generate"}
-                </button>
-              </div>
-            </div>
-
-            {attachments.length ? (
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {attachments.map((item) => (
-                  <div key={item.id} className="relative">
-                    <img
-                      src={
-                        item.previewUrl ||
-                        (item.kind === "history" ? `${backendUrl}/api/images/${item.imageId}` : "")
-                      }
-                      alt="attachment"
-                      className="h-32 w-full rounded-2xl object-cover"
-                    />
-                    <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-600">
-                      {item.kind === "history" ? "History" : "Upload"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeAttachment(item.id)}
-                      className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs text-slate-700 shadow"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-              <span>
-                {attachments.length}/{maxAttachments} image
-                {maxAttachments > 1 ? "s" : ""} attached
-              </span>
-              <button
-                type="button"
-                className="text-xs uppercase tracking-[0.2em] text-slate-500 underline underline-offset-4"
-                onClick={() => setSettingsOpen((open) => !open)}
-              >
-                {settingsOpen ? "Hide settings" : "Show settings"}
-              </button>
-              {error ? <span className="text-rose-600">{error}</span> : null}
-            </div>
-
-            {settingsOpen ? (
-              <div className="mt-4 grid gap-4 rounded-2xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-700">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Presets
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                      onClick={applySmokePreset}
-                    >
-                      Smoke
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                      onClick={applyDraftPreset}
-                    >
-                      Draft
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                      onClick={applyAcceptancePreset}
-                    >
-                      Acceptance
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Smoke = correctness, Draft = daily iteration, Acceptance = checkpoint quality review.
-                </p>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2">
-                    <SettingLabel
-                      label="Negative prompt"
-                      tooltip="Optional terms to steer away from."
-                    />
-                    <input
-                      value={negativePrompt}
-                      onChange={(event) => setNegativePrompt(event.target.value)}
-                      disabled={attachments.length > 0}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder="Optional"
-                    />
-                  </label>
-                  <label className="space-y-2">
-                    <SettingLabel
-                      label="Seed"
-                      tooltip="Same seed + params gives similar results."
-                    />
-                    <input
-                      value={seed}
-                      onChange={(event) => setSeed(event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder="Leave blank for random"
-                    />
-                  </label>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2">
-                    <SettingLabel
-                      label="Steps"
-                      tooltip="More steps = slower, often sharper."
-                    />
-                    <input
-                      value={steps}
-                      onChange={(event) => setSteps(event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder={String(activeDefaults.steps)}
-                    />
-                  </label>
-                  <label className="space-y-2">
-                    <SettingLabel
-                      label="Guidance scale"
-                      tooltip="How strongly the prompt is followed."
-                    />
-                    <input
-                      value={guidanceScale}
-                      onChange={(event) => setGuidanceScale(event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder={
-                        activeDefaults.guidance_scale !== undefined
-                          ? String(activeDefaults.guidance_scale)
-                          : "Optional"
-                      }
-                    />
-                  </label>
-                </div>
-
-                {attachments.length && activeModel?.id === "flux2-klein-9b-gguf" ? (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="space-y-2">
-                      <SettingLabel
-                        label="Strength"
-                        tooltip="How much to change the input image (0-1)."
-                      />
-                      <input
-                        value={strength}
-                        onChange={(event) => setStrength(event.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                        placeholder={
-                          activeDefaults.strength !== undefined
-                            ? String(activeDefaults.strength)
-                            : "0.65"
-                        }
-                      />
-                    </label>
-                  </div>
-                ) : null}
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2">
-                    <SettingLabel
-                      label="True CFG scale"
-                      tooltip="Qwen-specific guidance. 1.0 disables."
-                    />
-                    <input
-                      value={trueCfgScale}
-                      onChange={(event) => setTrueCfgScale(event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      placeholder={
-                        activeDefaults.true_cfg_scale !== undefined
-                          ? String(activeDefaults.true_cfg_scale)
-                          : "Optional"
-                      }
-                    />
-                  </label>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="space-y-2">
-                      <SettingLabel
-                        label="Width"
-                        tooltip="Output size in pixels (divisible by 8)."
-                      />
-                      <input
-                        value={width}
-                        onChange={(event) => setWidth(event.target.value)}
-                        disabled={attachments.length > 0}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                        placeholder={String(activeDefaults.width)}
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <SettingLabel
-                        label="Height"
-                        tooltip="Output size in pixels (divisible by 8)."
-                      />
-                      <input
-                        value={height}
-                        onChange={(event) => setHeight(event.target.value)}
-                        disabled={attachments.length > 0}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                        placeholder={String(activeDefaults.height)}
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          <ComposerPanel
+            activeDefaults={activeDefaults}
+            activeModel={activeModel}
+            activeReviewMode={activeReviewMode}
+            attachments={attachments}
+            activeEditPresetId={selectedEditPresetId}
+            backendUrl={backendUrl}
+            editPresets={EDIT_PRESETS}
+            editInputNotice={editInputNotice}
+            editModelConstraintNote={editModelConstraintNote}
+            error={error}
+            guidanceScale={guidanceScale}
+            height={height}
+            isEditMode={isEditMode}
+            isSubmitting={isSubmitting}
+            maxAttachments={maxAttachments}
+            modelOptions={modelOptions}
+            negativePrompt={negativePrompt}
+            onApplyAcceptancePreset={applyAcceptancePreset}
+            onApplyDraftPreset={applyDraftPreset}
+            onApplyEditPreset={applyEditPreset}
+            onApplyPromptTemplate={applyPromptTemplate}
+            onApplySmokePreset={applySmokePreset}
+            onAttachImages={handleAttachImages}
+            onGuidanceScaleChange={setGuidanceScale}
+            onHeightChange={setHeight}
+            onHistoryPicker={(slot) => {
+              void openHistoryPicker(slot);
+            }}
+            onNegativePromptChange={setNegativePrompt}
+            onPromptChange={setPrompt}
+            onRemoveAttachment={removeAttachment}
+            onSeedChange={setSeed}
+            onSelectModel={setSelectedModelId}
+            onSettingsToggle={() => setSettingsOpen((open) => !open)}
+            onStepsChange={setSteps}
+            onStrengthChange={setStrength}
+            onSubmit={handleSubmit}
+            onTrueCfgScaleChange={setTrueCfgScale}
+            onWidthChange={setWidth}
+            prompt={prompt}
+            promptPlaceholder={promptPlaceholder}
+            promptTemplates={PROMPT_TEMPLATES}
+            seed={seed}
+            selectedModelValue={selectedModelValue}
+            settingsOpen={settingsOpen}
+            steps={steps}
+            strength={strength}
+            submitLabel={submitLabel}
+            trueCfgScale={trueCfgScale}
+            width={width}
+          />
         </section>
       </div>
-      {historyOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4 py-10">
-          <div className="max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200/70 bg-white/95 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  History picker
-                </p>
-                <h2 className="font-display text-2xl text-slate-900">
-                  Pick an output to edit
-                </h2>
-              </div>
-              <button
-                type="button"
-                className="rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-700"
-                onClick={() => setHistoryOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-            <div className="max-h-[65vh] overflow-y-auto px-6 py-6">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {historyRuns
-                  .filter((run) => run.output_image_id)
-                  .map((run) => (
-                    <div
-                      key={run.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-3"
-                    >
-                      <img
-                        src={`${backendUrl}/api/images/${run.output_image_id}`}
-                        alt="history output"
-                        className="h-36 w-full rounded-xl object-cover"
-                      />
-                      <div className="mt-3 space-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                          {run.type ?? "run"}
-                        </p>
-                        <p className="text-sm text-slate-700">{run.prompt}</p>
-                        <button
-                          type="button"
-                          className="mt-2 w-full rounded-full border border-slate-900 px-3 py-1 text-xs font-semibold text-slate-800"
-                          onClick={() => {
-                            if (run.output_image_id) {
-                              addHistoryAttachment(run.output_image_id);
-                            }
-                          }}
-                        >
-                          Use as input
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-              {!historyRuns.some((run) => run.output_image_id) ? (
-                <p className="text-sm text-slate-500">No outputs available yet.</p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <HistoryPickerModal
+        backendUrl={backendUrl}
+        historyOpen={historyOpen}
+        historyRuns={historyRuns}
+        historyTargetSlot={historyTargetSlot}
+        onAddHistoryAttachment={addHistoryAttachment}
+        onClose={() => setHistoryOpen(false)}
+      />
     </main>
   );
 }
