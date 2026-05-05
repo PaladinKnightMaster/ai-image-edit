@@ -96,6 +96,7 @@ class Runner(abc.ABC):
     capabilities: set[str]
     defaults: dict[str, Any] = {}
     manual_review: bool = False
+    edit_input_limit: int | None = None
 
     def __init__(self) -> None:
         self._pipe: Any | None = None

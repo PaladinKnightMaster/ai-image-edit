@@ -14,6 +14,7 @@ class QwenImageEdit2511Runner(Runner):
     id = "qwen-image-edit-2511"
     label = "Qwen Image Edit 2511"
     capabilities = {"edit"}
+    edit_input_limit = 2
     defaults = {
         "steps": config.DEFAULT_STEPS,
         "guidance_scale": None,

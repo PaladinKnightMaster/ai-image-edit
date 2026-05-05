@@ -99,6 +99,7 @@ class ModelStatus(BaseModel):
     id: str
     label: str
     capabilities: list[str]
+    edit_input_limit: int | None = None
     present: bool
     local_path: str | None = None
     revision: str | None = None

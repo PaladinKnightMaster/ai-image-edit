@@ -459,6 +459,7 @@ class Flux2KleinGGUFRunner(Runner):
     id = "flux2-klein-9b-gguf"
     label = "FLUX.2 klein 9B (GGUF) - fast"
     capabilities = {"t2i", "edit"}
+    edit_input_limit = 1
     defaults = {
         "steps": config.FLUX2_DEFAULT_STEPS,
         "width": config.FLUX2_DEFAULT_SIZE,

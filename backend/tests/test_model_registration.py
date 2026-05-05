@@ -90,6 +90,7 @@ class ModelRegistrationTest(unittest.TestCase):
         payload = json.loads(stdout_lines[-1])
         self.assertEqual(len(payload), 1)
         self.assertEqual(payload[0]["id"], "flux2-klein-9b-gguf")
+        self.assertEqual(payload[0]["edit_input_limit"], 1)
         self.assertFalse(payload[0]["present"])
         self.assertIn("sd-cli: missing", payload[0]["detail"])
         self.assertIn("FLUX2_LLM_GGUF", payload[0]["detail"])

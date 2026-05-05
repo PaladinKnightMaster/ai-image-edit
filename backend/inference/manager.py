@@ -48,6 +48,7 @@ class InferenceManager:
                     "id": runner.id,
                     "label": runner.label or runner.id,
                     "capabilities": sorted(runner.capabilities),
+                    "edit_input_limit": runner.edit_input_limit,
                     "present": bool(status.get("present", False)),
                     "local_path": status.get("local_path"),
                     "revision": status.get("revision"),
