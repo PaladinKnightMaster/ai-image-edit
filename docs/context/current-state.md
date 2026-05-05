@@ -1,10 +1,13 @@
 ﻿# Current State
 
-Last updated: 2026-04-19
+Last updated: 2026-04-28
 
 ## Product Status
 - MVP roadmap drafted
 - Sprint 1, Sprint 2, and Sprint 3 planning docs drafted
+- Sprint 2 editor-first frontend work is largely implemented
+- local `qwen-image-edit-2511` benchmark/signoff is blocked on this machine by a reproducible native crash
+- the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime
 - fast-check env profiles added for CPU-only development
 - war-room operating layer added as project-local architecture
 - durable ADR, architecture, workflow, model, design, and testing docs added under `docs/`
@@ -31,11 +34,11 @@ Last updated: 2026-04-19
 - backend launcher and startup smoke scripts now validate Python runtime viability and can fall back
   to the base interpreter plus venv site-packages when the Windows venv launcher is stale
 
-## Current Primary Sprint 1 Focus
-- close Sprint 1 against the backlog and hand off to Sprint 2 from a clean diff
-- start Sprint 2 with explicit edit-vs-create workflow work
-- keep benchmark pack usage aligned with preset and acceptance review changes
-- stage local private benchmark assets before full Sprint 2 preset validation
+## Current Primary Sprint 2 Focus
+- finish the remaining Sprint 2 product work without waiting on local `qwen-image-edit-2511` recovery
+- use the now capability-aware `flux2-klein-9b-gguf` lane as the local draft edit path on this machine
+- validate the FLUX draft lane with one explicitly approved one-image smoke edit before leaning on it day to day
+- keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
 - `docs/planning/mvp-war-room-plan.md`
@@ -47,14 +50,14 @@ Last updated: 2026-04-19
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. close Sprint 1 against the backlog and hand off to Sprint 2 from a clean diff
-2. start Sprint 2 with explicit edit-vs-create workflow work
-3. stage local private benchmark assets before full Sprint 2 preset validation
+1. run one explicitly approved FLUX one-image draft edit smoke on this machine
+2. use the FLUX local draft lane for continued Sprint 2 product verification and polish
+3. keep `qwen-image-edit-2511` benchmark/signoff deferred to a stronger machine instead of forcing local reruns
 
 ## Supported Runtime Lanes
-- `qwen-image-2512`
-- `qwen-image-edit-2511`
-- `flux2-klein-9b-gguf`
+- `qwen-image-2512` - local T2I smoke lane
+- `qwen-image-edit-2511` - intended edit benchmark/signoff lane, blocked locally on this machine
+- `flux2-klein-9b-gguf` - local draft T2I + edit lane via the existing repo fallback path
 - `sdxl-openvino` exists but is not MVP-core yet
 
 ## Operating Model

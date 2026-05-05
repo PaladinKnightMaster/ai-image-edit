@@ -1,9 +1,9 @@
 # Sprint 2 Outline
 
-Status: Draft
+Status: Active with local-runtime constraint
 Sprint name: Sprint 2 - Editor-First UX and Core Editing Flow
 Duration: 2 weeks
-Last updated: 2026-04-17
+Last updated: 2026-04-28
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on: `docs/planning/sprint-1-backlog.md`
 Sprint owner: Tech Lead
@@ -24,6 +24,23 @@ Sprint 2 is complete only when all of the following are true:
 - generated images can be turned into edit inputs in one click
 - the frontend structure is materially more maintainable than the current single-file implementation
 - preset-driven editing exists in a usable first version
+
+## 2.1 Current Runtime Constraint
+
+The local development machine can no longer be treated as a reliable benchmark/signoff environment for
+`qwen-image-edit-2511`.
+
+Current known constraint:
+
+- local benchmark execution for `qwen-image-edit-2511` is blocked on this machine by a reproducible native
+  process exit (`0xC0000005`) during `Headshot Cleanup`
+
+Operational decision for the remainder of Sprint 2:
+
+- continue Sprint 2 product work using the existing `flux2-klein-9b-gguf` lane as the local draft edit
+  runtime
+- do not broaden scope into a new engine family; this is an operational use of an already-supported lane
+- keep `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane for a stronger machine
 
 ## 3. Scope Summary
 
@@ -223,12 +240,19 @@ Expected work:
 - make generated-image-to-edit handoff clean
 - keep API contracts stable while frontend is being restructured
 - support preset-driven request composition if useful
+- expose model-specific capability constraints cleanly when local draft lanes differ from the intended
+  signoff lane
 
 Avoid:
 
 - major engine additions
 - new runtime lanes
 - heavy OpenVINO work
+
+Allowed operational fallback:
+
+- use the existing `flux2-klein-9b-gguf` runner as the local Sprint 2 draft lane while
+  `qwen-image-edit-2511` remains blocked on this machine
 
 ## 13. AI/ML Work
 
@@ -237,7 +261,13 @@ Avoid:
 - define preset prompt patterns
 - define draft defaults for edit flows
 - define reference-guided examples
-- validate outputs on the benchmark pack defined in `docs/testing/benchmark-pack.md`
+- validate outputs on the benchmark pack defined in `docs/testing/benchmark-pack.md` where runtime permits
+
+### Current Local Validation Rule
+
+- use `flux2-klein-9b-gguf` for local draft edit iteration on this machine
+- keep `qwen-image-edit-2511` benchmark/signoff validation on a stronger machine
+- do not treat local FLUX draft results as final acceptance evidence for the Qwen edit lane
 
 ### Quality Review Criteria
 
@@ -250,6 +280,11 @@ Avoid:
 ### Output Policy
 
 Use draft-tier settings for normal tuning and acceptance-tier settings only at milestone review points.
+
+On the current development machine:
+
+- local draft checks may use `flux2-klein-9b-gguf`
+- benchmark/signoff for the Qwen edit lane remains deferred to stronger hardware
 
 ## 14. Ticket Outline
 
@@ -301,11 +336,12 @@ Use draft-tier settings for normal tuning and acceptance-tier settings only at m
 - Priority: P1
 - Outcome: primary flow is simpler, but advanced users retain control
 
-### WR2-009 - Validate presets against benchmark pack
+### WR2-009 - Validate presets against benchmark pack where runtime permits
 
 - Owner: AI/ML
 - Priority: P1
-- Outcome: presets are directionally consistent on `benchmark-pack-v0`
+- Outcome: presets are directionally consistent on `benchmark-pack-v0`, with local draft checks allowed
+  on the FLUX lane and Qwen edit signoff deferred when current hardware blocks the edit runner
 
 ### WR2-010 - Update product copy and onboarding hints
 
@@ -323,8 +359,8 @@ Use draft-tier settings for normal tuning and acceptance-tier settings only at m
 6. WR2-007 Add before/after compare
 7. WR2-008 Move advanced controls behind a drawer
 8. WR2-006 Add optional reference-image workflow
-9. WR2-009 Validate presets
-10. WR2-010 Update copy and onboarding hints
+9. WR2-010 Update copy and onboarding hints
+10. WR2-009 Validate presets where runtime permits; keep Qwen edit signoff off-box if local hardware remains blocked
 
 ## 16. Risks
 
@@ -340,7 +376,7 @@ Mitigation:
 Mitigation:
 
 - keep presets narrow
-- validate against benchmark pack early
+- validate against benchmark pack early where runtime permits
 
 ### Risk 3: Reference-image workflow confuses users
 
@@ -356,6 +392,15 @@ Mitigation:
 - keep draft defaults lean
 - reuse preview outputs
 - avoid unnecessary reruns
+- use the existing FLUX local draft lane instead of repeatedly forcing the blocked local Qwen edit path
+
+### Risk 5: Local Qwen edit benchmark lane is blocked by native runtime failure
+
+Mitigation:
+
+- preserve the benchmark/signoff contract, but move Qwen edit validation to stronger hardware
+- keep Sprint 2 product work moving on the existing FLUX local draft lane
+- surface capability constraints in the UI so local draft behavior does not misrepresent final signoff behavior
 
 ## 17. Sprint Review Checklist
 
@@ -385,3 +430,6 @@ Sprint 3 should focus on:
 - result iteration flow
 - recovery and reliability hardening if needed
 - prep for public beta criteria
+
+If off-box Qwen edit validation is still pending at Sprint 2 close, Sprint 3 should inherit that signoff
+lane explicitly rather than pretending Sprint 2 completed local benchmark closure on blocked hardware.

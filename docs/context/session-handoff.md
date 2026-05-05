@@ -16,12 +16,106 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Close Sprint 1 and hand off to Sprint 2:
-1. confirm Sprint 1 backlog closeout from the current clean boundary
-2. stage local private benchmark assets for `benchmark-pack-v0`
-3. start Sprint 2 with the explicit edit-vs-create workflow work
+Continue Sprint 2 from the now capability-aware FLUX draft lane:
+1. run one explicitly approved `flux2-klein-9b-gguf` one-image edit smoke on this machine
+2. use that lane for local Sprint 2 draft verification and remaining product polish
+3. preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane and stop forcing local reruns on blocked hardware
 
 ## Completed in this session
+- operationalized the local `flux2-klein-9b-gguf` draft edit lane in the product surface instead of leaving it as a hidden special case
+- added backend `/api/models` metadata for `edit_input_limit` so edit runners now declare their real input-image constraints
+- made the chat flow capability-aware so edit mode now defaults to FLUX locally, reference-image UI is gated by model metadata, and single-image edit lanes automatically normalize attachments to a valid base-only state
+- replaced FLUX-only frontend checks for edit-attachment count and strength controls with metadata-driven behavior where possible
+- verified the FLUX draft-lane implementation with backend model-registration tests plus `npm.cmd run lint`, `npm.cmd run typecheck`, and `npm.cmd run build`
+- approved the war-room pivot away from local `qwen-image-edit-2511` benchmark attempts on this PC and toward the existing `flux2-klein-9b-gguf` lane for local draft edit work
+- confirmed the local FLUX lane is present and reported by `/api/models` as a valid `t2i + edit` runtime through the existing repo fallback path
+- captured the second `Headshot Cleanup` rerun failure as a native process exit with `wrapper_exit_code = -1073741819` (`0xC0000005`, access violation) after about 104 seconds of CPU-only progress, with the job still left `running` and no output image
+- taught `scripts/run_edit_benchmark_case.ps1` to decode common native process exit codes into `wrapper_exit_hex` / `wrapper_exit_meaning` for future crash reports
+- hardened the benchmark runner again so the summary records per-poll heartbeats and the PowerShell wrapper stamps `wrapper_exit_code` / `wrapper_finished_at`, marking `process_exit` when Python disappears before a terminal status write
+- hardened `scripts/run_edit_benchmark_case.py` so it writes `data/benchmark-review-summary.json` immediately and updates it incrementally during upload, submission, and polling, reducing artifact loss when CPU-only model startup dies mid-run
+- hardened the approval-gated benchmark runner against Windows PowerShell UTF-8 BOM temp-plan files after a real user repro
+- added `scripts/run_edit_benchmark_case.ps1` as an approval-gated PowerShell entrypoint for preset benchmark review targets
+- added `scripts/run_edit_benchmark_case.py` as the long-lived in-process upload/job/poll harness that can keep `qwen-image-edit-2511` loaded across review targets
+- added a durable war-room rule that all agents must notify the user and get approval before heavy model execution
+- proved the first exact-coverage benchmark path end-to-end through upload and queued edit submission using the staged proxy fixture pack and `qwen-image-edit-2511`
+- recorded a measured runtime blocker: `Headshot Cleanup` / `edit-001-headshot-cleanup` reached `running` but produced no output within a bounded CPU-only harness window
+- corrected `docs/testing/preset-benchmark-review.md` so the proxy-pack worksheet is explicitly `Draft` tier rather than `Acceptance`
+- staged a temporary local proxy fixture pack under `fixtures/private/benchmark-pack-v0/` by copying existing workspace outputs from `data/images/` into the canonical benchmark filenames
+- documented the proxy fixture mapping and usage limits in `docs/testing/preset-benchmark-review.md`
+- confirmed the `qwen-image-edit-2511` mirrored asset tree exists locally under `models/hf/Qwen/Qwen-Image-Edit-2511`
+- worked around the broken system Python path by using the bundled workspace runtime for the first in-process review harness
+- attempted to start the first manual preset review and confirmed this workspace does not yet contain the private benchmark fixtures under `fixtures/private/benchmark-pack-v0/`
+- extended `docs/testing/preset-benchmark-review.md` with an explicit prerequisite checklist, first-pass preset order, and a lightweight acceptance review worksheet
+- extended `frontend/app/chat/edit-presets.ts` with benchmark review metadata so each portrait preset now carries mapped benchmark cases, shared review dimensions, and explicit watchouts
+- added `docs/testing/preset-benchmark-review.md` as the lightweight execution note that maps Sprint 2 presets to `benchmark-pack-v0`
+- marked the reference-guided benchmark cases as active in `docs/testing/benchmark-pack.md` and `docs/testing/benchmark-pack.v0.json` now that the base/reference workflow is live
+- updated `docs/testing/test-strategy.md` and `docs/index.md` so the benchmark-review note is part of the durable testing map
+- polished remaining onboarding and helper copy so `/chat` reads more like an edit-first studio and less
+  like a generic chat shell
+- updated helper surfaces from `thread` / `history` language toward `session` / `output library`
+  terminology where it is user-facing
+- aligned create-mode labels around `Create draft` / `starter prompts` and changed the result lane label
+  from `Assistant` to `Studio engine`
+- verified the copy/onboarding polish slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- moved model selection and raw tuning behind an explicit `Advanced controls` drawer in
+  `frontend/app/chat/components/ComposerPanel.tsx`
+- presets, prompt, and `Base image` / `Reference image` slots now remain visually primary while
+  model choice, run profile, and numeric controls are secondary
+- added drawer summary chips for active model, manual-review state, and missing-files state so the
+  user still sees essential runtime context without opening raw controls
+- verified the advanced-controls drawer slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- made the composer explicitly model one `Base image` plus one optional `Reference image`
+- slot-specific upload and history actions now target `base` vs `reference` instead of a generic
+  two-image bucket
+- edit submission now preserves `base`-first ordering in request snapshots so compare and reuse flows
+  can identify the true source image reliably
+- history picker now labels actions as `Use as base image` vs `Use as reference image`
+- timeline attachment badges now clarify `Base` / `Reference` and source provenance
+- verified the explicit base/reference workflow with `npm.cmd run lint`, `npm.cmd run typecheck`,
+  and `npm.cmd run build`
+- added `frontend/app/chat/components/BeforeAfterCompare.tsx` as a lightweight per-result compare widget
+- edit results with recoverable base inputs now support `Before`, `Split`, and `After` comparison inside
+  the main timeline
+- compare now prefers the explicit `base` image slot and surfaces when extra reference inputs are
+  present but outside the compare view
+- verified the compare slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and `npm.cmd run build`
+- implemented generated-image-to-edit polish so successful outputs now expose explicit `Edit this` actions
+- direct output handoff now switches to `Edit Photo`, stages the selected result as the new base image,
+  and clears stale create-mode prompt state
+- added composer feedback when a generated or history output is staged for editing
+- labeled staged attachments and message-history snapshots as `Generated result` vs `History`
+- verified the generated-image-to-edit slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- extracted `frontend/app/chat/components/HistoryPickerModal.tsx` for the edit-input history overlay
+- extracted `frontend/app/chat/components/UtilitiesPanel.tsx` for import/export, cleanup, and failed-run recovery controls
+- verified the modal/sidebar extraction with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- added `frontend/app/chat/edit-presets.ts` as the structured portrait preset metadata source
+- added preset types to `frontend/app/chat/types.ts` and wired preset application through the page state
+- implemented portrait preset picker v1 in `frontend/app/chat/components/ComposerPanel.tsx`
+- selecting a portrait preset now populates the edit prompt and applies draft-tier defaults for the
+  current edit flow
+- verified the preset picker slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- extracted `frontend/app/chat/components/MessageTimeline.tsx` for the message stream and empty-state flow
+- extracted `frontend/app/chat/components/ComposerPanel.tsx` for model selection, prompt input,
+  attachments, and settings
+- added `frontend/app/chat/types.ts` as the shared type surface for the new chat components
+- verified the timeline/composer extraction with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- extracted the top shell into `frontend/app/chat/components/ModeSwitchHero.tsx`
+- added an edit-first landing state in `frontend/app/chat/components/WorkflowLandingState.tsx`
+- reworked the empty `/chat` experience so it teaches the edit workflow and keeps create as the
+  supporting lane
+- verified the extracted-shell slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and
+  `npm.cmd run build`
+- introduced explicit `Edit Photo` / `Create from Scratch` mode state in `frontend/app/chat/page.tsx`
+- removed attachment-count inference as the primary mode switch; model filtering, CTA copy, prompt copy,
+  validation, and settings gating now follow explicit mode
+- preserved `Use as input` behavior by switching into edit mode when history or generated outputs are reused
+- verified the frontend slice with `npm.cmd run lint`, `npm.cmd run typecheck`, and `npm.cmd run build`
 - fixed `backend/app/config.py` indentation for `FLUX2_ALLOW_SAFETENSORS_LLM`
 - verified `import app.config` succeeds
 - verified `app.main` loads and exposes `/health`
