@@ -22,6 +22,12 @@ data/app.db-wal
 data/app.fast-check.db
 data/app.fast-check.db-shm
 data/app.fast-check.db-wal
+data/app.benchmark-review.db
+data/app.benchmark-review.db-shm
+data/app.benchmark-review.db-wal
+data/benchmark-backend.err.log
+data/benchmark-backend.out.log
+data/benchmark-review-summary.json
 data/flux2_outputs/
 fixtures/private/
 
