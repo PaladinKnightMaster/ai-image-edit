@@ -121,6 +121,8 @@ def run_target(
         payload["guidance_scale"] = target["guidance_scale"]
     if target.get("true_cfg_scale") is not None:
         payload["true_cfg_scale"] = target["true_cfg_scale"]
+    if target.get("strength") is not None:
+        payload["strength"] = target["strength"]
 
     submit_response = client.post("/api/jobs/edit", json=payload)
     submit_response.raise_for_status()
@@ -258,6 +260,7 @@ def main() -> int:
                         "steps": target["steps"],
                         "guidance_scale": target.get("guidance_scale"),
                         "true_cfg_scale": target.get("true_cfg_scale"),
+                        "strength": target.get("strength"),
                     },
                     poll_seconds=args.poll_seconds,
                     max_wait_seconds=args.max_wait_seconds,

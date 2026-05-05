@@ -17,11 +17,13 @@ The repo now has:
 
 ## Immediate next action
 Continue Sprint 2 from the now capability-aware FLUX draft lane:
-1. run one explicitly approved `flux2-klein-9b-gguf` one-image edit smoke on this machine
+1. run one explicitly approved `flux2-klein-9b-gguf` one-image edit smoke on this machine with `scripts/run_edit_benchmark_case.ps1 -PresetRun flux-draft-smoke -RunApproved`
 2. use that lane for local Sprint 2 draft verification and remaining product polish
 3. preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane and stop forcing local reruns on blocked hardware
 
 ## Completed in this session
+- added `flux-draft-smoke` to the approval-gated edit review runner so the next model run targets FLUX local draft editing rather than the blocked Qwen edit lane
+- passed `strength` through the review harness edit payload for FLUX img2img smoke coverage
 - operationalized the local `flux2-klein-9b-gguf` draft edit lane in the product surface instead of leaving it as a hidden special case
 - added backend `/api/models` metadata for `edit_input_limit` so edit runners now declare their real input-image constraints
 - made the chat flow capability-aware so edit mode now defaults to FLUX locally, reference-image UI is gated by model metadata, and single-image edit lanes automatically normalize attachments to a valid base-only state

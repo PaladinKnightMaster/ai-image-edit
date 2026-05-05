@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("headshot-cleanup", "studio-relight", "background-simplify", "multi-angle-portrait")]
+  [ValidateSet("headshot-cleanup", "studio-relight", "background-simplify", "multi-angle-portrait", "flux-draft-smoke")]
   [string[]]$PresetRun = @("headshot-cleanup"),
   [switch]$ListTargets,
   [switch]$RunApproved,
@@ -104,6 +104,17 @@ $targets = @{
     guidance_scale = 4.5
     true_cfg_scale = 1.25
   }
+  "flux-draft-smoke" = [ordered]@{
+    preset_id = "flux-draft-smoke"
+    case_id = "local-flux-one-image-smoke"
+    model_id = "flux2-klein-9b-gguf"
+    base_fixture = "fixtures/private/benchmark-pack-v0/portrait-base-01-studio-headshot.png"
+    prompt = "Make a subtle professional portrait cleanup while preserving identity, skin texture, eye detail, and the original studio headshot composition. Keep the result realistic and avoid major style changes."
+    seed = 4101
+    steps = 4
+    guidance_scale = 3.5
+    strength = 0.55
+  }
 }
 
 if ($ListTargets) {
@@ -111,7 +122,7 @@ if ($ListTargets) {
   foreach ($name in $targets.Keys) {
     $target = $targets[$name]
     $caseId = $target.case_id
-    Write-Host "  $name -> $caseId"
+    Write-Host "  $name -> $caseId [$($target.model_id)]"
   }
   exit 0
 }
@@ -124,6 +135,9 @@ foreach ($name in $PresetRun) {
   $selectedTargets += [ordered]@{} + $targets[$name]
 }
 
+$selectedModelIds = @($selectedTargets | ForEach-Object { $_.model_id } | Sort-Object -Unique)
+$selectedModelLabel = $selectedModelIds -join ","
+
 $summaryPathResolved = if ([System.IO.Path]::IsPathRooted($SummaryPath)) {
   $SummaryPath
 } else {
@@ -132,11 +146,11 @@ $summaryPathResolved = if ([System.IO.Path]::IsPathRooted($SummaryPath)) {
 
 if (-not $RunApproved) {
   Write-Host "Model run approval required."
-  Write-Host "This command can load qwen-image-edit-2511 and hold substantial CPU and memory for an extended time."
+  Write-Host "This command can load $selectedModelLabel and hold substantial CPU and memory for an extended time."
   Write-Host "Selected targets:"
   foreach ($target in $selectedTargets) {
     $reference = if ($target.Contains("reference_fixture")) { " + reference" } else { "" }
-    Write-Host "  - $($target.preset_id) ($($target.case_id))$reference"
+    Write-Host "  - $($target.preset_id) ($($target.case_id)) [$($target.model_id)]$reference"
   }
   Write-Host "No model execution started."
   Write-Host "Re-run with -RunApproved only after the user explicitly approves the model run."
@@ -184,6 +198,7 @@ try {
       --repo-root $repoRoot `
       --plan-path $planPath `
       --summary-path $summaryPathResolved `
+      --model-id $selectedModelLabel `
       --max-wait-seconds $MaxWaitSec `
       --poll-seconds $PollIntervalSec
   }
