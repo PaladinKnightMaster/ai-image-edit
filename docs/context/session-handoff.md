@@ -16,12 +16,20 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Continue Sprint 2 from the now capability-aware FLUX draft lane:
-1. run one explicitly approved `flux2-klein-9b-gguf` one-image edit smoke on this machine with `scripts/run_edit_benchmark_case.ps1 -PresetRun flux-draft-smoke -RunApproved`
-2. use that lane for local Sprint 2 draft verification and remaining product polish
-3. preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane and stop forcing local reruns on blocked hardware
+Continue Sprint 2 from the FLUX draft lane with slow-run observability in place:
+1. verify the persisted job activity / observer-timeout changes without launching a model
+2. rerun `flux2-klein-9b-gguf` smoke only after explicit user approval for another heavy local model run
+3. use the FLUX lane for local draft verification and preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane
 
 ## Completed in this session
+- added persisted job activity fields (`stage`, progress step/percent/total, and `last_activity_at`) so
+  the UI, polling API, SSE reconnects, and benchmark harness share the same long-running job state
+- changed the benchmark harness so `MaxWaitSec` is an observer timeout, not an automatic job failure;
+  observer timeouts now exit distinctly without calling `mark_job_failed`
+- raised the approval-gated benchmark wrapper default observer window to 7200 seconds and labeled exit
+  code `2` as `observer_timeout`
+- added timeline copy for active local inference so slow CPU runs are represented as continuing work
+  rather than unexplained silence
 - added `flux-draft-smoke` to the approval-gated edit review runner so the next model run targets FLUX local draft editing rather than the blocked Qwen edit lane
 - passed `strength` through the review harness edit payload for FLUX img2img smoke coverage
 - operationalized the local `flux2-klein-9b-gguf` draft edit lane in the product surface instead of leaving it as a hidden special case

@@ -3,7 +3,7 @@ param(
   [string[]]$PresetRun = @("headshot-cleanup"),
   [switch]$ListTargets,
   [switch]$RunApproved,
-  [int]$MaxWaitSec = 1800,
+  [int]$MaxWaitSec = 7200,
   [int]$PollIntervalSec = 5,
   [string]$SummaryPath = ".\\data\\benchmark-review-summary.json"
 )
@@ -49,6 +49,7 @@ function Get-ProcessExitMetadata {
     0xC0000005 { "access_violation" }
     0xC0000409 { "stack_buffer_overrun" }
     0xC0000017 { "no_memory" }
+    2 { "observer_timeout" }
     default { $null }
   }
 

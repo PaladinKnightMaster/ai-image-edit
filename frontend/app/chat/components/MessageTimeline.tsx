@@ -95,6 +95,8 @@ export function MessageTimeline({
             message.request?.inputPreviews?.filter((item) => item.slot === "reference").length ??
             (compareInputCount > 1 ? compareInputCount - 1 : 0);
           const showCompare = Boolean(outputImageUrl && compareInputUrl && compareInputCount);
+          const isActiveJob =
+            !isUser && !message.outputImageId && ["queued", "running"].includes(message.status ?? "");
 
           return (
             <div
@@ -155,6 +157,15 @@ export function MessageTimeline({
                       {typeof message.etaMs === "number" ? (
                         <span>ETA: {formatDuration(message.etaMs)}</span>
                       ) : null}
+                      {typeof message.progressStep === "number" &&
+                      typeof message.progressTotal === "number" ? (
+                        <span>
+                          Step: {message.progressStep}/{message.progressTotal}
+                        </span>
+                      ) : null}
+                      {message.lastActivityAt ? (
+                        <span>Last activity: {formatTime(message.lastActivityAt)}</span>
+                      ) : null}
                     </div>
                     {typeof message.progress === "number" ? (
                       <div className="h-2 w-full rounded-full bg-slate-200">
@@ -162,6 +173,13 @@ export function MessageTimeline({
                           className="h-2 rounded-full bg-slate-900 transition-all"
                           style={{ width: `${message.progress}%` }}
                         />
+                      </div>
+                    ) : null}
+                    {isActiveJob ? (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
+                        Local inference is still running. Larger models can stay active for a long
+                        time on CPU; this panel will update when the backend reports progress or a
+                        terminal result.
                       </div>
                     ) : null}
                     {message.requiresReview ? (

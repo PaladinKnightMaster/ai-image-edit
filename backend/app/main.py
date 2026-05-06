@@ -159,6 +159,11 @@ class JobResponse(BaseModel):
     started_at: int | None = None
     finished_at: int | None = None
     error: str | None = None
+    stage: str | None = None
+    progress_percent: int | None = None
+    progress_step: int | None = None
+    progress_total: int | None = None
+    last_activity_at: int | None = None
     run: RunResponse | None = None
 
 

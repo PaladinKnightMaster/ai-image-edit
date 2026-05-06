@@ -7,7 +7,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
 
 from app import config, db, images as image_store
@@ -37,6 +37,17 @@ def _publish(job_id: str, event: str, data: dict[str, Any]) -> None:
 
 
 def publish_event(job_id: str, event: str, data: dict[str, Any]) -> None:
+    if event == "status":
+        _update_job_activity(job_id, status=data.get("status"), stage=data.get("stage"))
+    elif event == "stage":
+        _update_job_activity(job_id, stage=data.get("stage"))
+    elif event == "progress":
+        _update_job_activity(
+            job_id,
+            progress_percent=data.get("percent"),
+            progress_step=data.get("step"),
+            progress_total=data.get("total_steps"),
+        )
     _publish(job_id, event, data)
 
 
@@ -59,6 +70,61 @@ def unsubscribe(job_id: str, subscriber: queue.Queue[dict[str, Any]]) -> None:
 def format_sse(event: str, data: dict[str, Any]) -> str:
     payload = json.dumps(data)
     return f"event: {event}\ndata: {payload}\n\n"
+
+
+def _job_activity_payload(job: dict[str, Any]) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "last_activity_at": job.get("last_activity_at"),
+    }
+    if job.get("stage") is not None:
+        payload["stage"] = job.get("stage")
+    if job.get("progress_percent") is not None:
+        payload["percent"] = job.get("progress_percent")
+    if job.get("progress_step") is not None:
+        payload["step"] = job.get("progress_step")
+    if job.get("progress_total") is not None:
+        payload["total_steps"] = job.get("progress_total")
+    return {key: value for key, value in payload.items() if value is not None}
+
+
+def _update_job_activity(
+    job_id: str,
+    *,
+    status: str | None = None,
+    stage: str | None = None,
+    progress_percent: int | None = None,
+    progress_step: int | None = None,
+    progress_total: int | None = None,
+    started_at: int | None = None,
+    finished_at: int | None = None,
+    error: str | None = None,
+) -> int:
+    last_activity_at = _now_ms()
+    fields: dict[str, Any] = {"last_activity_at": last_activity_at}
+    if status is not None:
+        fields["status"] = status
+    if stage is not None:
+        fields["stage"] = stage
+    if progress_percent is not None:
+        fields["progress_percent"] = progress_percent
+    if progress_step is not None:
+        fields["progress_step"] = progress_step
+    if progress_total is not None:
+        fields["progress_total"] = progress_total
+    if started_at is not None:
+        fields["started_at"] = started_at
+    if finished_at is not None:
+        fields["finished_at"] = finished_at
+    if error is not None:
+        fields["error"] = error
+
+    assignments = ", ".join(f"{column} = ?" for column in fields)
+    values = list(fields.values())
+    values.append(job_id)
+    with db.get_connection() as conn:
+        conn.execute(f"UPDATE jobs SET {assignments} WHERE id = ?", values)
+        conn.commit()
+    return last_activity_at
 
 
 def init_jobs() -> None:
@@ -84,8 +150,12 @@ def _recover_jobs() -> None:
             ("queued",),
         ).fetchall()
         conn.execute(
-            "UPDATE jobs SET status = ?, finished_at = ?, error = ? WHERE status IN (?, ?)",
-            ("failed", now, "server restarted", "running", "queued"),
+            """
+            UPDATE jobs
+            SET status = ?, finished_at = ?, error = ?, stage = ?, last_activity_at = ?
+            WHERE status IN (?, ?)
+            """,
+            ("failed", now, "server restarted", "failed", now, "running", "queued"),
         )
         conn.commit()
 
@@ -176,10 +246,13 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
     with db.get_connection() as conn:
         conn.execute(
             """
-            INSERT INTO jobs (id, type, status, created_at, started_at, finished_at, error)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO jobs (
+                id, type, status, created_at, started_at, finished_at, error,
+                stage, progress_percent, progress_step, progress_total, last_activity_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (job_id, job_type, "queued", created_at, None, None, None),
+            (job_id, job_type, "queued", created_at, None, None, None, "queued", 0, 0, None, created_at),
         )
         conn.execute(
             """
@@ -220,7 +293,11 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
             raise
     else:
         _JOB_QUEUE.put(job_id)
-    _publish(job_id, "status", {"status": "queued"})
+    _publish(
+        job_id,
+        "status",
+        {"status": "queued", "stage": "queued", "last_activity_at": created_at},
+    )
     return job_id
 
 
@@ -251,21 +328,32 @@ def run_job(
     job_started = time.perf_counter()
     with _CURRENT_JOB_LOCK:
         _CURRENT_JOB_ID = job_id
-    with db.get_connection() as conn:
-        conn.execute(
-            "UPDATE jobs SET status = ?, started_at = ? WHERE id = ?",
-            ("running", started_at, job_id),
-        )
-        conn.commit()
-    publish_fn(job_id, "status", {"status": "running"})
 
     def _publish_stage(stage: str) -> None:
+        last_activity_at = _update_job_activity(job_id, stage=stage)
         publish_fn(
             job_id,
             "stage",
-            {"stage": stage, "elapsed_ms": int((time.perf_counter() - job_started) * 1000)},
+            {
+                "stage": stage,
+                "elapsed_ms": int((time.perf_counter() - job_started) * 1000),
+                "last_activity_at": last_activity_at,
+            },
         )
 
+    last_activity_at = _update_job_activity(
+        job_id,
+        status="running",
+        stage="loading",
+        progress_percent=0,
+        progress_step=0,
+        started_at=started_at,
+    )
+    publish_fn(
+        job_id,
+        "status",
+        {"status": "running", "stage": "loading", "last_activity_at": last_activity_at},
+    )
     _publish_stage("loading")
 
     run = job.get("run")
@@ -299,7 +387,13 @@ def run_job(
     logging_utils.log_event("job_start", **log_payload)
 
     def progress_callback(step: int, total_steps: int) -> None:
-        percent = int((step / total_steps) * 100)
+        percent = int((step / total_steps) * 100) if total_steps else 0
+        last_activity_at = _update_job_activity(
+            job_id,
+            progress_percent=percent,
+            progress_step=step,
+            progress_total=total_steps,
+        )
         publish_fn(
             job_id,
             "progress",
@@ -308,6 +402,7 @@ def run_job(
                 "total_steps": total_steps,
                 "percent": percent,
                 "elapsed_ms": int((time.perf_counter() - job_started) * 1000),
+                "last_activity_at": last_activity_at,
             },
         )
 
@@ -369,8 +464,13 @@ def run_job(
                 (image_id, latency_ms, job_id),
             )
             conn.execute(
-                "UPDATE jobs SET status = ?, finished_at = ? WHERE id = ?",
-                ("pending_review", finished_at, job_id),
+                """
+                UPDATE jobs
+                SET status = ?, finished_at = ?, stage = ?, progress_percent = ?,
+                    last_activity_at = ?
+                WHERE id = ?
+                """,
+                ("pending_review", finished_at, "review", 100, finished_at, job_id),
             )
         else:
             conn.execute(
@@ -378,14 +478,27 @@ def run_job(
                 (image_id, latency_ms, job_id),
             )
             conn.execute(
-                "UPDATE jobs SET status = ?, finished_at = ? WHERE id = ?",
-                ("succeeded", finished_at, job_id),
+                """
+                UPDATE jobs
+                SET status = ?, finished_at = ?, stage = ?, progress_percent = ?,
+                    last_activity_at = ?
+                WHERE id = ?
+                """,
+                ("succeeded", finished_at, "complete", 100, finished_at, job_id),
             )
         conn.commit()
 
     if review_required:
-        publish_fn(job_id, "status", {"status": "pending_review"})
-        publish_fn(job_id, "review_required", {"message": "Manual review required."})
+        publish_fn(
+            job_id,
+            "status",
+            {"status": "pending_review", "stage": "review", "last_activity_at": finished_at},
+        )
+        publish_fn(
+            job_id,
+            "review_required",
+            {"message": "Manual review required.", "last_activity_at": finished_at},
+        )
         logging_utils.log_event(
             "job_pending_review",
             job_id=job_id,
@@ -394,8 +507,16 @@ def run_job(
         )
         return
 
-    publish_fn(job_id, "status", {"status": "succeeded"})
-    publish_fn(job_id, "result", {"output_image_id": image_id, "latency_ms": latency_ms})
+    publish_fn(
+        job_id,
+        "status",
+        {"status": "succeeded", "stage": "complete", "last_activity_at": finished_at},
+    )
+    publish_fn(
+        job_id,
+        "result",
+        {"output_image_id": image_id, "latency_ms": latency_ms, "last_activity_at": finished_at},
+    )
     logging_utils.log_event(
         "job_success",
         job_id=job_id,
@@ -417,16 +538,24 @@ def _mark_job_failed(
     finished_at = _now_ms()
     with db.get_connection() as conn:
         conn.execute(
-            "UPDATE jobs SET status = ?, finished_at = ?, error = ? WHERE id = ?",
-            ("failed", finished_at, message, job_id),
+            """
+            UPDATE jobs
+            SET status = ?, finished_at = ?, error = ?, stage = ?, last_activity_at = ?
+            WHERE id = ?
+            """,
+            ("failed", finished_at, message, "failed", finished_at, job_id),
         )
         conn.commit()
     with _CURRENT_JOB_LOCK:
         global _CURRENT_JOB_ID
         if _CURRENT_JOB_ID == job_id:
             _CURRENT_JOB_ID = None
-    publish_fn(job_id, "status", {"status": "failed"})
-    publish_fn(job_id, "error", {"message": message})
+    publish_fn(
+        job_id,
+        "status",
+        {"status": "failed", "stage": "failed", "last_activity_at": finished_at},
+    )
+    publish_fn(job_id, "error", {"message": message, "last_activity_at": finished_at})
     logging_utils.log_error(
         "job_failed",
         job_id=job_id,
@@ -606,14 +735,19 @@ def reveal_job(job_id: str) -> str:
             "UPDATE runs SET output_image_id = ?, pending_output_image_id = NULL WHERE job_id = ?",
             (image_id, job_id),
         )
+        now = _now_ms()
         conn.execute(
-            "UPDATE jobs SET status = ? WHERE id = ?",
-            ("succeeded", job_id),
+            """
+            UPDATE jobs
+            SET status = ?, stage = ?, progress_percent = ?, last_activity_at = ?
+            WHERE id = ?
+            """,
+            ("succeeded", "complete", 100, now, job_id),
         )
         conn.commit()
 
-    _publish(job_id, "status", {"status": "succeeded"})
-    _publish(job_id, "result", {"output_image_id": image_id})
+    _publish(job_id, "status", {"status": "succeeded", "stage": "complete", "last_activity_at": now})
+    _publish(job_id, "result", {"output_image_id": image_id, "last_activity_at": now})
     logging_utils.log_event(
         "job_revealed",
         job_id=job_id,
@@ -630,17 +764,30 @@ def stream_events(job_id: str, request: Any | None = None) -> Any:
             yield format_sse("error", {"message": "Job not found."})
             return
 
-        yield format_sse("status", {"status": job["status"]})
+        yield format_sse(
+            "status",
+            {"status": job["status"], **_job_activity_payload(job)},
+        )
+        if job.get("stage"):
+            yield format_sse("stage", {"stage": job["stage"], **_job_activity_payload(job)})
+        if job.get("progress_percent") is not None:
+            yield format_sse("progress", _job_activity_payload(job))
         if job["status"] == "pending_review":
-            yield format_sse("review_required", {"message": "Manual review required."})
+            yield format_sse(
+                "review_required",
+                {"message": "Manual review required.", **_job_activity_payload(job)},
+            )
             return
         if job["status"] == "succeeded" and job.get("run"):
             output_image_id = job["run"].get("output_image_id")
             if output_image_id:
-                yield format_sse("result", {"output_image_id": output_image_id})
+                yield format_sse(
+                    "result",
+                    {"output_image_id": output_image_id, **_job_activity_payload(job)},
+                )
                 return
         if job["status"] == "failed":
-            yield format_sse("error", {"message": job.get("error")})
+            yield format_sse("error", {"message": job.get("error"), **_job_activity_payload(job)})
             return
 
         subscriber = subscribe(job_id)

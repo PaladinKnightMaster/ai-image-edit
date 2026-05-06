@@ -3,7 +3,7 @@
 Status: Active with local-runtime constraint
 Sprint name: Sprint 2 - Editor-First UX and Core Editing Flow
 Duration: 2 weeks
-Last updated: 2026-04-28
+Last updated: 2026-05-06
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on: `docs/planning/sprint-1-backlog.md`
 Sprint owner: Tech Lead
@@ -41,6 +41,9 @@ Operational decision for the remainder of Sprint 2:
   runtime
 - do not broaden scope into a new engine family; this is an operational use of an already-supported lane
 - keep `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane for a stronger machine
+- treat long local model runtime as an observability problem: jobs should surface persisted stage,
+  progress, and last-activity state, while benchmark observer timeouts must not rewrite active work as
+  model failure
 
 ## 3. Scope Summary
 
@@ -242,6 +245,8 @@ Expected work:
 - support preset-driven request composition if useful
 - expose model-specific capability constraints cleanly when local draft lanes differ from the intended
   signoff lane
+- expose enough job activity state for slow local inference to remain trustworthy in the UI and review
+  harness
 
 Avoid:
 
@@ -393,6 +398,8 @@ Mitigation:
 - reuse preview outputs
 - avoid unnecessary reruns
 - use the existing FLUX local draft lane instead of repeatedly forcing the blocked local Qwen edit path
+- distinguish observer timeout from backend failure, and surface last activity so users can decide whether
+  to keep waiting or stop the run externally
 
 ### Risk 5: Local Qwen edit benchmark lane is blocked by native runtime failure
 

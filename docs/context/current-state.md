@@ -1,13 +1,15 @@
 ﻿# Current State
 
-Last updated: 2026-04-28
+Last updated: 2026-05-06
 
 ## Product Status
 - MVP roadmap drafted
 - Sprint 1, Sprint 2, and Sprint 3 planning docs drafted
 - Sprint 2 editor-first frontend work is largely implemented
 - local `qwen-image-edit-2511` benchmark/signoff is blocked on this machine by a reproducible native crash
-- the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime
+- the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime and has produced
+  a one-image smoke output on this machine, but long CPU runtime means observer timeouts must not be
+  treated as model-quality failure
 - fast-check env profiles added for CPU-only development
 - war-room operating layer added as project-local architecture
 - durable ADR, architecture, workflow, model, design, and testing docs added under `docs/`
@@ -37,7 +39,8 @@ Last updated: 2026-04-28
 ## Current Primary Sprint 2 Focus
 - finish the remaining Sprint 2 product work without waiting on local `qwen-image-edit-2511` recovery
 - use the now capability-aware `flux2-klein-9b-gguf` lane as the local draft edit path on this machine
-- validate the FLUX draft lane with one explicitly approved one-image smoke edit before leaning on it day to day
+- use persisted job activity and long-observer harness semantics for FLUX draft checks so slow runs remain
+  visible instead of being marked failed solely because the shell stopped waiting
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -50,8 +53,9 @@ Last updated: 2026-04-28
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. run one explicitly approved FLUX one-image draft edit smoke on this machine
-2. use the FLUX local draft lane for continued Sprint 2 product verification and polish
+1. verify the new persisted activity / observer-timeout handling with non-model tests
+2. rerun an explicitly approved FLUX one-image draft edit smoke only when the user is ready for another
+   heavy local model run
 3. keep `qwen-image-edit-2511` benchmark/signoff deferred to a stronger machine instead of forcing local reruns
 
 ## Supported Runtime Lanes

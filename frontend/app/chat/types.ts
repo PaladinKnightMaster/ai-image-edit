@@ -91,8 +91,11 @@ export type ChatMessage = {
   status?: string;
   stage?: string;
   progress?: number;
+  progressStep?: number;
+  progressTotal?: number;
   stageElapsedMs?: number;
   etaMs?: number;
+  lastActivityAt?: number;
   outputImageId?: string;
   requiresReview?: boolean;
   reviewNote?: string;

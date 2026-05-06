@@ -41,7 +41,12 @@ def init_db() -> None:
                 created_at INTEGER NOT NULL,
                 started_at INTEGER,
                 finished_at INTEGER,
-                error TEXT
+                error TEXT,
+                stage TEXT,
+                progress_percent INTEGER,
+                progress_step INTEGER,
+                progress_total INTEGER,
+                last_activity_at INTEGER
             );
 
             CREATE TABLE IF NOT EXISTS runs (
@@ -77,6 +82,17 @@ def init_db() -> None:
                 run_id TEXT
             );
             """
+        )
+        _ensure_columns(
+            conn,
+            "jobs",
+            [
+                ("stage", "TEXT"),
+                ("progress_percent", "INTEGER"),
+                ("progress_step", "INTEGER"),
+                ("progress_total", "INTEGER"),
+                ("last_activity_at", "INTEGER"),
+            ],
         )
         _ensure_columns(
             conn,

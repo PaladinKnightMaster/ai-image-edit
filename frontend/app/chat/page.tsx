@@ -148,8 +148,11 @@ type ChatMessage = {
   status?: string;
   stage?: string;
   progress?: number;
+  progressStep?: number;
+  progressTotal?: number;
   stageElapsedMs?: number;
   etaMs?: number;
+  lastActivityAt?: number;
   outputImageId?: string;
   requiresReview?: boolean;
   reviewNote?: string;
@@ -853,10 +856,18 @@ export default function ChatPage() {
       updateMessageByJob(jobId, {
         status: data.status,
         run: data.run,
+        stage: data.status === "pending_review" ? "review" : data.stage,
+        progress:
+          typeof data.progress_percent === "number" ? data.progress_percent : undefined,
+        progressStep:
+          typeof data.progress_step === "number" ? data.progress_step : undefined,
+        progressTotal:
+          typeof data.progress_total === "number" ? data.progress_total : undefined,
+        lastActivityAt:
+          typeof data.last_activity_at === "number" ? data.last_activity_at : undefined,
         outputImageId: data.run?.output_image_id ?? undefined,
         requiresReview: data.status === "pending_review",
-        reviewNote: data.status === "pending_review" ? "Manual review required." : undefined,
-        ...(data.status === "pending_review" ? { stage: "review" } : {})
+        reviewNote: data.status === "pending_review" ? "Manual review required." : undefined
       });
       if (data.status === "succeeded" || data.status === "failed" || data.status === "pending_review") {
         eventSources.current.get(jobId)?.close();
@@ -875,7 +886,12 @@ export default function ChatPage() {
     const source = new EventSource(`${backendUrl}/api/jobs/${jobId}/events`);
     source.addEventListener("status", (event) => {
       const payload = JSON.parse((event as MessageEvent).data);
-      const patch: Partial<ChatMessage> = { status: payload.status };
+      const patch: Partial<ChatMessage> = {
+        status: payload.status,
+        stage: payload.stage,
+        lastActivityAt:
+          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+      };
       if (payload.status === "running") {
         patch.startedAt = Date.now();
       }
@@ -886,7 +902,9 @@ export default function ChatPage() {
       updateMessageByJob(jobId, {
         stage: payload.stage,
         stageElapsedMs:
-          typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined
+          typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined,
+        lastActivityAt:
+          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
       });
     });
     source.addEventListener("progress", (event) => {
@@ -899,8 +917,13 @@ export default function ChatPage() {
           : undefined;
       updateMessageByJob(jobId, {
         progress: payload.percent,
+        progressStep: typeof payload.step === "number" ? payload.step : undefined,
+        progressTotal:
+          typeof payload.total_steps === "number" ? payload.total_steps : undefined,
         etaMs,
-        stageElapsedMs: elapsedMs
+        stageElapsedMs: elapsedMs,
+        lastActivityAt:
+          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
       });
     });
     source.addEventListener("result", (event) => {
@@ -909,7 +932,9 @@ export default function ChatPage() {
         status: "succeeded",
         outputImageId: payload.output_image_id,
         stage: "complete",
-        progress: 100
+        progress: 100,
+        lastActivityAt:
+          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
       });
       fetchJob(jobId);
     });
@@ -919,7 +944,9 @@ export default function ChatPage() {
         status: "pending_review",
         requiresReview: true,
         reviewNote: payload.message,
-        stage: "review"
+        stage: "review",
+        lastActivityAt:
+          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
       });
       source.close();
       eventSources.current.delete(jobId);
@@ -928,7 +955,12 @@ export default function ChatPage() {
     source.addEventListener("error", (event) => {
       try {
         const payload = JSON.parse((event as MessageEvent).data);
-        updateMessageByJob(jobId, { status: "failed", error: payload.message });
+        updateMessageByJob(jobId, {
+          status: "failed",
+          error: payload.message,
+          lastActivityAt:
+            typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+        });
       } catch {
         updateMessageByJob(jobId, { status: "failed", error: "Stream disconnected." });
       }

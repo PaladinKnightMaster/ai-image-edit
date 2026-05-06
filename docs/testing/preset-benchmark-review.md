@@ -35,6 +35,12 @@ Use `scripts/run_edit_benchmark_case.ps1` as the approval-gated review entrypoin
 - run it without `-RunApproved` first to show the selected benchmark target(s) and the resource warning
 - rerun it with `-RunApproved` only after the user explicitly approves the model execution
 - the wrapper keeps the real upload/job flow inside one long-lived harness so the model can stay loaded across cases
+- `-MaxWaitSec` is an observer window, not a model failure rule; if it expires while the job is still
+  active, the summary records `outcome = observer_timeout` and exits with code `2` without marking the
+  job failed
+- treat real failures as backend/job terminal `failed` states, native process exits, missing output after
+  terminal success, or reviewer-visible output defects; do not call a slow CPU run failed only because
+  the observer stopped waiting
 
 ## Current workspace staging
 
@@ -95,6 +101,20 @@ Implication of the second attempt:
 - the edit runner is reaching native library code and crashing before it can report a terminal job status
 - treat further preset review on this machine as blocked until the runtime path changes
 - the next decision is infrastructure-focused: lower-memory execution path, different runtime build, or a stronger machine
+
+## Long-running FLUX draft behavior
+
+On 2026-05-06, the local `flux2-klein-9b-gguf` smoke lane reached real execution and produced an
+`out.png` artifact under `data/flux2_outputs/`, but the bounded observer window still reported timeout
+before the harness could classify a terminal success.
+
+Operational implication:
+
+- FLUX is viable as the local draft lane, but runtime varies heavily by machine
+- UI and tooling must display live activity (`stage`, progress, `last_activity_at`) rather than relying
+  on short fixed waits
+- benchmark observer timeout is now a monitoring limit only; it does not mutate the job into `failed`
+  unless the backend itself reports a terminal failure
 
 ## First-pass order
 

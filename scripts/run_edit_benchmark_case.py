@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-root")
     parser.add_argument("--db-path")
     parser.add_argument("--poll-seconds", type=int, default=5)
-    parser.add_argument("--max-wait-seconds", type=int, default=1800)
+    parser.add_argument("--max-wait-seconds", type=int, default=7200)
     return parser.parse_args()
 
 
@@ -81,7 +81,6 @@ def upload_fixture(client: Any, fixture_path: Path) -> str:
 def run_target(
     *,
     client: Any,
-    jobs_module: Any,
     image_store: Any,
     target: dict[str, Any],
     poll_seconds: int,
@@ -130,6 +129,8 @@ def run_target(
     job_id = submit_payload["job_id"]
     started_at = time.time()
     last_status = None
+    observer_timeout = False
+    timeout_message = None
 
     print(f"[{preset_id}] Submitted job_id={job_id}", flush=True)
     if progress:
@@ -156,6 +157,11 @@ def run_target(
                     "elapsed_seconds": elapsed,
                     "error": job.get("error"),
                     "last_polled_at": int(time.time()),
+                    "last_activity_at": job.get("last_activity_at"),
+                    "stage": job.get("stage"),
+                    "progress_percent": job.get("progress_percent"),
+                    "progress_step": job.get("progress_step"),
+                    "progress_total": job.get("progress_total"),
                 }
             )
         if status != last_status:
@@ -166,12 +172,23 @@ def run_target(
             break
 
         if time.time() - started_at >= max_wait_seconds:
-            message = f"benchmark review timeout after {max_wait_seconds}s"
-            jobs_module.mark_job_failed(job_id, message)
-            response = client.get(f"/api/jobs/{job_id}")
-            response.raise_for_status()
-            job = response.json()
-            status = job["status"]
+            observer_timeout = True
+            timeout_message = (
+                f"benchmark observer timeout after {max_wait_seconds}s; "
+                f"job remained {status}"
+            )
+            print(f"[{preset_id}] {timeout_message}", flush=True)
+            if progress:
+                progress(
+                    {
+                        "phase": "observer_timeout",
+                        "status": status,
+                        "outcome": "observer_timeout",
+                        "elapsed_seconds": elapsed,
+                        "error": timeout_message,
+                        "last_polled_at": int(time.time()),
+                    }
+                )
             break
 
         time.sleep(poll_seconds)
@@ -179,7 +196,7 @@ def run_target(
     run_payload = job.get("run") or {}
     output_image_id = run_payload.get("output_image_id")
     output_path = str(image_store.get_image_path(output_image_id)) if output_image_id else None
-    outcome = "blocked" if status == "failed" and (job.get("error") or "").startswith("benchmark review timeout") else status
+    outcome = "observer_timeout" if observer_timeout else status
 
     return {
         "preset_id": preset_id,
@@ -189,10 +206,15 @@ def run_target(
         "upload_image_ids": image_ids,
         "status": status,
         "outcome": outcome,
-        "error": job.get("error"),
+        "error": timeout_message if observer_timeout else job.get("error"),
         "elapsed_seconds": int(time.time() - started_at),
         "output_image_id": output_image_id,
         "output_path": output_path,
+        "last_activity_at": job.get("last_activity_at"),
+        "stage": job.get("stage"),
+        "progress_percent": job.get("progress_percent"),
+        "progress_step": job.get("progress_step"),
+        "progress_total": job.get("progress_total"),
     }
 
 
@@ -218,7 +240,6 @@ def main() -> int:
 
     try:
         from fastapi.testclient import TestClient
-        from app import jobs as jobs_module
         from app.images import get_image_path as _unused_get_image_path  # noqa: F401
         from app import images as image_store
         from app.main import app
@@ -245,7 +266,6 @@ def main() -> int:
 
                 result = run_target(
                     client=client,
-                    jobs_module=jobs_module,
                     image_store=image_store,
                     target={
                         "preset_id": target["preset_id"],
@@ -283,6 +303,8 @@ def main() -> int:
     results = summary["results"]
     if all(result["outcome"] == "succeeded" for result in results):
         return 0
+    if any(result["outcome"] == "observer_timeout" for result in results):
+        return 2
     return 1
 
 
