@@ -17,11 +17,17 @@ The repo now has:
 
 ## Immediate next action
 Continue Sprint 2 from the FLUX draft lane with slow-run observability in place:
-1. verify the persisted job activity / observer-timeout changes without launching a model
-2. rerun `flux2-klein-9b-gguf` smoke only after explicit user approval for another heavy local model run
-3. use the FLUX lane for local draft verification and preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane
+1. patch the benchmark harness so `pending_review` stops polling and captures the pending output image
+2. use the completed FLUX smoke output as local draft-lane evidence for continued Sprint 2 polish
+3. preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane
 
 ## Completed in this session
+- confirmed the approved `flux2-klein-9b-gguf` one-image smoke edit completed on CPU in about 34.7
+  minutes, reached `pending_review`, and produced pending image `340ab221970549709dc9d017b96b3cba`
+- identified a harness classification bug: `pending_review` was not treated as terminal, so the wrapper
+  kept polling until `MaxWaitSec` and reported `observer_timeout` after successful generation
+- exposed `pending_output_image_id` in the job/run API response and updated the benchmark harness to stop
+  on `pending_review`, capture the pending output path, and return success for `pending_review` smoke runs
 - added persisted job activity fields (`stage`, progress step/percent/total, and `last_activity_at`) so
   the UI, polling API, SSE reconnects, and benchmark harness share the same long-running job state
 - changed the benchmark harness so `MaxWaitSec` is an observer timeout, not an automatic job failure;

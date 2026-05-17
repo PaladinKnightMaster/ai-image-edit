@@ -168,7 +168,7 @@ def run_target(
             print(f"[{preset_id}] status={status} elapsed={elapsed}s", flush=True)
             last_status = status
 
-        if status in {"succeeded", "failed", "canceled"}:
+        if status in {"succeeded", "failed", "canceled", "pending_review"}:
             break
 
         if time.time() - started_at >= max_wait_seconds:
@@ -194,7 +194,8 @@ def run_target(
         time.sleep(poll_seconds)
 
     run_payload = job.get("run") or {}
-    output_image_id = run_payload.get("output_image_id")
+    pending_output_image_id = run_payload.get("pending_output_image_id")
+    output_image_id = run_payload.get("output_image_id") or pending_output_image_id
     output_path = str(image_store.get_image_path(output_image_id)) if output_image_id else None
     outcome = "observer_timeout" if observer_timeout else status
 
@@ -209,6 +210,7 @@ def run_target(
         "error": timeout_message if observer_timeout else job.get("error"),
         "elapsed_seconds": int(time.time() - started_at),
         "output_image_id": output_image_id,
+        "pending_output_image_id": pending_output_image_id,
         "output_path": output_path,
         "last_activity_at": job.get("last_activity_at"),
         "stage": job.get("stage"),
@@ -301,7 +303,8 @@ def main() -> int:
     print(json.dumps(summary, indent=2), flush=True)
 
     results = summary["results"]
-    if all(result["outcome"] == "succeeded" for result in results):
+    successful_outcomes = {"succeeded", "pending_review"}
+    if all(result["outcome"] in successful_outcomes for result in results):
         return 0
     if any(result["outcome"] == "observer_timeout" for result in results):
         return 2

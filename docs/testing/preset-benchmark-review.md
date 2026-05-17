@@ -108,6 +108,17 @@ On 2026-05-06, the local `flux2-klein-9b-gguf` smoke lane reached real execution
 `out.png` artifact under `data/flux2_outputs/`, but the bounded observer window still reported timeout
 before the harness could classify a terminal success.
 
+On 2026-05-16 / 2026-05-17, the same `flux-draft-smoke` path completed through the app job layer:
+
+- job id: `64ff0fcdc35b42c3b46e35be413c8e48`
+- run id: `4efd5b09d456429380f227c12cd80191`
+- uploaded base image id: `d48050c77959491cae00b06a3d1696e0`
+- pending output image id: `340ab221970549709dc9d017b96b3cba`
+- status: `pending_review`
+- stage: `review`
+- progress: `4/4`, `100%`
+- latency: `2,084,008 ms` (about 34.7 minutes)
+
 Operational implication:
 
 - FLUX is viable as the local draft lane, but runtime varies heavily by machine
@@ -115,6 +126,8 @@ Operational implication:
   on short fixed waits
 - benchmark observer timeout is now a monitoring limit only; it does not mutate the job into `failed`
   unless the backend itself reports a terminal failure
+- `pending_review` is a terminal successful generation state for smoke purposes; the harness must capture
+  `pending_output_image_id` rather than continue polling for `output_image_id`
 
 ## First-pass order
 

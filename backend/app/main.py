@@ -143,6 +143,7 @@ class RunResponse(BaseModel):
     strength: float | None = None
     input_image_ids: list[str] | None = None
     output_image_id: str | None = None
+    pending_output_image_id: str | None = None
     latency_ms: int | None = None
     type: str | None = None
     status: str | None = None

@@ -7,9 +7,9 @@ Last updated: 2026-05-06
 - Sprint 1, Sprint 2, and Sprint 3 planning docs drafted
 - Sprint 2 editor-first frontend work is largely implemented
 - local `qwen-image-edit-2511` benchmark/signoff is blocked on this machine by a reproducible native crash
-- the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime and has produced
-  a one-image smoke output on this machine, but long CPU runtime means observer timeouts must not be
-  treated as model-quality failure
+- the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime and completed a
+  one-image smoke edit on this machine in about 34.7 minutes, reaching `pending_review` with a usable
+  pending output image
 - fast-check env profiles added for CPU-only development
 - war-room operating layer added as project-local architecture
 - durable ADR, architecture, workflow, model, design, and testing docs added under `docs/`
@@ -39,8 +39,8 @@ Last updated: 2026-05-06
 ## Current Primary Sprint 2 Focus
 - finish the remaining Sprint 2 product work without waiting on local `qwen-image-edit-2511` recovery
 - use the now capability-aware `flux2-klein-9b-gguf` lane as the local draft edit path on this machine
-- use persisted job activity and long-observer harness semantics for FLUX draft checks so slow runs remain
-  visible instead of being marked failed solely because the shell stopped waiting
+- use persisted job activity and pending-review-aware harness semantics for FLUX draft checks so slow runs
+  remain visible and completed manual-review outputs are captured correctly
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -53,9 +53,8 @@ Last updated: 2026-05-06
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. verify the new persisted activity / observer-timeout handling with non-model tests
-2. rerun an explicitly approved FLUX one-image draft edit smoke only when the user is ready for another
-   heavy local model run
+1. patch the benchmark harness so `pending_review` is treated as a terminal successful smoke outcome
+2. use the completed FLUX smoke output as draft-lane evidence for continued Sprint 2 product polish
 3. keep `qwen-image-edit-2511` benchmark/signoff deferred to a stronger machine instead of forcing local reruns
 
 ## Supported Runtime Lanes

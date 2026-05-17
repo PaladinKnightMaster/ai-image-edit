@@ -44,6 +44,8 @@ Operational decision for the remainder of Sprint 2:
 - treat long local model runtime as an observability problem: jobs should surface persisted stage,
   progress, and last-activity state, while benchmark observer timeouts must not rewrite active work as
   model failure
+- the local FLUX smoke lane has now produced a completed `pending_review` output, so Sprint 2 can use it
+  as draft-lane evidence while keeping Qwen edit signoff off-box
 
 ## 3. Scope Summary
 
