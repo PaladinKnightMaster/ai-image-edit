@@ -132,13 +132,13 @@ def init_jobs() -> None:
     if _WORKERS_STARTED:
         return
     db.init_db()
-    _recover_jobs()
+    recover_interrupted_jobs()
     if config.INFERENCE_MODE == "local":
         _start_workers()
     _WORKERS_STARTED = True
 
 
-def _recover_jobs() -> None:
+def recover_interrupted_jobs() -> dict[str, int]:
     now = _now_ms()
     with db.get_connection() as conn:
         running_rows = conn.execute(
@@ -159,12 +159,19 @@ def _recover_jobs() -> None:
         )
         conn.commit()
 
+    recovered = {
+        "queued": len(queued_rows),
+        "running": len(running_rows),
+        "marked_failed": len(running_rows) + len(queued_rows),
+    }
     if running_rows or queued_rows:
         logging_utils.log_event(
             "job_recovery",
-            recovered_queued=0,
-            marked_failed=len(running_rows) + len(queued_rows),
+            recovered_queued=recovered["queued"],
+            recovered_running=recovered["running"],
+            marked_failed=recovered["marked_failed"],
         )
+    return recovered
 
 
 def _start_workers() -> None:

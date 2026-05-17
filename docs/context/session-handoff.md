@@ -16,12 +16,25 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Implement the first Sprint 3 reliability slice without launching a model:
+Continue the first Sprint 3 reliability slice without launching a model:
 1. follow `docs/planning/sprint-3-outline.md`
-2. start with WR3-001 / WR3-003: pending-review reveal validation plus cheap job/recovery checks
+2. extend WR3-001 / WR3-003 from backend/API temp-DB transition coverage into lightweight live UI validation
 3. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
+- added copy-based API validation using `data/app.benchmark-review.db` as a read-only source fixture:
+  the test copies the DB, reveals job `64ff0fcdc35b42c3b46e35be413c8e48` in the scratch copy, verifies
+  `/api/jobs`, `/api/runs?status=...`, and `/api/images`, then confirms the real benchmark DB is unchanged
+- started WR3-001 / WR3-003 as a local-only reliability slice without submitting a new edit job or running a model
+- added cheap temp-DB backend coverage for pending-review reveal transitions: pending output moves to
+  `output_image_id`, `pending_output_image_id` clears, job status becomes `succeeded`, and run history becomes reusable
+- added in-process API coverage for `POST /api/jobs/{job_id}/reveal`, `GET /api/jobs/{job_id}`, and
+  `GET /api/runs?status=...` against a seeded pending-review run
+- added cheap coverage for pending-review run deletion with pending-output image cleanup
+- exposed job restart recovery as `recover_interrupted_jobs()` and covered queued/running jobs becoming failed with
+  `server restarted` while succeeded jobs remain intact
+- confirmed read-only that `data/app.benchmark-review.db` still has pending-review job
+  `64ff0fcdc35b42c3b46e35be413c8e48` with pending image `340ab221970549709dc9d017b96b3cba`
 - confirmed the approved `flux2-klein-9b-gguf` one-image smoke edit completed on CPU in about 34.7
   minutes, reached `pending_review`, and produced pending image `340ab221970549709dc9d017b96b3cba`
 - completed the Sprint 2 closeout audit in `docs/planning/sprint-2-closeout-audit.md`, marking the

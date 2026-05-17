@@ -40,6 +40,10 @@ Last updated: 2026-05-17
 ## Current Primary Sprint 3 Focus
 - Sprint 3 is active in `docs/planning/sprint-3-outline.md`
 - start with local-only pending-review reveal validation and cheap job/recovery checks
+- WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
+  API reveal responses, pending-output cleanup on delete, and queued/running recovery after restart
+- the existing `data/app.benchmark-review.db` pending-review artifact now has copy-based API validation:
+  reveal succeeds against a scratch DB copy while the real benchmark DB remains unchanged
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -52,8 +56,8 @@ Last updated: 2026-05-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. implement WR3-001 / WR3-003 as a local-only reliability slice
-2. validate reveal state transitions and job/runs recovery behavior without submitting a new model job
+1. extend WR3-001 / WR3-003 from backend/API transition coverage into lightweight live UI validation where feasible
+2. validate Recent runs reveal/reuse behavior in the browser against a scratch DB, without submitting a new model job
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes
