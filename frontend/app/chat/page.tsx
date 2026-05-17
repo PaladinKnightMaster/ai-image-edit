@@ -1813,6 +1813,16 @@ export default function ChatPage() {
                               Edit this
                             </button>
                           ) : null}
+                          {run.output_image_id ? (
+                            <a
+                              className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                              href={`${backendUrl}/api/images/${run.output_image_id}`}
+                              download
+                              data-testid={`recent-run-download-${run.id}`}
+                            >
+                              Download
+                            </a>
+                          ) : null}
                           {isPendingReview ? (
                             <button
                               type="button"

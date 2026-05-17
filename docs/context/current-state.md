@@ -45,6 +45,8 @@ Last updated: 2026-05-17
 - the existing `data/app.benchmark-review.db` pending-review artifact now has copy-based API validation:
   reveal succeeds against a scratch DB copy while the real benchmark DB remains unchanged
 - Recent runs and output-library surfaces now expose stable test hooks for live reveal/reuse browser validation
+- WR3-002 has started with a small result-iteration hardening pass: revealed Recent runs now expose
+  both `Edit this` and `Download` actions
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs

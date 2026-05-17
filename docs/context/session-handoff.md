@@ -27,6 +27,8 @@ Continue the first Sprint 3 reliability slice without launching a model:
   `/api/jobs`, `/api/runs?status=...`, and `/api/images`, then confirms the real benchmark DB is unchanged
 - added stable `data-testid` hooks to Recent runs reveal/reuse controls and the output-library reuse cards so
   the next browser validation can target deterministic elements
+- started WR3-002 result-iteration hardening by adding a direct `Download` action to revealed Recent runs
+  alongside `Edit this`
 - started WR3-001 / WR3-003 as a local-only reliability slice without submitting a new edit job or running a model
 - added cheap temp-DB backend coverage for pending-review reveal transitions: pending output moves to
   `output_image_id`, `pending_output_image_id` clears, job status becomes `succeeded`, and run history becomes reusable
