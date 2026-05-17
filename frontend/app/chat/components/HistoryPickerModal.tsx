@@ -24,6 +24,9 @@ export function HistoryPickerModal({
   }
 
   const outputRuns = historyRuns.filter((run) => run.output_image_id);
+  const pendingReviewCount = historyRuns.filter(
+    (run) => !run.output_image_id && run.pending_output_image_id
+  ).length;
   const title =
     historyTargetSlot === "base" ? "Pick a base image to edit" : "Pick a reference image";
   const actionLabel =
@@ -76,6 +79,13 @@ export function HistoryPickerModal({
           </div>
           {!outputRuns.length ? (
             <p className="text-sm text-slate-500">No outputs available yet.</p>
+          ) : null}
+          {pendingReviewCount ? (
+            <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {pendingReviewCount} pending review output
+              {pendingReviewCount === 1 ? "" : "s"} must be revealed from Recent runs before
+              reuse.
+            </p>
           ) : null}
         </div>
       </div>

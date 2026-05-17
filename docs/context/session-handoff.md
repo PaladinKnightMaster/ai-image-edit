@@ -16,14 +16,16 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Continue Sprint 2 from the FLUX draft lane with slow-run observability in place:
-1. patch the benchmark harness so `pending_review` stops polling and captures the pending output image
-2. use the completed FLUX smoke output as local draft-lane evidence for continued Sprint 2 polish
-3. preserve `qwen-image-edit-2511` benchmark/signoff as an off-box validation lane
+Finish the Sprint 2 UI closeout path without launching another model:
+1. validate that Recent runs surface `pending_review` outputs as review-gated results
+2. confirm `Reveal` turns the pending run into a normal reusable output
+3. run a Sprint 2 closeout audit against `docs/planning/sprint-2-outline.md`
 
 ## Completed in this session
 - confirmed the approved `flux2-klein-9b-gguf` one-image smoke edit completed on CPU in about 34.7
   minutes, reached `pending_review`, and produced pending image `340ab221970549709dc9d017b96b3cba`
+- surfaced pending-review outputs in Recent runs with an explicit `Reveal` action, while keeping unrevealed
+  outputs out of normal edit reuse/history selection
 - identified a harness classification bug: `pending_review` was not treated as terminal, so the wrapper
   kept polling until `MaxWaitSec` and reported `observer_timeout` after successful generation
 - exposed `pending_output_image_id` in the job/run API response and updated the benchmark harness to stop

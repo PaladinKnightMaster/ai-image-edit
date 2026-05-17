@@ -3,7 +3,7 @@
 Status: Active with local-runtime constraint
 Sprint name: Sprint 2 - Editor-First UX and Core Editing Flow
 Duration: 2 weeks
-Last updated: 2026-05-06
+Last updated: 2026-05-17
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on: `docs/planning/sprint-1-backlog.md`
 Sprint owner: Tech Lead
@@ -46,6 +46,8 @@ Operational decision for the remainder of Sprint 2:
   model failure
 - the local FLUX smoke lane has now produced a completed `pending_review` output, so Sprint 2 can use it
   as draft-lane evidence while keeping Qwen edit signoff off-box
+- pending-review outputs must remain gated until reveal; the product should make that state recoverable
+  from Recent runs without treating the pending image as a normal reusable output
 
 ## 3. Scope Summary
 
@@ -356,6 +358,13 @@ On the current development machine:
 - Priority: P1
 - Outcome: messaging matches the editor-first MVP
 
+### WR2-011 - Surface manual-review outputs
+
+- Owner: Frontend + Backend
+- Priority: P0
+- Outcome: local draft outputs that reach `pending_review` are visible, revealable, and only reusable after
+  the reveal gate is completed
+
 ## 15. Recommended Execution Order
 
 1. WR2-001 Introduce explicit mode switch
@@ -367,7 +376,8 @@ On the current development machine:
 7. WR2-008 Move advanced controls behind a drawer
 8. WR2-006 Add optional reference-image workflow
 9. WR2-010 Update copy and onboarding hints
-10. WR2-009 Validate presets where runtime permits; keep Qwen edit signoff off-box if local hardware remains blocked
+10. WR2-011 Surface manual-review outputs
+11. WR2-009 Validate presets where runtime permits; keep Qwen edit signoff off-box if local hardware remains blocked
 
 ## 16. Risks
 
@@ -428,6 +438,7 @@ Mitigation:
 - preset system v1
 - before/after comparison
 - optional reference image support
+- manual-review output reveal path
 - updated product language
 
 ## 19. Hand-off to Sprint 3

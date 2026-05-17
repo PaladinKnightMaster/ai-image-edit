@@ -33,6 +33,7 @@ export type RunRecord = {
   strength?: number | null;
   input_image_ids?: string[] | null;
   output_image_id?: string | null;
+  pending_output_image_id?: string | null;
   latency_ms?: number | null;
   type?: string | null;
   status?: string | null;

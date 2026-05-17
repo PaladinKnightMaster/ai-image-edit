@@ -84,6 +84,7 @@ type RunRecord = {
   strength?: number | null;
   input_image_ids?: string[] | null;
   output_image_id?: string | null;
+  pending_output_image_id?: string | null;
   latency_ms?: number | null;
   type?: string | null;
   status?: string | null;
@@ -553,6 +554,23 @@ export default function ChatPage() {
     setRecentRuns((runs) => runs.filter((run) => run.id !== runId));
     setFailedRuns((runs) => runs.filter((run) => run.id !== runId));
     setHistoryRuns((runs) => runs.filter((run) => run.id !== runId));
+  };
+
+  const markRunRevealed = (jobId: string, imageId: string) => {
+    const updateRuns = (runs: RunRecord[]) =>
+      runs.map((run) =>
+        run.job_id === jobId
+          ? {
+              ...run,
+              status: "succeeded",
+              output_image_id: imageId,
+              pending_output_image_id: null
+            }
+          : run
+      );
+    setRecentRuns(updateRuns);
+    setHistoryRuns(updateRuns);
+    setFailedRuns(updateRuns);
   };
 
   const deleteRun = async (runId: string) => {
@@ -1418,29 +1436,59 @@ export default function ChatPage() {
     }
   };
 
+  const revealJobOutput = async (jobId: string) => {
+    const response = await fetch(`${backendUrl}/api/jobs/${jobId}/reveal`, {
+      method: "POST"
+    });
+    if (!response.ok) {
+      const detail = await parseErrorMessage(response);
+      throw new Error(detail || "Reveal failed.");
+    }
+    const data = (await response.json()) as { image_id: string };
+    markRunRevealed(jobId, data.image_id);
+    return data.image_id;
+  };
+
   const handleReveal = async (message: ChatMessage) => {
     if (!message.jobId) {
       return;
     }
     setError(null);
     try {
-      const response = await fetch(`${backendUrl}/api/jobs/${message.jobId}/reveal`, {
-        method: "POST"
-      });
-      if (!response.ok) {
-        const detail = await parseErrorMessage(response);
-        throw new Error(detail || "Reveal failed.");
-      }
-      const data = (await response.json()) as { image_id: string };
+      const imageId = await revealJobOutput(message.jobId);
       updateMessageByJob(message.jobId, {
         status: "succeeded",
-        outputImageId: data.image_id,
+        outputImageId: imageId,
         requiresReview: false,
         reviewNote: undefined,
         stage: "complete",
         progress: 100
       });
       fetchJob(message.jobId);
+      void Promise.all([loadRuns(), loadHistoryRuns()]);
+    } catch (revealError) {
+      const messageText =
+        revealError instanceof Error ? revealError.message : "Reveal failed.";
+      setError(messageText);
+    }
+  };
+
+  const handleRevealRun = async (run: RunRecord) => {
+    if (!run.job_id) {
+      return;
+    }
+    setError(null);
+    try {
+      const imageId = await revealJobOutput(run.job_id);
+      updateMessageByJob(run.job_id, {
+        status: "succeeded",
+        outputImageId: imageId,
+        requiresReview: false,
+        reviewNote: undefined,
+        stage: "complete",
+        progress: 100
+      });
+      void Promise.all([loadRuns(), loadHistoryRuns()]);
     } catch (revealError) {
       const messageText =
         revealError instanceof Error ? revealError.message : "Reveal failed.";
@@ -1694,62 +1742,90 @@ export default function ChatPage() {
             </div>
             <div className="mt-4 space-y-4">
               {recentRuns.length ? (
-                recentRuns.map((run) => (
-                  <div
-                    key={run.id}
-                    className="group flex gap-3 rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
-                  >
-                    <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                      {run.output_image_id ? (
-                        <img
-                          src={`${backendUrl}/api/images/${run.output_image_id}`}
-                          alt="recent output"
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] text-slate-400">
-                          n/a
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                          {run.model_id}
-                        </p>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                          {run.status ?? "done"}
-                        </span>
-                      </div>
-                      <p className="mt-1 max-h-10 overflow-hidden text-sm text-slate-700">
-                        {run.prompt}
-                      </p>
-                      <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                        <span>{run.created_at ? formatTime(run.created_at) : ""}</span>
-                        <span>{formatLatency(run.latency_ms)}</span>
-                      </div>
-                      <div className="mt-2 flex items-center gap-2 text-[11px]">
+                recentRuns.map((run) => {
+                  const isPendingReview =
+                    run.status === "pending_review" && Boolean(run.pending_output_image_id);
+                  return (
+                    <div
+                      key={run.id}
+                      className="group flex gap-3 rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
+                    >
+                      <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
                         {run.output_image_id ? (
+                          <img
+                            src={`${backendUrl}/api/images/${run.output_image_id}`}
+                            alt="recent output"
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div
+                            className={`flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] ${
+                              isPendingReview ? "bg-amber-50 text-amber-700" : "text-slate-400"
+                            }`}
+                          >
+                            {isPendingReview ? "Review" : "n/a"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                            {run.model_id}
+                          </p>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${
+                              isPendingReview
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {run.status ?? "done"}
+                          </span>
+                        </div>
+                        <p className="mt-1 max-h-10 overflow-hidden text-sm text-slate-700">
+                          {run.prompt}
+                        </p>
+                        {isPendingReview ? (
+                          <p className="mt-1 text-[11px] text-amber-700">
+                            Output is ready for manual review. Reveal before reuse.
+                          </p>
+                        ) : null}
+                        <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                          <span>{run.created_at ? formatTime(run.created_at) : ""}</span>
+                          <span>{formatLatency(run.latency_ms)}</span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2 text-[11px]">
+                          {run.output_image_id ? (
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
+                              onClick={() => startEditFromOutput(run.output_image_id!)}
+                            >
+                              Edit this
+                            </button>
+                          ) : null}
+                          {isPendingReview ? (
+                            <button
+                              type="button"
+                              className="rounded-full border border-amber-400 px-2 py-0.5 font-semibold text-amber-700 transition hover:border-amber-600 hover:text-amber-900"
+                              onClick={() => handleRevealRun(run)}
+                            >
+                              Reveal
+                            </button>
+                          ) : null}
                           <button
                             type="button"
                             className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                            onClick={() => startEditFromOutput(run.output_image_id!)}
+                            onClick={() => deleteRun(run.id)}
                           >
-                            Edit this
+                            Remove
                           </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                          onClick={() => deleteRun(run.id)}
-                        >
-                          Remove
-                        </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-sm text-slate-500">No runs yet.</p>
               )}

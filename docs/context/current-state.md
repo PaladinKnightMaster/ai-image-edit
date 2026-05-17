@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-05-06
+Last updated: 2026-05-17
 
 ## Product Status
 - MVP roadmap drafted
@@ -10,6 +10,7 @@ Last updated: 2026-05-06
 - the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime and completed a
   one-image smoke edit on this machine in about 34.7 minutes, reaching `pending_review` with a usable
   pending output image
+- pending-review outputs are now surfaced in Recent runs with an explicit reveal action before reuse
 - fast-check env profiles added for CPU-only development
 - war-room operating layer added as project-local architecture
 - durable ADR, architecture, workflow, model, design, and testing docs added under `docs/`
@@ -53,8 +54,9 @@ Last updated: 2026-05-06
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. patch the benchmark harness so `pending_review` is treated as a terminal successful smoke outcome
-2. use the completed FLUX smoke output as draft-lane evidence for continued Sprint 2 product polish
+1. validate the pending-review UX path locally without launching a model: Recent runs should show `Review`,
+   reveal should move the run to `succeeded`, and the output should then be reusable
+2. run a Sprint 2 closeout audit against `docs/planning/sprint-2-outline.md`
 3. keep `qwen-image-edit-2511` benchmark/signoff deferred to a stronger machine instead of forcing local reruns
 
 ## Supported Runtime Lanes
