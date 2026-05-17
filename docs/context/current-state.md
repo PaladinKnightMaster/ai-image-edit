@@ -5,7 +5,7 @@ Last updated: 2026-05-17
 ## Product Status
 - MVP roadmap drafted
 - Sprint 1, Sprint 2, and Sprint 3 planning docs drafted
-- Sprint 2 editor-first frontend work is largely implemented
+- Sprint 2 editor-first frontend work is engineering-complete for the local draft-lane product scope
 - local `qwen-image-edit-2511` benchmark/signoff is blocked on this machine by a reproducible native crash
 - the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime and completed a
   one-image smoke edit on this machine in about 34.7 minutes, reaching `pending_review` with a usable
@@ -38,10 +38,8 @@ Last updated: 2026-05-17
   to the base interpreter plus venv site-packages when the Windows venv launcher is stale
 
 ## Current Primary Sprint 2 Focus
-- finish the remaining Sprint 2 product work without waiting on local `qwen-image-edit-2511` recovery
-- use the now capability-aware `flux2-klein-9b-gguf` lane as the local draft edit path on this machine
-- use persisted job activity and pending-review-aware harness semantics for FLUX draft checks so slow runs
-  remain visible and completed manual-review outputs are captured correctly
+- Sprint 2 closeout audit is complete in `docs/planning/sprint-2-closeout-audit.md`
+- local draft-lane product scope is ready to hand off to Sprint 3 planning/start
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -54,10 +52,9 @@ Last updated: 2026-05-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. validate the pending-review UX path locally without launching a model: Recent runs should show `Review`,
-   reveal should move the run to `succeeded`, and the output should then be reusable
-2. run a Sprint 2 closeout audit against `docs/planning/sprint-2-outline.md`
-3. keep `qwen-image-edit-2511` benchmark/signoff deferred to a stronger machine instead of forcing local reruns
+1. start Sprint 3 planning from the Sprint 2 closeout audit
+2. carry Qwen edit benchmark/signoff as an explicit off-box validation task
+3. keep local validation focused on cheap UI/API checks unless the user explicitly approves another model run
 
 ## Supported Runtime Lanes
 - `qwen-image-2512` - local T2I smoke lane

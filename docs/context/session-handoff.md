@@ -16,14 +16,16 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Finish the Sprint 2 UI closeout path without launching another model:
-1. validate that Recent runs surface `pending_review` outputs as review-gated results
-2. confirm `Reveal` turns the pending run into a normal reusable output
-3. run a Sprint 2 closeout audit against `docs/planning/sprint-2-outline.md`
+Start Sprint 3 planning from the Sprint 2 closeout audit:
+1. read `docs/planning/sprint-2-closeout-audit.md`
+2. keep Qwen edit benchmark/signoff as an explicit off-box validation task
+3. prioritize result-iteration reliability, preset quality review, and job/reveal hardening before new editing surfaces
 
 ## Completed in this session
 - confirmed the approved `flux2-klein-9b-gguf` one-image smoke edit completed on CPU in about 34.7
   minutes, reached `pending_review`, and produced pending image `340ab221970549709dc9d017b96b3cba`
+- completed the Sprint 2 closeout audit in `docs/planning/sprint-2-closeout-audit.md`, marking the
+  local draft-lane product scope engineering-complete while preserving Qwen edit signoff as off-box work
 - surfaced pending-review outputs in Recent runs with an explicit `Reveal` action, while keeping unrevealed
   outputs out of normal edit reuse/history selection
 - identified a harness classification bug: `pending_review` was not treated as terminal, so the wrapper
