@@ -29,6 +29,14 @@ Continue the first Sprint 3 reliability slice without launching a model:
   the next browser validation can target deterministic elements
 - started WR3-002 result-iteration hardening by adding a direct `Download` action to revealed Recent runs
   alongside `Edit this`
+- hardened reveal UI against duplicate submissions with a shared in-flight `Revealing...` state for both
+  timeline and Recent runs reveal actions
+- ran live browser validation with backend/frontend on localhost against a scratch DB copy:
+  Recent runs `Reveal` changed the fixture from `pending_review` to `succeeded`, rendered the output,
+  exposed `Edit this` and `Download`, staged the revealed output as the edit base, and confirmed the
+  composer output-library replacement path shows the revealed run as reusable
+- note: use `http://localhost:3000/chat` for browser validation because backend CORS is configured for
+  `http://localhost:3000`; `127.0.0.1:3000` loads the page but client-side API reads are blocked by CORS
 - started WR3-001 / WR3-003 as a local-only reliability slice without submitting a new edit job or running a model
 - added cheap temp-DB backend coverage for pending-review reveal transitions: pending output moves to
   `output_image_id`, `pending_output_image_id` clears, job status becomes `succeeded`, and run history becomes reusable

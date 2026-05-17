@@ -47,6 +47,10 @@ Last updated: 2026-05-17
 - Recent runs and output-library surfaces now expose stable test hooks for live reveal/reuse browser validation
 - WR3-002 has started with a small result-iteration hardening pass: revealed Recent runs now expose
   both `Edit this` and `Download` actions
+- reveal actions are now guarded against duplicate submissions and show an in-flight `Revealing...` state
+  from both timeline and Recent runs entry points
+- live browser validation against a scratch copy of `data/app.benchmark-review.db` passed for Recent runs
+  reveal, rendered output, `Edit this` reuse, `Download`, and composer output-library reuse
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -59,8 +63,8 @@ Last updated: 2026-05-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. run lightweight live UI validation against the Recent runs reveal/reuse hooks when local server launch is available
-2. validate Recent runs reveal/reuse behavior in the browser against a scratch DB, without submitting a new model job
+1. continue WR3-002 result-iteration hardening around compare/refine continuity
+2. decide whether the landing-state `Open output library` path needs a focused follow-up check
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes

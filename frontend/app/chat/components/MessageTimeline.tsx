@@ -14,6 +14,7 @@ type MessageTimelineProps = {
   formatTime: (timestamp?: number) => string;
   isEditMode: boolean;
   messages: ChatMessage[];
+  revealingJobIds: Set<string>;
   onStartEditFromOutput: (imageId: string) => void;
   onCopyDebugInfo: (message: ChatMessage) => void;
   onCopyRunParams: (run?: RunRecord) => void;
@@ -32,6 +33,7 @@ export function MessageTimeline({
   formatTime,
   isEditMode,
   messages,
+  revealingJobIds,
   onStartEditFromOutput,
   onCopyDebugInfo,
   onCopyRunParams,
@@ -97,6 +99,7 @@ export function MessageTimeline({
           const showCompare = Boolean(outputImageUrl && compareInputUrl && compareInputCount);
           const isActiveJob =
             !isUser && !message.outputImageId && ["queued", "running"].includes(message.status ?? "");
+          const isRevealing = message.jobId ? revealingJobIds.has(message.jobId) : false;
 
           return (
             <div
@@ -190,10 +193,11 @@ export function MessageTimeline({
                     {message.requiresReview ? (
                       <button
                         type="button"
-                        className="rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900 transition hover:-translate-y-0.5"
+                        className="rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900 transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
                         onClick={() => onReveal(message)}
+                        disabled={isRevealing}
                       >
-                        Reveal result
+                        {isRevealing ? "Revealing..." : "Reveal result"}
                       </button>
                     ) : null}
                     {message.outputImageId ? (

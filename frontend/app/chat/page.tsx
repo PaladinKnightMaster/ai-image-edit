@@ -406,6 +406,7 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteImagesOnCleanup, setDeleteImagesOnCleanup] = useState(false);
+  const [revealingJobIds, setRevealingJobIds] = useState<Set<string>>(() => new Set());
   const eventSources = useRef<Map<string, EventSource>>(new Map());
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -1453,7 +1454,11 @@ export default function ChatPage() {
     if (!message.jobId) {
       return;
     }
+    if (revealingJobIds.has(message.jobId)) {
+      return;
+    }
     setError(null);
+    setRevealingJobIds((current) => new Set(current).add(message.jobId!));
     try {
       const imageId = await revealJobOutput(message.jobId);
       updateMessageByJob(message.jobId, {
@@ -1470,6 +1475,12 @@ export default function ChatPage() {
       const messageText =
         revealError instanceof Error ? revealError.message : "Reveal failed.";
       setError(messageText);
+    } finally {
+      setRevealingJobIds((current) => {
+        const next = new Set(current);
+        next.delete(message.jobId!);
+        return next;
+      });
     }
   };
 
@@ -1477,7 +1488,11 @@ export default function ChatPage() {
     if (!run.job_id) {
       return;
     }
+    if (revealingJobIds.has(run.job_id)) {
+      return;
+    }
     setError(null);
+    setRevealingJobIds((current) => new Set(current).add(run.job_id));
     try {
       const imageId = await revealJobOutput(run.job_id);
       updateMessageByJob(run.job_id, {
@@ -1493,6 +1508,12 @@ export default function ChatPage() {
       const messageText =
         revealError instanceof Error ? revealError.message : "Reveal failed.";
       setError(messageText);
+    } finally {
+      setRevealingJobIds((current) => {
+        const next = new Set(current);
+        next.delete(run.job_id);
+        return next;
+      });
     }
   };
 
@@ -1748,6 +1769,7 @@ export default function ChatPage() {
                 recentRuns.map((run) => {
                   const isPendingReview =
                     run.status === "pending_review" && Boolean(run.pending_output_image_id);
+                  const isRevealing = revealingJobIds.has(run.job_id);
                   return (
                     <div
                       key={run.id}
@@ -1826,11 +1848,12 @@ export default function ChatPage() {
                           {isPendingReview ? (
                             <button
                               type="button"
-                              className="rounded-full border border-amber-400 px-2 py-0.5 font-semibold text-amber-700 transition hover:border-amber-600 hover:text-amber-900"
+                              className="rounded-full border border-amber-400 px-2 py-0.5 font-semibold text-amber-700 transition hover:border-amber-600 hover:text-amber-900 disabled:cursor-wait disabled:opacity-70"
                               onClick={() => handleRevealRun(run)}
+                              disabled={isRevealing}
                               data-testid={`recent-run-reveal-${run.id}`}
                             >
-                              Reveal
+                              {isRevealing ? "Revealing..." : "Reveal"}
                             </button>
                           ) : null}
                           <button
@@ -1887,6 +1910,7 @@ export default function ChatPage() {
             formatTime={formatTime}
             isEditMode={isEditMode}
             messages={messages}
+            revealingJobIds={revealingJobIds}
             onStartEditFromOutput={startEditFromOutput}
             onCopyDebugInfo={copyDebugInfo}
             onCopyRunParams={copyRunParams}
