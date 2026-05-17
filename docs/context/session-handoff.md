@@ -16,16 +16,18 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Start Sprint 3 planning from the Sprint 2 closeout audit:
-1. read `docs/planning/sprint-2-closeout-audit.md`
-2. keep Qwen edit benchmark/signoff as an explicit off-box validation task
-3. prioritize result-iteration reliability, preset quality review, and job/reveal hardening before new editing surfaces
+Implement the first Sprint 3 reliability slice without launching a model:
+1. follow `docs/planning/sprint-3-outline.md`
+2. start with WR3-001 / WR3-003: pending-review reveal validation plus cheap job/recovery checks
+3. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - confirmed the approved `flux2-klein-9b-gguf` one-image smoke edit completed on CPU in about 34.7
   minutes, reached `pending_review`, and produced pending image `340ab221970549709dc9d017b96b3cba`
 - completed the Sprint 2 closeout audit in `docs/planning/sprint-2-closeout-audit.md`, marking the
   local draft-lane product scope engineering-complete while preserving Qwen edit signoff as off-box work
+- activated Sprint 3 in `docs/planning/sprint-3-outline.md` with reliability, reveal, iteration, preset-review,
+  and beta-readiness work sequenced before any approval-gated model-quality run
 - surfaced pending-review outputs in Recent runs with an explicit `Reveal` action, while keeping unrevealed
   outputs out of normal edit reuse/history selection
 - identified a harness classification bug: `pending_review` was not treated as terminal, so the wrapper

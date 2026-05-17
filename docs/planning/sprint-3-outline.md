@@ -1,298 +1,238 @@
 # Sprint 3 Outline
 
-Status: Draft
-Sprint name: Sprint 3 - Editing Quality, Reliability, and Beta Readiness
+Status: Active
+Sprint name: Sprint 3 - Reliability, Iteration, Quality Review, and Beta Readiness
 Duration: 2 weeks
-Last updated: 2026-04-17
+Last updated: 2026-05-17
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
 - `docs/planning/sprint-1-backlog.md`
 - `docs/planning/sprint-2-outline.md`
+- `docs/planning/sprint-2-closeout-audit.md`
 
 Sprint owner: Tech Lead
 
 ## 1. Sprint Goal
 
-Harden the edit-first MVP so it is credible for external beta use.
+Harden the edit-first MVP so it is credible for closed beta planning.
 
-Sprint 3 is where the team stops proving workflow shape and starts proving product quality, reliability, and consistency. The goal is not broad new feature work. The goal is to make the current edit-first experience dependable enough for real users.
+Sprint 2 proved the local draft-lane product flow. Sprint 3 must now make the result loop,
+manual-review path, recovery behavior, and quality-review process trustworthy. The goal is not to add
+new editor surfaces. The goal is to make the current product loop dependable enough that a beta
+decision can be made from evidence.
 
-## 2. Definition of Done for Sprint 3
+## 2. Definition Of Done
 
 Sprint 3 is complete only when all of the following are true:
 
-- portrait editing quality is directionally consistent across the benchmark pack
-- reference-guided editing is understandable and usable
-- key job/recovery flows are trustworthy enough for beta
-- benchmark-driven preset tuning has been completed for the initial preset set
-- beta readiness criteria are documented and reviewable
+- result iteration is clear: `edit -> reveal if needed -> compare -> refine -> download/reuse`
+- pending-review reveal behavior has lightweight live/API validation without launching a new model
+- reference-guided editing is understandable and explicitly optional
+- key job/recovery states are documented and validated with cheap checks
+- preset quality review has a recorded path that separates local FLUX draft evidence from Qwen signoff
+- beta readiness criteria and known limitations are documented and reviewable
 
-## 3. Scope Summary
+## 3. Inherited Constraints
 
-### In Scope
+- Local `qwen-image-edit-2511` benchmark/signoff remains blocked on this machine by a reproducible native
+  process exit (`0xC0000005`) during CPU-only execution.
+- `flux2-klein-9b-gguf` is the local draft edit lane and can support product-flow evidence.
+- FLUX draft results are not final acceptance evidence for the intended Qwen edit lane.
+- Any heavy model run still requires explicit user notification and approval before execution.
+- Do not broaden into new engine families, masking, batch editing, Android, or hosted GPU work in this sprint.
 
-- preset quality tuning
-- reference-guided editing polish
-- result iteration improvements
-- backend reliability improvements that block beta confidence
-- benchmark and acceptance review process
-- beta readiness checklist
+## 4. Workstreams
 
-### Out of Scope
+### Workstream A: Result Iteration And Reveal Hardening
 
-- new engine families
-- Android/browser companion implementation
-- hosted GPU implementation
-- masking/editor tool expansion
-- broad design-system or navigation rewrite
+Objective: make the post-output loop trustworthy without requiring users to understand backend state.
 
-## 4. Product Outcomes
+Focus:
 
-By the end of Sprint 3, a beta user should be able to:
+- validate pending-review reveal from Recent runs and timeline messages
+- ensure revealed outputs become reusable in edit/history flows
+- keep unrevealed pending outputs out of normal reuse
+- make `Edit this`, compare, and download actions remain prominent after reveal
 
-1. upload a portrait
-2. apply a preset or type an edit instruction
-3. optionally add a reference image
-4. run a draft edit
-5. evaluate the result with compare tools
-6. rerun or refine with confidence
-7. save a result that is consistently useful
+### Workstream B: Job Reliability And Recovery
 
-## 5. Workstreams
+Objective: reduce beta risk from long CPU jobs, interrupted jobs, and confusing state transitions.
 
-### Workstream A: Editing Quality Tuning
+Focus:
 
-Objective: make the existing preset system produce stable, believable portrait results.
+- cheap checks for `/api/jobs`, `/api/runs`, reveal, deletion, and cleanup behavior
+- stale `queued` / `running` recovery behavior after restart
+- clearer status/error language where current copy is ambiguous
+- storage cleanup expectations for output and pending-output images
 
-### Workstream B: Reference-Guided Editing Polish
+### Workstream C: Preset Quality Review
 
-Objective: make the optional second-image workflow understandable and predictable.
+Objective: create an evidence-based preset review loop without pretending local hardware can complete all signoff.
 
-### Workstream C: Reliability and Recovery
+Focus:
 
-Objective: reduce the risk of long CPU runs feeling untrustworthy.
+- review six portrait presets against benchmark-pack mapping
+- use FLUX draft evidence only where local runtime permits and user approves the run
+- keep Qwen edit signoff as an off-box validation lane
+- record preset watchouts and tuning decisions before changing defaults
 
-### Workstream D: Beta Readiness
+### Workstream D: Reference-Guided UX Polish
 
-Objective: define and satisfy external beta entry criteria.
+Objective: make optional reference-image use clear enough for beta users.
 
-## 6. Editing Quality Tuning
+Focus:
 
-### Goals
+- clarify base vs reference expectations
+- keep single-image edit path primary
+- document supported reference use cases: lighting, style, angle guidance
+- avoid advanced reference weighting UI in Sprint 3
 
-- improve consistency of portrait presets
-- reduce surprising or low-value outputs
-- tune for identity preservation and naturalism
+### Workstream E: Beta Readiness
 
-### Review Dimensions
+Objective: define the beta gate in concrete, reviewable terms.
 
-- identity retention
-- skin texture realism
-- eye and face coherence
-- lighting realism
-- background cleanliness
-- prompt adherence
+Focus:
 
-### Tuning Policy
+- closed-beta checklist
+- known limitations
+- local hardware/runtime expectations
+- off-box validation requirement for Qwen edit signoff
 
-- use draft-tier runs for most tuning loops
-- use acceptance-tier runs only at scheduled review points
-- record changes to presets and outcomes against benchmark cases
+## 5. Ticket Outline
 
-## 7. Reference-Guided Editing Polish
+### WR3-001 - Validate pending-review reveal path
 
-### Goals
-
-- clarify when and why to use a reference image
-- reduce confusion between base image and reference image
-- improve expected behavior on style, lighting, and angle use cases
-
-### UX Requirements
-
-- clear labels for base vs reference image
-- concise helper text
-- reference use remains optional
-- simple failure messaging when the result diverges
-
-### Product Rule
-
-Reference-guided editing is a support feature, not the primary MVP path. The single-image edit flow must remain stronger and simpler.
-
-## 8. Result Iteration Improvements
-
-### Scope
-
-- make it easier to rerun edits
-- improve reuse of latest result as new input
-- keep compare and save actions prominent
-
-### Expected Outcomes
-
-- lower friction between first output and second attempt
-- clearer loop: `edit -> compare -> refine`
-
-## 9. Reliability and Recovery
-
-### Focus Areas
-
-- long CPU-run trustworthiness
-- job status visibility
-- restart behavior
-- storage and cleanup correctness
-
-### Desired Improvements
-
-- better handling for interrupted queued/running jobs
-- clearer surfaced errors
-- more predictable history state after failures
-- confidence that beta users will not lose track of outputs
-
-## 10. Benchmark and Acceptance Review
-
-### Required Inputs
-
-- benchmark fixture pack from earlier sprints
-- fixed seeds
-- preset list v1
-
-### Review Cadence
-
-- weekly draft-tier review
-- milestone acceptance-tier review
-
-### Output
-
-- benchmark notes
-- preset adjustments
-- beta readiness recommendation
-
-## 11. Ticket Outline
-
-### WR3-001 - Tune preset pack against benchmark set
-
-- Owner: AI/ML
+- Owner: Frontend + Backend
 - Priority: P0
-- Outcome: initial presets are directionally consistent on the benchmark pack
+- Outcome: existing pending-review outputs can be revealed and then reused without launching a new model
 
-### WR3-002 - Improve reference-guided edit UX copy and structure
-
-- Owner: Frontend + UI/UX
-- Priority: P0
-- Outcome: users understand how to use an optional reference image
-
-### WR3-003 - Improve rerun and refine loop
+### WR3-002 - Harden result iteration loop
 
 - Owner: Frontend
 - Priority: P0
-- Outcome: iteration after first output is fast and obvious
+- Outcome: users can move from output to compare, refine, download, or reuse without losing context
 
-### WR3-004 - Harden job/recovery behavior for beta confidence
+### WR3-003 - Add cheap job/recovery API checks
 
 - Owner: Backend
 - Priority: P0
-- Outcome: long CPU runs feel more trustworthy
+- Outcome: job/runs/reveal/delete/recovery behavior has non-model validation coverage where feasible
 
-### WR3-005 - Improve error and status communication
+### WR3-004 - Improve status and error communication
 
 - Owner: Backend + Frontend
 - Priority: P1
-- Outcome: failures are easier to understand and recover from
+- Outcome: long waits, observer timeouts, pending review, and failures are distinguishable to users
 
-### WR3-006 - Add beta readiness checklist
+### WR3-005 - Polish reference-guided UX copy
+
+- Owner: Frontend + UI/UX
+- Priority: P1
+- Outcome: users understand that reference images are optional guidance, not the primary identity source
+
+### WR3-006 - Create preset quality review worksheet
+
+- Owner: AI/ML + Product
+- Priority: P0
+- Outcome: preset review can proceed with clear criteria, runtime lane labels, and signoff boundaries
+
+### WR3-007 - Run approval-gated draft preset review where feasible
+
+- Owner: AI/ML
+- Priority: P1
+- Outcome: any local FLUX draft run is explicitly approved and logged as draft evidence only
+
+### WR3-008 - Add beta readiness checklist and limitations doc
 
 - Owner: Tech Lead + Product
 - Priority: P0
-- Outcome: team has explicit entry criteria for external beta
+- Outcome: closed-beta entry criteria, known limitations, and off-box validation needs are explicit
 
-### WR3-007 - Run acceptance review on benchmark pack
+## 6. Recommended Execution Order
 
-- Owner: AI/ML + Product + Domain Advisors
-- Priority: P1
-- Outcome: beta recommendation is based on review, not intuition
+1. WR3-001 Validate pending-review reveal path
+2. WR3-003 Add cheap job/recovery API checks
+3. WR3-002 Harden result iteration loop
+4. WR3-008 Add beta readiness checklist and limitations doc
+5. WR3-006 Create preset quality review worksheet
+6. WR3-005 Polish reference-guided UX copy
+7. WR3-004 Improve status and error communication
+8. WR3-007 Run approval-gated draft preset review where feasible
 
-### WR3-008 - Document known limitations and beta expectations
+This order intentionally starts with non-heavy reliability and evidence plumbing before any model-quality
+run. It keeps the machine-safe Sprint 3 path moving while preserving the heavy-run approval rule.
 
-- Owner: Product + Marketing
-- Priority: P1
-- Outcome: beta messaging is honest about CPU-only limits and scope
+## 7. First Step
 
-## 12. Recommended Execution Order
+Start with WR3-001 and WR3-003 together as one local-only reliability slice:
 
-1. WR3-001 Tune preset pack
-2. WR3-002 Improve reference-guided UX
-3. WR3-003 Improve rerun/refine loop
-4. WR3-004 Harden job/recovery behavior
-5. WR3-005 Improve error and status communication
-6. WR3-006 Add beta readiness checklist
-7. WR3-007 Run acceptance review
-8. WR3-008 Document known limitations
+- inspect the existing `pending_review` run state in `data/app.db` or available API responses
+- add or update non-model tests for reveal state transitions if the current backend test harness supports it
+- verify that a pending output moves to `output_image_id`, clears `pending_output_image_id`, updates job status,
+  and becomes visible in reusable run history
+- do not submit a new edit job or run any model
 
-## 13. Risks
+## 8. Risks
 
-### Risk 1: Team tries to solve too many quality issues at once
-
-Mitigation:
-
-- tune only the v1 preset pack
-- defer broader style expansion
-
-### Risk 2: Reference-guided edits stay inconsistent
+### Risk 1: Sprint 3 drifts into new features
 
 Mitigation:
 
-- keep the flow optional
-- narrow the supported guidance use cases
+- reject masking, batch editing, new engines, and hosted GPU work for this sprint
+- prioritize reliability, iteration, review, and beta gates
 
-### Risk 3: CPU latency remains frustrating for beta users
-
-Mitigation:
-
-- keep preview/final model explicit
-- message CPU draft/final behavior clearly
-- prefer strong draft experience over overly ambitious defaults
-
-### Risk 4: Reliability work is postponed because it is less visible
+### Risk 2: Preset quality is judged from insufficient evidence
 
 Mitigation:
 
-- treat recovery and trust as beta blockers
-- include them in review gates
+- separate FLUX draft evidence from Qwen signoff
+- label runtime lane and hardware context in every review artifact
+- require off-box Qwen edit validation before final acceptance
 
-## 14. Beta Readiness Criteria
+### Risk 3: CPU latency still feels like failure
 
-External beta should not start until:
+Mitigation:
 
-- Sprint 1 stabilization criteria remain satisfied
+- preserve persisted job activity and observer-timeout semantics
+- improve user-facing status copy where needed
+- avoid fixed ETA promises on CPU-only inference
+
+### Risk 4: `page.tsx` keeps growing
+
+Mitigation:
+
+- do not add major orchestration directly to `page.tsx`
+- extract hooks or utilities for new reliability/reveal logic when implementation grows
+
+## 9. Beta Readiness Criteria
+
+Closed beta should not start until:
+
+- Sprint 1 startup/runtime checks remain green
 - Sprint 2 edit-first workflow remains intact
-- preset pack performs acceptably on the benchmark set
-- rerun/refine loop is usable
-- key failure states are understandable
-- setup and limitations are documented
+- reveal/reuse/recovery flows have cheap validation coverage
+- preset quality review is recorded with lane-specific evidence
+- Qwen edit signoff is completed off-box or explicitly marked as a beta blocker
+- known limitations and CPU-only runtime expectations are documented
 
-## 15. Sprint Review Checklist
+## 10. Expected Deliverables
 
-- Are portrait presets actually useful on the benchmark pack?
-- Is reference-guided editing understandable?
-- Can users iterate without getting lost?
-- Are failures and long waits communicated clearly?
-- Is the team confident enough to expose the MVP to beta users?
-
-## 16. Expected Deliverables
-
-- tuned preset pack v1
-- polished reference-guided edit UX
-- better rerun/refine flow
-- improved recovery and status trust
+- pending-review reveal validation
+- job/recovery non-model checks
+- improved result iteration loop
+- preset quality review worksheet
+- reference-guided UX polish
 - beta readiness checklist
-- documented beta limitations
+- known limitations document
 
-## 17. Hand-off to Beta / Phase 4
+## 11. Hand-off To Beta / Phase 4
 
-After Sprint 3, the team should decide one of:
+After Sprint 3, choose one of:
 
 - proceed to closed beta
 - run one more hardening sprint
 - delay beta and narrow scope further
 
-The decision must be based on benchmark evidence and reliability confidence, not only on feature completeness.
+The decision must be based on benchmark evidence, reveal/recovery reliability, and honest runtime
+limitations, not only feature completeness.

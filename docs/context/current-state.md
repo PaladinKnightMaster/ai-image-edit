@@ -37,9 +37,9 @@ Last updated: 2026-05-17
 - backend launcher and startup smoke scripts now validate Python runtime viability and can fall back
   to the base interpreter plus venv site-packages when the Windows venv launcher is stale
 
-## Current Primary Sprint 2 Focus
-- Sprint 2 closeout audit is complete in `docs/planning/sprint-2-closeout-audit.md`
-- local draft-lane product scope is ready to hand off to Sprint 3 planning/start
+## Current Primary Sprint 3 Focus
+- Sprint 3 is active in `docs/planning/sprint-3-outline.md`
+- start with local-only pending-review reveal validation and cheap job/recovery checks
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -52,9 +52,9 @@ Last updated: 2026-05-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. start Sprint 3 planning from the Sprint 2 closeout audit
-2. carry Qwen edit benchmark/signoff as an explicit off-box validation task
-3. keep local validation focused on cheap UI/API checks unless the user explicitly approves another model run
+1. implement WR3-001 / WR3-003 as a local-only reliability slice
+2. validate reveal state transitions and job/runs recovery behavior without submitting a new model job
+3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes
 - `qwen-image-2512` - local T2I smoke lane
