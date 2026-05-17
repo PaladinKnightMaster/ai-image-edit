@@ -18,13 +18,15 @@ The repo now has:
 ## Immediate next action
 Continue the first Sprint 3 reliability slice without launching a model:
 1. follow `docs/planning/sprint-3-outline.md`
-2. extend WR3-001 / WR3-003 from backend/API temp-DB transition coverage into lightweight live UI validation
+2. run lightweight live UI validation against the Recent runs reveal/reuse hooks when local server launch is available
 3. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - added copy-based API validation using `data/app.benchmark-review.db` as a read-only source fixture:
   the test copies the DB, reveals job `64ff0fcdc35b42c3b46e35be413c8e48` in the scratch copy, verifies
   `/api/jobs`, `/api/runs?status=...`, and `/api/images`, then confirms the real benchmark DB is unchanged
+- added stable `data-testid` hooks to Recent runs reveal/reuse controls and the output-library reuse cards so
+  the next browser validation can target deterministic elements
 - started WR3-001 / WR3-003 as a local-only reliability slice without submitting a new edit job or running a model
 - added cheap temp-DB backend coverage for pending-review reveal transitions: pending output moves to
   `output_image_id`, `pending_output_image_id` clears, job status becomes `succeeded`, and run history becomes reusable

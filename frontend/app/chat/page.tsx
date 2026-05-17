@@ -1725,7 +1725,10 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur">
+          <div
+            className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur"
+            data-testid="recent-runs-panel"
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Recent runs
@@ -1749,6 +1752,7 @@ export default function ChatPage() {
                     <div
                       key={run.id}
                       className="group flex gap-3 rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
+                      data-testid={`recent-run-${run.id}`}
                     >
                       <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
                         {run.output_image_id ? (
@@ -1757,12 +1761,14 @@ export default function ChatPage() {
                             alt="recent output"
                             className="h-full w-full object-cover"
                             loading="lazy"
+                            data-testid={`recent-run-image-${run.id}`}
                           />
                         ) : (
                           <div
                             className={`flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] ${
                               isPendingReview ? "bg-amber-50 text-amber-700" : "text-slate-400"
                             }`}
+                            data-testid={`recent-run-placeholder-${run.id}`}
                           >
                             {isPendingReview ? "Review" : "n/a"}
                           </div>
@@ -1779,6 +1785,7 @@ export default function ChatPage() {
                                 ? "bg-amber-100 text-amber-800"
                                 : "bg-slate-100 text-slate-500"
                             }`}
+                            data-testid={`recent-run-status-${run.id}`}
                           >
                             {run.status ?? "done"}
                           </span>
@@ -1801,6 +1808,7 @@ export default function ChatPage() {
                               type="button"
                               className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
                               onClick={() => startEditFromOutput(run.output_image_id!)}
+                              data-testid={`recent-run-edit-${run.id}`}
                             >
                               Edit this
                             </button>
@@ -1810,6 +1818,7 @@ export default function ChatPage() {
                               type="button"
                               className="rounded-full border border-amber-400 px-2 py-0.5 font-semibold text-amber-700 transition hover:border-amber-600 hover:text-amber-900"
                               onClick={() => handleRevealRun(run)}
+                              data-testid={`recent-run-reveal-${run.id}`}
                             >
                               Reveal
                             </button>

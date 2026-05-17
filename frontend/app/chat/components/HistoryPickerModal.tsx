@@ -33,7 +33,10 @@ export function HistoryPickerModal({
     historyTargetSlot === "base" ? "Use as base image" : "Use as reference image";
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4 py-10">
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4 py-10"
+      data-testid="history-picker-modal"
+    >
       <div className="max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200/70 bg-white/95 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
@@ -51,11 +54,16 @@ export function HistoryPickerModal({
         <div className="max-h-[65vh] overflow-y-auto px-6 py-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {outputRuns.map((run) => (
-              <div key={run.id} className="rounded-2xl border border-slate-200 bg-white p-3">
+              <div
+                key={run.id}
+                className="rounded-2xl border border-slate-200 bg-white p-3"
+                data-testid={`history-output-${run.id}`}
+              >
                 <img
                   src={`${backendUrl}/api/images/${run.output_image_id}`}
                   alt="history output"
                   className="h-36 w-full rounded-xl object-cover"
+                  data-testid={`history-output-image-${run.id}`}
                 />
                 <div className="mt-3 space-y-1">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -70,6 +78,7 @@ export function HistoryPickerModal({
                         onAddHistoryAttachment(run.output_image_id);
                       }
                     }}
+                    data-testid={`history-output-use-${run.id}`}
                   >
                     {actionLabel}
                   </button>
