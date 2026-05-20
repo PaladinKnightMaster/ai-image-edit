@@ -18,11 +18,14 @@ The repo now has:
 ## Immediate next action
 Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
-2. continue WR3-006 preset quality review worksheet setup without running a model
-3. add a concise beta tester limitations handoff based on `docs/planning/beta-readiness-checklist.md`
+2. add a concise beta tester limitations handoff based on `docs/planning/beta-readiness-checklist.md`
+3. continue WR3-005 reference-guided UX copy polish without adding new controls
 4. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
+- added `docs/testing/preset-quality-review-worksheet.md` for WR3-006 with every Sprint 2 portrait preset
+  mapped to benchmark cases, evidence lanes, current statuses, review dimensions, watchouts, and review-log fields
+- linked the preset quality worksheet from `docs/index.md` and `docs/testing/preset-benchmark-review.md`
 - added `docs/planning/beta-readiness-checklist.md` for WR3-008 with the current not-beta-ready verdict,
   closed-beta gates, evidence tiers, known limitations, and Sprint 3 beta decision options
 - linked the beta readiness checklist from `docs/index.md` and updated Sprint 3/current-state docs so the

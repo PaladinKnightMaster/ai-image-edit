@@ -41,6 +41,8 @@ Sprint 3 is complete only when all of the following are true:
   reveal/reuse/download, composer output-library reuse, and landing-state output-library reuse.
 - WR3-008 has started with `docs/planning/beta-readiness-checklist.md`, which records the current
   not-beta-ready verdict, closed-beta gates, evidence tiers, and known limitations.
+- WR3-006 has started with `docs/testing/preset-quality-review-worksheet.md`, which maps all Sprint 2
+  presets to evidence lanes, required cases, current statuses, watchouts, and review-log fields.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints
