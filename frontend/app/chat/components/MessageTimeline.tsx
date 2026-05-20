@@ -12,6 +12,7 @@ type MessageTimelineProps = {
   formatDuration: (ms?: number | null) => string;
   formatLatency: (latency?: number | null) => string;
   formatTime: (timestamp?: number) => string;
+  historyLoading: boolean;
   isEditMode: boolean;
   messages: ChatMessage[];
   revealingJobIds: Set<string>;
@@ -31,6 +32,7 @@ export function MessageTimeline({
   formatDuration,
   formatLatency,
   formatTime,
+  historyLoading,
   isEditMode,
   messages,
   revealingJobIds,
@@ -43,6 +45,9 @@ export function MessageTimeline({
   onRetry,
   timelineRef
 }: MessageTimelineProps) {
+  const timelineSizing =
+    messages.length === 0 ? "flex-none overflow-visible" : "min-h-[420px] flex-1 overflow-y-auto";
+
   const getAttachmentBadge = (message: ChatMessage, index: number) => {
     const item = message.attachments?.[index];
     if (!item) {
@@ -68,11 +73,12 @@ export function MessageTimeline({
   return (
     <div
       ref={timelineRef}
-      className="flex-1 space-y-6 overflow-y-auto rounded-3xl border border-slate-200/70 bg-white/70 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur"
+      className={`${timelineSizing} space-y-6 rounded-3xl border border-slate-200/70 bg-white/70 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur`}
     >
       {messages.length === 0 ? (
         <WorkflowLandingState
           attachmentsCount={attachmentsCount}
+          historyLoading={historyLoading}
           isEditMode={isEditMode}
           onModeChange={onModeChange}
           onOpenHistory={onOpenHistory}

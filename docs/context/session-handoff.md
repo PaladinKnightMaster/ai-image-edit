@@ -16,12 +16,21 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Continue the first Sprint 3 reliability slice without launching a model:
+Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
-2. run lightweight live UI validation against the Recent runs reveal/reuse hooks when local server launch is available
-3. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
+2. start WR3-008 beta readiness checklist / known-limitations documentation while the reveal/reuse evidence is fresh
+3. continue WR3-006 preset quality review worksheet setup without running a model
+4. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
+- hardened the landing-state output-library entry by adding a stable test hook, an in-flight loading guard,
+  and a layout fix that removes the composer panel's desktop sticky overlap from timeline/landing controls
+- ran live browser validation with backend/frontend on localhost against a scratch DB copy:
+  landing `Open output library` opens the history picker, the copied pending-review run can be revealed,
+  the revealed output appears in the landing output library, and `Use as base image` stages it for editing
+- confirmed the scratch DB reveal moved pending image `340ab221970549709dc9d017b96b3cba` to
+  `output_image_id`, cleared `pending_output_image_id`, and set the copied job to `succeeded`; the real
+  `data/app.benchmark-review.db` fixture remains `pending_review`
 - added copy-based API validation using `data/app.benchmark-review.db` as a read-only source fixture:
   the test copies the DB, reveals job `64ff0fcdc35b42c3b46e35be413c8e48` in the scratch copy, verifies
   `/api/jobs`, `/api/runs?status=...`, and `/api/images`, then confirms the real benchmark DB is unchanged

@@ -399,6 +399,7 @@ export default function ChatPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyTargetSlot, setHistoryTargetSlot] = useState<AttachmentRole>("base");
   const [historyRuns, setHistoryRuns] = useState<RunRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
@@ -411,6 +412,7 @@ export default function ChatPage() {
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const lastDefaultsRef = useRef({ steps: "", width: "", height: "" });
+  const historyLoadingRef = useRef(false);
   const isEditMode = workflowMode === "edit";
 
   useEffect(() => {
@@ -1099,10 +1101,21 @@ export default function ChatPage() {
   };
 
   const openHistoryPicker = async (slot: AttachmentRole) => {
-    handleModeChange("edit");
-    setHistoryTargetSlot(slot);
-    await loadHistoryRuns();
-    setHistoryOpen(true);
+    if (historyLoadingRef.current) {
+      return;
+    }
+    historyLoadingRef.current = true;
+    setHistoryLoading(true);
+    setError(null);
+    try {
+      handleModeChange("edit");
+      setHistoryTargetSlot(slot);
+      await loadHistoryRuns();
+      setHistoryOpen(true);
+    } finally {
+      historyLoadingRef.current = false;
+      setHistoryLoading(false);
+    }
   };
 
   const uploadImage = async (item: AttachmentDraft) => {
@@ -1908,6 +1921,7 @@ export default function ChatPage() {
             formatDuration={formatDuration}
             formatLatency={formatLatency}
             formatTime={formatTime}
+            historyLoading={historyLoading}
             isEditMode={isEditMode}
             messages={messages}
             revealingJobIds={revealingJobIds}

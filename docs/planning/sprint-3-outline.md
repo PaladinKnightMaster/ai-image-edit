@@ -33,6 +33,14 @@ Sprint 3 is complete only when all of the following are true:
 - preset quality review has a recorded path that separates local FLUX draft evidence from Qwen signoff
 - beta readiness criteria and known limitations are documented and reviewable
 
+## 2.1 Current Progress
+
+- WR3-001 / WR3-003 have non-model backend coverage for reveal transitions, API reveal responses,
+  pending-output cleanup, and queued/running recovery.
+- WR3-002 has live browser evidence on a scratch copy of `data/app.benchmark-review.db` for Recent runs
+  reveal/reuse/download, composer output-library reuse, and landing-state output-library reuse.
+- No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
+
 ## 3. Inherited Constraints
 
 - Local `qwen-image-edit-2511` benchmark/signoff remains blocked on this machine by a reproducible native

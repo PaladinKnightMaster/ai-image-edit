@@ -1,5 +1,6 @@
 type WorkflowLandingStateProps = {
   attachmentsCount: number;
+  historyLoading: boolean;
   isEditMode: boolean;
   onModeChange: (mode: "edit" | "create") => void;
   onOpenHistory: () => void;
@@ -43,6 +44,7 @@ const createSteps = [
 
 export function WorkflowLandingState({
   attachmentsCount,
+  historyLoading,
   isEditMode,
   onModeChange,
   onOpenHistory
@@ -77,10 +79,18 @@ export function WorkflowLandingState({
           <>
             <button
               type="button"
-              onClick={onOpenHistory}
-              className="rounded-full border border-slate-900 px-4 py-2 font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+              data-testid="workflow-open-output-library"
+              disabled={historyLoading}
+              onClick={() => {
+                onOpenHistory();
+              }}
+              className={`rounded-full border px-4 py-2 font-semibold transition ${
+                historyLoading
+                  ? "cursor-wait border-slate-300 bg-slate-100 text-slate-400"
+                  : "border-slate-900 text-slate-900 hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+              }`}
             >
-              Open output library
+              {historyLoading ? "Opening library..." : "Open output library"}
             </button>
             <button
               type="button"

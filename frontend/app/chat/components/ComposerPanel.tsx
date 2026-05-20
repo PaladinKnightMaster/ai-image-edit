@@ -149,7 +149,7 @@ export function ComposerPanel({
   const activeModelLabel = activeModel?.label ?? activeModel?.id ?? "No model selected";
 
   return (
-    <div className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur lg:sticky lg:bottom-6">
+    <div className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.5)] backdrop-blur">
       {isEditMode ? (
         <div className="mb-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
