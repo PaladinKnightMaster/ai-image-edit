@@ -3,7 +3,7 @@
 Status: Active
 Sprint name: Sprint 3 - Reliability, Iteration, Quality Review, and Beta Readiness
 Duration: 2 weeks
-Last updated: 2026-05-17
+Last updated: 2026-05-20
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -39,6 +39,8 @@ Sprint 3 is complete only when all of the following are true:
   pending-output cleanup, and queued/running recovery.
 - WR3-002 has live browser evidence on a scratch copy of `data/app.benchmark-review.db` for Recent runs
   reveal/reuse/download, composer output-library reuse, and landing-state output-library reuse.
+- WR3-008 has started with `docs/planning/beta-readiness-checklist.md`, which records the current
+  not-beta-ready verdict, closed-beta gates, evidence tiers, and known limitations.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints

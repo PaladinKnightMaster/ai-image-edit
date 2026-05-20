@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-05-17
+Last updated: 2026-05-20
 
 ## Product Status
 - MVP roadmap drafted
@@ -54,6 +54,8 @@ Last updated: 2026-05-17
 - landing-state output-library reuse is now browser-validated against the same scratch DB path: the
   landing `Open output library` action opens deterministically, no longer sits under the composer panel,
   and can stage a revealed output as the edit base image
+- WR3-008 beta readiness documentation has started in `docs/planning/beta-readiness-checklist.md`;
+  the current verdict is not beta-ready yet because preset review and off-box Qwen edit signoff remain incomplete
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -66,8 +68,8 @@ Last updated: 2026-05-17
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. start WR3-008 beta readiness checklist and known-limitations doc while reliability evidence is fresh
-2. continue WR3-006 preset quality review worksheet without running a model
+1. continue WR3-006 preset quality review worksheet without running a model
+2. add the concise beta tester limitations handoff referenced by the readiness checklist
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes
