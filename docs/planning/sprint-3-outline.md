@@ -43,6 +43,8 @@ Sprint 3 is complete only when all of the following are true:
   not-beta-ready verdict, closed-beta gates, evidence tiers, and known limitations.
 - WR3-006 has started with `docs/testing/preset-quality-review-worksheet.md`, which maps all Sprint 2
   presets to evidence lanes, required cases, current statuses, watchouts, and review-log fields.
+- The beta tester limitations handoff now exists at `docs/testing/beta-tester-limitations-handoff.md`
+  to keep future tester messaging aligned with the readiness gate and current runtime constraints.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints

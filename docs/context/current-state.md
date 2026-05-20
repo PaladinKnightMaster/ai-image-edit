@@ -58,6 +58,8 @@ Last updated: 2026-05-20
   the current verdict is not beta-ready yet because preset review and off-box Qwen edit signoff remain incomplete
 - WR3-006 preset review documentation has started in `docs/testing/preset-quality-review-worksheet.md`;
   all portrait presets now have mapped cases, evidence lanes, current statuses, and watchouts
+- beta tester limitations handoff now exists at `docs/testing/beta-tester-limitations-handoff.md`;
+  it is internal draft copy and does not change the current not-beta-ready verdict
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -70,8 +72,8 @@ Last updated: 2026-05-20
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. add the concise beta tester limitations handoff referenced by the readiness checklist
-2. continue WR3-005 reference-guided UX copy polish without adding new controls
+1. continue WR3-005 reference-guided UX copy polish without adding new controls
+2. review status/error communication for WR3-004 using existing non-model states
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes

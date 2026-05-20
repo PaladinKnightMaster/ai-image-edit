@@ -18,11 +18,16 @@ The repo now has:
 ## Immediate next action
 Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
-2. add a concise beta tester limitations handoff based on `docs/planning/beta-readiness-checklist.md`
-3. continue WR3-005 reference-guided UX copy polish without adding new controls
+2. continue WR3-005 reference-guided UX copy polish without adding new controls
+3. review status/error communication for WR3-004 using existing non-model states
 4. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
+- added `docs/testing/beta-tester-limitations-handoff.md` as an internal draft for future closed-beta
+  tester messaging, including current scope, what testers can evaluate, what is not final, known limitations,
+  feedback prompts, and the current go/no-go message
+- linked the beta tester limitations handoff from `docs/index.md`, `docs/planning/beta-readiness-checklist.md`,
+  and the Sprint 3/current-state docs
 - added `docs/testing/preset-quality-review-worksheet.md` for WR3-006 with every Sprint 2 portrait preset
   mapped to benchmark cases, evidence lanes, current statuses, review dimensions, watchouts, and review-log fields
 - linked the preset quality worksheet from `docs/index.md` and `docs/testing/preset-benchmark-review.md`

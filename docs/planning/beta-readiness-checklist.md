@@ -103,5 +103,5 @@ At Sprint 3 closeout, choose one:
 ## Next Required Artifacts
 
 - WR3-006 preset quality review worksheet
-- concise beta known-limitations handoff for testers
+- concise beta known-limitations handoff for testers: `docs/testing/beta-tester-limitations-handoff.md`
 - off-box Qwen edit validation record, or an explicit decision that closed beta is draft-lane only
