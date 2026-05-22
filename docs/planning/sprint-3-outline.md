@@ -47,8 +47,10 @@ Sprint 3 is complete only when all of the following are true:
   to keep future tester messaging aligned with the readiness gate and current runtime constraints.
 - WR3-005 has started with copy-only UI and workflow-doc changes that define the base image as the
   identity/source image and the optional reference as visual guidance only.
-- WR3-004 has started with frontend status/error copy helpers for existing non-model states; raw job
-  states now have clearer user-facing labels and failure details in the main UI.
+- WR3-004 has frontend status/error copy helpers and backend/API presentation metadata for existing non-model
+  states; raw job states now have clearer user-facing labels and failure details in the main UI and API.
+- `docs/testing/job-status-and-recovery-states.md` records the status/recovery contract and the remaining
+  WR3-004 checks.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints
@@ -142,6 +144,8 @@ Focus:
 - Owner: Backend + Frontend
 - Priority: P1
 - Outcome: long waits, observer timeouts, pending review, and failures are distinguishable to users
+- Progress: frontend copy helpers and backend/API presentation metadata are implemented; remaining work is
+  limited to browser-checking for copy mismatch if the UI starts consuming backend presentation fields directly.
 
 ### WR3-005 - Polish reference-guided UX copy
 

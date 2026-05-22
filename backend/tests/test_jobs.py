@@ -131,6 +131,9 @@ class JobStateTransitionTest(unittest.TestCase):
         job_payload = JobResponse.model_validate(job).model_dump()
         run_payload = RunResponse.model_validate(run).model_dump()
         self.assertEqual(job_payload["status"], "succeeded")
+        self.assertEqual(job_payload["status_label"], "Complete")
+        self.assertEqual(job_payload["status_detail"], "The output is available for compare, download, or reuse.")
+        self.assertEqual(job_payload["stage_label"], "Complete")
         self.assertEqual(job_payload["run"]["output_image_id"], pending_image_id)
         self.assertIsNone(job_payload["run"]["pending_output_image_id"])
         self.assertEqual(run_payload["output_image_id"], pending_image_id)
@@ -165,7 +168,10 @@ class JobStateTransitionTest(unittest.TestCase):
             self.assertEqual(job_response.status_code, 200)
             job_payload = job_response.json()
             self.assertEqual(job_payload["status"], "succeeded")
+            self.assertEqual(job_payload["status_label"], "Complete")
+            self.assertEqual(job_payload["status_detail"], "The output is available for compare, download, or reuse.")
             self.assertEqual(job_payload["stage"], "complete")
+            self.assertEqual(job_payload["stage_label"], "Complete")
             self.assertEqual(job_payload["run"]["output_image_id"], pending_image_id)
             self.assertIsNone(job_payload["run"]["pending_output_image_id"])
 
@@ -174,6 +180,11 @@ class JobStateTransitionTest(unittest.TestCase):
             succeeded_runs = succeeded_response.json()
             revealed = [run for run in succeeded_runs if run["id"] == run_id]
             self.assertEqual(len(revealed), 1)
+            self.assertEqual(revealed[0]["status_label"], "Complete")
+            self.assertEqual(
+                revealed[0]["status_detail"],
+                "The output is available for compare, download, or reuse.",
+            )
             self.assertEqual(revealed[0]["output_image_id"], pending_image_id)
             self.assertIsNone(revealed[0]["pending_output_image_id"])
 
@@ -221,11 +232,49 @@ class JobStateTransitionTest(unittest.TestCase):
         succeeded = self.jobs.get_job("job-succeeded")
         self.assertEqual(queued["status"], "failed")
         self.assertEqual(queued["error"], "server restarted")
+        self.assertEqual(queued["status_label"], "Failed")
+        self.assertEqual(queued["stage_label"], "Failed")
+        self.assertEqual(
+            queued["error_detail"],
+            "This job was marked failed during backend restart recovery. The run metadata is safe, but the job is not resumable.",
+        )
         self.assertEqual(queued["stage"], "failed")
         self.assertEqual(running["status"], "failed")
         self.assertEqual(running["error"], "server restarted")
+        self.assertEqual(running["status_label"], "Failed")
+        self.assertEqual(
+            running["error_detail"],
+            "This job was marked failed during backend restart recovery. The run metadata is safe, but the job is not resumable.",
+        )
         self.assertEqual(running["stage"], "failed")
         self.assertEqual(succeeded["status"], "succeeded")
+
+    def test_status_copy_distinguishes_pending_review_and_observer_timeout(self) -> None:
+        self._insert_run(
+            job_id="job-review",
+            run_id="run-review",
+            status="pending_review",
+            pending_output_image_id="pending-image",
+        )
+        self._insert_run(job_id="job-timeout", run_id="run-timeout", status="failed")
+        with self.db.get_connection() as conn:
+            conn.execute(
+                "UPDATE jobs SET error = ? WHERE id = ?",
+                ("observer_timeout after 7200s; job remained running", "job-timeout"),
+            )
+            conn.commit()
+
+        review = self.jobs.get_job("job-review")
+        timeout = self.jobs.get_run("run-timeout")
+
+        self.assertEqual(review["status_label"], "Ready for review")
+        self.assertEqual(review["status_detail"], "The output is ready but hidden until it is revealed.")
+        self.assertEqual(review["stage_label"], "Review")
+        self.assertEqual(timeout["status_label"], "Failed")
+        self.assertEqual(
+            timeout["error_detail"],
+            "The observer stopped waiting while the job may still have been active. Treat this as monitoring evidence, not model-quality failure.",
+        )
 
 
 class BenchmarkReviewRevealFixtureTest(unittest.TestCase):
@@ -296,7 +345,9 @@ class BenchmarkReviewRevealFixtureTest(unittest.TestCase):
             self.assertEqual(job_response.status_code, 200)
             job_payload = job_response.json()
             self.assertEqual(job_payload["status"], "succeeded")
+            self.assertEqual(job_payload["status_label"], "Complete")
             self.assertEqual(job_payload["stage"], "complete")
+            self.assertEqual(job_payload["stage_label"], "Complete")
             self.assertEqual(job_payload["run"]["id"], self.PENDING_RUN_ID)
             self.assertEqual(job_payload["run"]["output_image_id"], self.PENDING_IMAGE_ID)
             self.assertIsNone(job_payload["run"]["pending_output_image_id"])

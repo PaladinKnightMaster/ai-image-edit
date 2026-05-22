@@ -147,7 +147,10 @@ class RunResponse(BaseModel):
     latency_ms: int | None = None
     type: str | None = None
     status: str | None = None
+    status_label: str | None = None
+    status_detail: str | None = None
     error: str | None = None
+    error_detail: str | None = None
     created_at: int | None = None
     finished_at: int | None = None
 
@@ -156,11 +159,15 @@ class JobResponse(BaseModel):
     id: str
     type: str
     status: str
+    status_label: str | None = None
+    status_detail: str | None = None
     created_at: int
     started_at: int | None = None
     finished_at: int | None = None
     error: str | None = None
+    error_detail: str | None = None
     stage: str | None = None
+    stage_label: str | None = None
     progress_percent: int | None = None
     progress_step: int | None = None
     progress_total: int | None = None

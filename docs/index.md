@@ -42,6 +42,7 @@ This repository now has four documentation layers:
 ## Testing
 
 - Test strategy: `docs/testing/test-strategy.md`
+- Job status and recovery states: `docs/testing/job-status-and-recovery-states.md`
 - Smoke validation path: `docs/testing/smoke-validation-path.md`
 - Beta tester limitations handoff: `docs/testing/beta-tester-limitations-handoff.md`
 - Benchmark pack: `docs/testing/benchmark-pack.md`

@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from app import config, db, images as image_store
 from app import logging_utils
+from app.status_copy import with_status_copy
 from inference.base import EditParams, GenerationParams
 from inference.manager import get_manager
 
@@ -604,7 +605,7 @@ def get_run(run_id: str) -> dict[str, Any] | None:
     entry = dict(row)
     if entry.get("input_image_ids"):
         entry["input_image_ids"] = json.loads(entry["input_image_ids"])
-    return entry
+    return with_status_copy(entry)
 
 
 def get_recent_latencies(limit: int = 50) -> list[int]:
@@ -636,7 +637,10 @@ def get_job(job_id: str) -> dict[str, Any] | None:
         run["input_image_ids"] = json.loads(run["input_image_ids"])
     if run:
         run["type"] = job["type"]
-    return {**job, "run": run}
+        run["status"] = job["status"]
+        run["error"] = job.get("error")
+        run = with_status_copy(run)
+    return with_status_copy({**job, "run": run})
 
 
 def list_runs(limit: int = 50, status: str | None = None) -> list[dict[str, Any]]:
@@ -659,7 +663,7 @@ def list_runs(limit: int = 50, status: str | None = None) -> list[dict[str, Any]
         entry = dict(row)
         if entry.get("input_image_ids"):
             entry["input_image_ids"] = json.loads(entry["input_image_ids"])
-        runs.append(entry)
+        runs.append(with_status_copy(entry))
     return runs
 
 
