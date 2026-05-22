@@ -65,6 +65,8 @@ Last updated: 2026-05-21
 - WR3-004 status/error communication now has shared frontend copy helpers plus backend/API presentation
   metadata for queued, running, ready-for-review, complete, failed, restart-recovery, and observer-timeout states
 - the status/recovery state contract is documented in `docs/testing/job-status-and-recovery-states.md`
+- WR3-007 is prepared but not approved: `docs/testing/wr3-007-draft-preset-review-approval-packet.md`
+  defines the local FLUX draft target, preview command, approval-only execution command, and evidence boundaries
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -77,8 +79,8 @@ Last updated: 2026-05-21
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. finish WR3-004 only if browser validation shows a status-copy mismatch; otherwise move to WR3-007 planning
-2. keep reference-guided UX work to copy only unless a usability blocker appears
+1. decide whether to run only the WR3-007 preview command, approve the FLUX draft run, or defer model execution
+2. finish WR3-004 only if browser validation shows a status-copy mismatch
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes

@@ -1,6 +1,6 @@
 # Preset Quality Review Worksheet
 
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 Sprint: Sprint 3
 Ticket: WR3-006
 Status: Ready for non-model review planning; model execution remains approval-gated
@@ -94,7 +94,8 @@ Use the benchmark pack dimensions consistently:
 
 ## Next Review Actions
 
-1. Keep local work to worksheet updates, non-model checks, and UI/product-flow validation.
-2. Prepare off-box Qwen review for `Headshot Cleanup` first because it is the primary crash-blocked case.
-3. After one off-box pass, decide whether to keep current defaults, tune one preset, or add benchmark-pack cases
+1. Use `docs/testing/wr3-007-draft-preset-review-approval-packet.md` before any local FLUX draft run.
+2. Keep local FLUX review explicitly labeled as `flux-draft`; do not promote it to Qwen acceptance.
+3. Prepare off-box Qwen review for `Headshot Cleanup` first because it is the primary crash-blocked case.
+4. After one off-box pass, decide whether to keep current defaults, tune one preset, or add benchmark-pack cases
    for the current coverage gaps.

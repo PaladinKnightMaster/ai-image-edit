@@ -51,6 +51,8 @@ Sprint 3 is complete only when all of the following are true:
   states; raw job states now have clearer user-facing labels and failure details in the main UI and API.
 - `docs/testing/job-status-and-recovery-states.md` records the status/recovery contract and the remaining
   WR3-004 checks.
+- WR3-007 has an approval packet at `docs/testing/wr3-007-draft-preset-review-approval-packet.md`; no
+  draft model run has been approved or submitted.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints
@@ -164,6 +166,8 @@ Focus:
 - Owner: AI/ML
 - Priority: P1
 - Outcome: any local FLUX draft run is explicitly approved and logged as draft evidence only
+- Progress: prepared, not executed. The approval packet names `flux-draft-smoke` as the smallest first
+  target and preserves the boundary that FLUX is draft evidence only.
 
 ### WR3-008 - Add beta readiness checklist and limitations doc
 

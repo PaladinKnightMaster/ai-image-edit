@@ -19,8 +19,8 @@ The repo now has:
 Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
 2. treat WR3-004 as nearly complete unless browser validation exposes a status-copy mismatch
-3. next likely step is WR3-007 planning only: define the approval-gated draft preset review command/evidence
-   packet before asking the user whether to run anything heavy
+3. WR3-007 planning is prepared in `docs/testing/wr3-007-draft-preset-review-approval-packet.md`; ask the
+   user before running anything heavy
 4. keep any further reference-guided UX work to copy only unless a usability blocker appears
 5. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
@@ -32,6 +32,8 @@ Continue Sprint 3 with the next non-model evidence/documentation slice:
 - added backend/API status presentation metadata on job and run responses: `status_label`, `status_detail`,
   `stage_label`, and `error_detail`
 - documented the status/recovery state contract in `docs/testing/job-status-and-recovery-states.md`
+- prepared WR3-007 without execution in `docs/testing/wr3-007-draft-preset-review-approval-packet.md`,
+  including the preview command, approval-only FLUX draft command, expected cost, evidence fields, and go/no-go criteria
 - started WR3-005 reference-guided UX copy polish without adding controls:
   `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
   and related notices now distinguish base identity/source image from optional visual guide image

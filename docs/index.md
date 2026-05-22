@@ -49,6 +49,7 @@ This repository now has four documentation layers:
 - Benchmark manifest: `docs/testing/benchmark-pack.v0.json`
 - Preset benchmark review: `docs/testing/preset-benchmark-review.md`
 - Preset quality review worksheet: `docs/testing/preset-quality-review-worksheet.md`
+- WR3-007 draft preset review approval packet: `docs/testing/wr3-007-draft-preset-review-approval-packet.md`
 - Fixture asset convention: `fixtures/README.md`
 
 ## ADRs
