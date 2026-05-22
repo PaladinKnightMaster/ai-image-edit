@@ -121,7 +121,7 @@ export function BeforeAfterCompare({
 
       {extraInputsCount > 0 ? (
         <p className="mt-3 text-xs text-slate-500">
-          Comparing against the base image. {extraInputsCount} additional reference
+          Comparing against the base identity image. {extraInputsCount} visual guide
           image{extraInputsCount > 1 ? "s stay" : " stays"} outside the compare view.
         </p>
       ) : null}

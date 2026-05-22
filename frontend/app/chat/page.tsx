@@ -695,7 +695,7 @@ export default function ChatPage() {
     setAttachments(normalizedAttachments);
     if (hadReference && !modelSupportsReferenceImage(editModeModel)) {
       setEditInputNotice(
-        "Reference removed. The selected local draft model runs with one base image only."
+        "Visual guide removed. The selected local draft model runs with one base image only."
       );
     } else if (!hadBase && normalizedAttachments.length) {
       setEditInputNotice("Selected image moved into the base slot for the edit run.");
@@ -1040,7 +1040,7 @@ export default function ChatPage() {
     setEditInputNotice(
       slot === "base"
         ? "Base image ready for editing."
-        : "Reference image added for look and lighting guidance."
+        : "Visual guide added for lighting, style, framing, or angle."
     );
     event.target.value = "";
   };
@@ -1081,7 +1081,7 @@ export default function ChatPage() {
       setEditInputNotice(
         historyTargetSlot === "base"
           ? "Library output staged as the base image."
-          : "Library output staged as the reference image."
+          : "Library output staged as the visual guide."
       );
     }
     setHistoryOpen(false);
@@ -1188,7 +1188,7 @@ export default function ChatPage() {
       setError(
         maxAttachments > 1
           ? `This model supports up to ${maxAttachments} input images.`
-          : "This model supports only a base image. Remove the reference image or switch models."
+          : "This model supports only a base image. Remove the visual guide or switch models."
       );
       return;
     }

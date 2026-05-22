@@ -18,11 +18,16 @@ The repo now has:
 ## Immediate next action
 Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
-2. continue WR3-005 reference-guided UX copy polish without adding new controls
-3. review status/error communication for WR3-004 using existing non-model states
+2. review status/error communication for WR3-004 using existing non-model states
+3. keep any further reference-guided UX work to copy only unless a usability blocker appears
 4. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
+- started WR3-005 reference-guided UX copy polish without adding controls:
+  `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
+  and related notices now distinguish base identity/source image from optional visual guide image
+- updated `docs/workflows/user-workflows.md` so reference-guided edit explicitly says the reference is
+  visual guidance for lighting, style, framing, or angle, not a replacement subject or identity
 - added `docs/testing/beta-tester-limitations-handoff.md` as an internal draft for future closed-beta
   tester messaging, including current scope, what testers can evaluate, what is not final, known limitations,
   feedback prompts, and the current go/no-go message

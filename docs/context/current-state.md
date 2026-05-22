@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 
 ## Product Status
 - MVP roadmap drafted
@@ -60,6 +60,8 @@ Last updated: 2026-05-20
   all portrait presets now have mapped cases, evidence lanes, current statuses, and watchouts
 - beta tester limitations handoff now exists at `docs/testing/beta-tester-limitations-handoff.md`;
   it is internal draft copy and does not change the current not-beta-ready verdict
+- WR3-005 reference-guided UX copy polish has started: UI copy now frames the base image as the
+  identity/source image and the optional second image as a visual guide for lighting, style, framing, or angle
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -72,8 +74,8 @@ Last updated: 2026-05-20
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. continue WR3-005 reference-guided UX copy polish without adding new controls
-2. review status/error communication for WR3-004 using existing non-model states
+1. review status/error communication for WR3-004 using existing non-model states
+2. keep reference-guided UX work to copy only unless a usability blocker appears
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
 ## Supported Runtime Lanes

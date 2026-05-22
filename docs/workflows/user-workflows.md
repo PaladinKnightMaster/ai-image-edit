@@ -33,9 +33,12 @@ Bridge flow between T2I and the edit-first product.
 
 1. user uploads a base image
 2. user optionally uploads one reference image
-3. user writes the target instruction
+3. user uses the reference only as visual guidance for lighting, style, framing, or angle
 4. system runs edit mode with one or two image ids
 5. user compares and saves
+
+The base image remains the identity/source image. The reference image should not be framed as a second
+subject or replacement identity.
 
 ## 5. History and Replay
 

@@ -3,7 +3,7 @@
 Status: Active
 Sprint name: Sprint 3 - Reliability, Iteration, Quality Review, and Beta Readiness
 Duration: 2 weeks
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -45,6 +45,8 @@ Sprint 3 is complete only when all of the following are true:
   presets to evidence lanes, required cases, current statuses, watchouts, and review-log fields.
 - The beta tester limitations handoff now exists at `docs/testing/beta-tester-limitations-handoff.md`
   to keep future tester messaging aligned with the readiness gate and current runtime constraints.
+- WR3-005 has started with copy-only UI and workflow-doc changes that define the base image as the
+  identity/source image and the optional reference as visual guidance only.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints

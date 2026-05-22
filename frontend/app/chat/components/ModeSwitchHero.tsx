@@ -13,7 +13,7 @@ export function ModeSwitchHero({
 }: ModeSwitchHeroProps) {
   const modeHeading = isEditMode ? "Edit Photo" : "Create from Scratch";
   const modeDescription = isEditMode
-    ? "Start from a base image, guide the change, compare the result, and keep refining locally."
+    ? "Start from a base image, use references only as visual guidance, compare the result, and keep refining locally."
     : "Draft something new here, then move the strongest result into Edit Photo with one click.";
 
   return (
@@ -47,7 +47,7 @@ export function ModeSwitchHero({
           </p>
           <h2 className="mt-2 font-display text-2xl">Edit Photo</h2>
           <p className={`mt-2 text-sm ${isEditMode ? "text-slate-100" : "text-slate-600"}`}>
-            Build around a base portrait, add an optional reference, then compare and save.
+            Build around one base portrait. Add a reference only to guide lighting, style, framing, or angle.
           </p>
         </button>
         <button

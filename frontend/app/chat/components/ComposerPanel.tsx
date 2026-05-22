@@ -230,7 +230,7 @@ export function ComposerPanel({
         <div className="flex flex-col gap-3">
           {isEditMode ? (
             <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
-              {referenceEnabled ? "Base + optional reference" : "Base image only"}
+              {referenceEnabled ? "Base identity + optional guide" : "Base image only"}
             </span>
           ) : null}
           <button
@@ -269,7 +269,7 @@ export function ComposerPanel({
               slot: "base" as const,
               eyebrow: "Primary input",
               title: "Base image",
-              description: "Required. This is the portrait the edit runs against.",
+              description: "Required. This portrait is the identity and source image for the edit.",
               attachment: baseAttachment
             },
             {
@@ -277,7 +277,7 @@ export function ComposerPanel({
               eyebrow: "Optional guide",
               title: "Reference image",
               description: referenceEnabled
-                ? "Optional. Use this for lighting, style, or angle guidance."
+                ? "Optional. Guides lighting, style, framing, or angle without replacing the base identity."
                 : "This model currently supports only one input image.",
               attachment: referenceAttachment
             }
@@ -334,9 +334,9 @@ export function ComposerPanel({
                   ) : (
                     <div className="mt-4 flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/70 px-4 text-center text-xs leading-relaxed text-slate-500">
                       {slotCard.slot === "base"
-                        ? "Choose the main portrait you want to change."
+                        ? "Choose the portrait whose identity and details should stay central."
                         : referenceEnabled
-                          ? "Add a second image only when you need extra visual guidance."
+                          ? "Add a second image only when you need visual direction, not a new subject."
                           : "Reference input is unavailable for the selected model."}
                     </div>
                   )}
@@ -383,8 +383,8 @@ export function ComposerPanel({
           <span>
             {baseAttachment
               ? referenceEnabled && referenceAttachment
-                ? "Base and reference images are ready for the edit run."
-                : "Base image is ready. Add a reference only if it improves the direction."
+                ? "Base identity and reference guidance are ready for the edit run."
+                : "Base image is ready. Add a reference only if it improves visual direction."
               : "Add a base image to start the edit flow."}
           </span>
         ) : (
@@ -609,7 +609,7 @@ export function ComposerPanel({
           </div>
         ) : (
           <p className="mt-4 text-xs text-slate-500">
-            Presets, prompt, and the base/reference slots stay in the main workflow. Open this
+            Presets, prompt, and the base/guide image slots stay in the main workflow. Open this
             drawer only when you need manual tuning or a different model lane.
           </p>
         )}

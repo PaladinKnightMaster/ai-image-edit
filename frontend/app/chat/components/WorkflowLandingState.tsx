@@ -15,7 +15,7 @@ const editSteps = [
   {
     id: "guide",
     label: "2. Describe the change",
-    body: "Use plain editing language first. Presets lead, and advanced controls stay secondary."
+    body: "Use plain editing language first. Add a reference only when it clarifies lighting, style, framing, or angle."
   },
   {
     id: "review",

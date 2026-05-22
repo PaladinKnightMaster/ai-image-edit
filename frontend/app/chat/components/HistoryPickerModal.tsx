@@ -28,9 +28,9 @@ export function HistoryPickerModal({
     (run) => !run.output_image_id && run.pending_output_image_id
   ).length;
   const title =
-    historyTargetSlot === "base" ? "Pick a base image to edit" : "Pick a reference image";
+    historyTargetSlot === "base" ? "Pick the base identity image" : "Pick a visual guide";
   const actionLabel =
-    historyTargetSlot === "base" ? "Use as base image" : "Use as reference image";
+    historyTargetSlot === "base" ? "Use as base image" : "Use as visual guide";
 
   return (
     <div
