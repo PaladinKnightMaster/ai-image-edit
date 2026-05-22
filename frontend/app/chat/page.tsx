@@ -11,6 +11,7 @@ import { HistoryPickerModal } from "./components/HistoryPickerModal";
 import { MessageTimeline } from "./components/MessageTimeline";
 import { ModeSwitchHero } from "./components/ModeSwitchHero";
 import { UtilitiesPanel } from "./components/UtilitiesPanel";
+import { getJobStatusHelp, getJobStatusLabel, getJobStatusTone } from "./status-copy";
 
 type SystemInfo = {
   profile: string;
@@ -1783,6 +1784,8 @@ export default function ChatPage() {
                   const isPendingReview =
                     run.status === "pending_review" && Boolean(run.pending_output_image_id);
                   const isRevealing = revealingJobIds.has(run.job_id);
+                  const statusLabel = getJobStatusLabel(run.status);
+                  const statusHelp = getJobStatusHelp(run.status);
                   return (
                     <div
                       key={run.id}
@@ -1815,14 +1818,11 @@ export default function ChatPage() {
                             {run.model_id}
                           </p>
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${
-                              isPendingReview
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
+                            className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${getJobStatusTone(run.status)}`}
                             data-testid={`recent-run-status-${run.id}`}
+                            title={statusHelp}
                           >
-                            {run.status ?? "done"}
+                            {statusLabel}
                           </span>
                         </div>
                         <p className="mt-1 max-h-10 overflow-hidden text-sm text-slate-700">
@@ -1830,7 +1830,7 @@ export default function ChatPage() {
                         </p>
                         {isPendingReview ? (
                           <p className="mt-1 text-[11px] text-amber-700">
-                            Output is ready for manual review. Reveal before reuse.
+                            {statusHelp}
                           </p>
                         ) : null}
                         <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">

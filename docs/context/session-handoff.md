@@ -18,11 +18,15 @@ The repo now has:
 ## Immediate next action
 Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
-2. review status/error communication for WR3-004 using existing non-model states
+2. continue WR3-004 status/error review for backend/API wording and docs, without changing job behavior
 3. keep any further reference-guided UX work to copy only unless a usability blocker appears
 4. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
+- started WR3-004 status/error communication with `frontend/app/chat/status-copy.ts`
+- replaced raw frontend status labels such as `pending_review` with user-facing labels such as
+  `Ready for review`, and added short explanations for queued, running, ready-for-review, complete, failed,
+  restart-recovery, and observer-timeout states across timeline, Recent runs, and failed-run recovery
 - started WR3-005 reference-guided UX copy polish without adding controls:
   `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
   and related notices now distinguish base identity/source image from optional visual guide image

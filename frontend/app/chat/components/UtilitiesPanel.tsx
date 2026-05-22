@@ -1,6 +1,7 @@
 import type { ChangeEvent, RefObject } from "react";
 
 import type { RunRecord } from "../types";
+import { getFailureDetail, getJobStatusLabel } from "../status-copy";
 
 type UtilitiesPanelProps = {
   deleteImagesOnCleanup: boolean;
@@ -159,12 +160,10 @@ export function UtilitiesPanel({
                 failedRuns.map((run) => (
                   <div key={run.id} className="rounded-2xl border border-rose-200 bg-rose-50 p-3">
                     <p className="text-xs uppercase tracking-[0.2em] text-rose-500">
-                      {run.type ?? "run"}
+                      {run.type ?? "run"} / {getJobStatusLabel(run.status)}
                     </p>
                     <p className="mt-1 text-sm text-slate-700">{run.prompt}</p>
-                    {run.error ? (
-                      <p className="mt-2 text-xs text-rose-600">{run.error}</p>
-                    ) : null}
+                    <p className="mt-2 text-xs text-rose-600">{getFailureDetail(run.error)}</p>
                     <div className="mt-2 flex items-center gap-2">
                       <button
                         type="button"

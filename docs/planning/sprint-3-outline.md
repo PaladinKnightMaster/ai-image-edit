@@ -47,6 +47,8 @@ Sprint 3 is complete only when all of the following are true:
   to keep future tester messaging aligned with the readiness gate and current runtime constraints.
 - WR3-005 has started with copy-only UI and workflow-doc changes that define the base image as the
   identity/source image and the optional reference as visual guidance only.
+- WR3-004 has started with frontend status/error copy helpers for existing non-model states; raw job
+  states now have clearer user-facing labels and failure details in the main UI.
 - No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
 
 ## 3. Inherited Constraints

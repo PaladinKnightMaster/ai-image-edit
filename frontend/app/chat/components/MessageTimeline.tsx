@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 
 import type { ChatMessage, ProductMode, RunRecord } from "../types";
+import { getFailureDetail, getJobStatusHelp, getJobStatusLabel, getStageLabel } from "../status-copy";
 import { BeforeAfterCompare } from "./BeforeAfterCompare";
 import { WorkflowLandingState } from "./WorkflowLandingState";
 
@@ -106,6 +107,9 @@ export function MessageTimeline({
           const isActiveJob =
             !isUser && !message.outputImageId && ["queued", "running"].includes(message.status ?? "");
           const isRevealing = message.jobId ? revealingJobIds.has(message.jobId) : false;
+          const statusLabel = getJobStatusLabel(message.status);
+          const stageLabel = getStageLabel(message.stage);
+          const statusHelp = getJobStatusHelp(message.status);
 
           return (
             <div
@@ -158,8 +162,8 @@ export function MessageTimeline({
                 {!isUser ? (
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                      <span>Status: {message.status ?? "queued"}</span>
-                      {message.stage ? <span>Stage: {message.stage}</span> : null}
+                      <span>Status: {statusLabel}</span>
+                      {stageLabel ? <span>Stage: {stageLabel}</span> : null}
                       {typeof message.stageElapsedMs === "number" ? (
                         <span>Elapsed: {formatDuration(message.stageElapsedMs)}</span>
                       ) : null}
@@ -186,14 +190,12 @@ export function MessageTimeline({
                     ) : null}
                     {isActiveJob ? (
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
-                        Local inference is still running. Larger models can stay active for a long
-                        time on CPU; this panel will update when the backend reports progress or a
-                        terminal result.
+                        {statusHelp}
                       </div>
                     ) : null}
                     {message.requiresReview ? (
                       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                        {message.reviewNote ?? "Manual review required."}
+                        {message.reviewNote ?? statusHelp}
                       </div>
                     ) : null}
                     {message.requiresReview ? (
@@ -250,7 +252,7 @@ export function MessageTimeline({
                       </div>
                     ) : null}
                     {message.error ? (
-                      <p className="text-sm text-rose-600">{message.error}</p>
+                      <p className="text-sm text-rose-600">{getFailureDetail(message.error)}</p>
                     ) : null}
                     {message.status === "failed" && message.request ? (
                       <button

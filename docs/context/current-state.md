@@ -62,6 +62,8 @@ Last updated: 2026-05-21
   it is internal draft copy and does not change the current not-beta-ready verdict
 - WR3-005 reference-guided UX copy polish has started: UI copy now frames the base image as the
   identity/source image and the optional second image as a visual guide for lighting, style, framing, or angle
+- WR3-004 status/error communication has started with shared frontend copy helpers for queued, running,
+  ready-for-review, complete, failed, restart-recovery, and observer-timeout states
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -74,7 +76,7 @@ Last updated: 2026-05-21
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. review status/error communication for WR3-004 using existing non-model states
+1. continue WR3-004 status/error review for backend/API wording and docs, without changing job behavior
 2. keep reference-guided UX work to copy only unless a usability blocker appears
 3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
 
