@@ -31,6 +31,7 @@ closed beta if the limitations are explicit. Sprint 4 locks that beta scope in
 | Qwen edit acceptance signoff | Blocked locally | Complete off-box validation or explicitly mark beta as blocked for the intended Qwen edit lane. |
 | Runtime expectations | Pass for draft-lane disclosure | CPU-only latency and model-run approval expectations are documented. |
 | Known limitations | Pass for internal draft handoff | Tester limitations handoff exists; final invite copy still depends on beta scope. |
+| Tester handoff | Pass for owner review | Draft-lane tester handoff is ready in `docs/testing/draft-lane-beta-tester-handoff.md`. |
 | Beta scope lock | Pass | Sprint 4 chose draft-lane beta preparation; final Qwen-acceptance beta remains no-go. |
 | Release smoke | Partial pass | Current workspace smoke passed with Python override; target clean-machine smoke record is still required. |
 
@@ -110,4 +111,4 @@ At Sprint 3 closeout, choose one:
 - off-box Qwen edit validation record from `docs/testing/off-box-qwen-acceptance-packet.md`, or an explicit
   decision that closed beta remains draft-lane only
 - clean-machine release smoke record using `docs/testing/clean-machine-release-smoke.md`
-- finalized tester handoff aligned to `docs/planning/beta-scope-decision.md`
+- owner-reviewed tester invite/session copy based on `docs/testing/draft-lane-beta-tester-handoff.md`

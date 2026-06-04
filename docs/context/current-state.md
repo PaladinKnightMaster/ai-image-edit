@@ -48,6 +48,7 @@ Last updated: 2026-06-04
   aggregate script `scripts/release_smoke.ps1`
 - current workspace WR4-004 release smoke passed on 2026-06-04 with explicit Python runtime override; target
   clean-machine smoke remains required before tester handoff
+- WR4-005 tester handoff is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
 - start with local-only pending-review reveal validation and cheap job/recovery checks
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
   API reveal responses, pending-output cleanup on delete, and queued/running recovery after restart
@@ -94,7 +95,7 @@ Last updated: 2026-06-04
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. finalize tester handoff copy against the locked draft-lane beta scope
+1. decide WR4-006: keep WR3-007 pending as a fixture or reveal it intentionally
 2. run or schedule clean-machine release smoke on the target beta machine
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 

@@ -1,7 +1,7 @@
 # Beta Tester Limitations Handoff
 
 Last updated: 2026-06-04
-Status: Internal draft for draft-lane closed-beta handoff
+Status: Ready for owner review
 
 ## Purpose
 
@@ -9,8 +9,8 @@ Use this note when preparing a closed-beta tester invite, runbook, or onboarding
 testers should expect from the current edit-first MVP without overstating model quality or runtime
 readiness.
 
-Do not send this as a beta invite yet. Sprint 4 has locked a draft-lane beta scope, but final invite copy
-still needs clean-machine smoke evidence and owner review.
+Use `docs/testing/draft-lane-beta-tester-handoff.md` for invite/session wording. This file remains the
+limitations source of truth behind that handoff.
 
 ## Current Scope
 
@@ -83,3 +83,9 @@ Use this status until the beta gate changes:
 The product flow is ready for internal dogfooding and structured review. It is not ready for closed beta
 as a final Qwen-quality product. A limited draft-lane closed beta may proceed only if the invitation
 explicitly says Qwen edit acceptance is still pending off-box validation.
+
+## Tester-Facing Handoff
+
+Use this linked handoff for the current Sprint 4 draft-lane beta scope:
+
+- `docs/testing/draft-lane-beta-tester-handoff.md`

@@ -21,9 +21,10 @@ Continue Sprint 4 from the locked beta scope:
 2. review `docs/planning/sprint-4-outline.md`
 3. use `docs/planning/beta-scope-decision.md` as the WR4-001 decision record
 4. WR4-002 is prepared in `docs/testing/off-box-qwen-acceptance-packet.md`
-5. WR4-004 is prepared in `docs/testing/clean-machine-release-smoke.md`; next implement WR4-005 tester handoff
-6. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
-7. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
+5. WR4-004 is prepared in `docs/testing/clean-machine-release-smoke.md`
+6. WR4-005 is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
+7. next decide WR4-006: keep the real WR3-007 pending output as a fixture or reveal it intentionally
+8. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - started WR3-004 status/error communication with `frontend/app/chat/status-copy.ts`
@@ -48,6 +49,7 @@ Continue Sprint 4 from the locked beta scope:
 - prepared WR4-002 in `docs/testing/off-box-qwen-acceptance-packet.md` and expanded
   `scripts/run_edit_benchmark_case.ps1` so off-box runs can pass explicit dotenv, model-root, and DB paths
 - prepared WR4-004 with `docs/testing/clean-machine-release-smoke.md` and `scripts/release_smoke.ps1`
+- finalized WR4-005 tester handoff for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:

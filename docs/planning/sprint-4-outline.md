@@ -91,6 +91,8 @@ Sprint 4 scope decision:
 - Owner: Product + Tech Lead
 - Priority: P0
 - Outcome: tester-facing limitations and feedback prompts are ready and aligned with the chosen beta scope
+- Progress: complete. Tester-facing handoff is in `docs/testing/draft-lane-beta-tester-handoff.md`, backed
+  by `docs/testing/beta-tester-limitations-handoff.md`.
 
 ### WR4-006 - Decide WR3-007 pending fixture handling
 
@@ -106,10 +108,9 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. WR4-005 Finalize beta tester handoff
-2. WR4-006 Decide WR3-007 pending fixture handling
-3. WR4-003 Run or record off-box Qwen acceptance if required
-4. WR4-007 Release checklist and risk register
+1. WR4-006 Decide WR3-007 pending fixture handling
+2. WR4-003 Run or record off-box Qwen acceptance if required
+3. WR4-007 Release checklist and risk register
 
 ## 7. Exit Criteria
 
