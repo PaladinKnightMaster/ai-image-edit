@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-05-21
+Last updated: 2026-06-03
 
 ## Product Status
 - MVP roadmap drafted
@@ -67,6 +67,12 @@ Last updated: 2026-05-21
 - the status/recovery state contract is documented in `docs/testing/job-status-and-recovery-states.md`
 - WR3-007 is prepared but not approved: `docs/testing/wr3-007-draft-preset-review-approval-packet.md`
   defines the local FLUX draft target, preview command, approval-only execution command, and evidence boundaries
+- WR3-007 FLUX draft run completed after explicit approval on 2026-06-03: job
+  `dfc36b9bde8d4ee7b111c5196d8ecb24` reached `pending_review` in 2387 seconds with pending output image
+  `6ea3269b9814425fa91ab6bdf149b01a`; this remains draft evidence only
+- WR3-007 reveal/reuse behavior was validated on 2026-06-04 against a scratch copy of the benchmark DB:
+  reveal promoted the pending output to reusable `succeeded` state and image retrieval returned 200, while
+  the real benchmark DB stayed `pending_review`
 - keep Qwen edit benchmark/signoff as an off-box validation lane on stronger hardware
 
 ## Active Planning Docs
@@ -79,9 +85,9 @@ Last updated: 2026-05-21
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. decide whether to run only the WR3-007 preview command, approve the FLUX draft run, or defer model execution
+1. decide whether to reveal the real WR3-007 pending output or keep it pending as a benchmark fixture
 2. finish WR3-004 only if browser validation shows a status-copy mismatch
-3. keep any model-quality run approval-gated and explicitly labeled as FLUX draft evidence only
+3. keep Qwen model-quality signoff off-box unless a stronger machine is explicitly approved
 
 ## Supported Runtime Lanes
 - `qwen-image-2512` - local T2I smoke lane

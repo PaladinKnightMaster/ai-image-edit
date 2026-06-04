@@ -1,7 +1,7 @@
 # WR3-007 Draft Preset Review Approval Packet
 
-Status: Prepared; execution not approved
-Last updated: 2026-05-21
+Status: Executed once; draft evidence and scratch reveal validation recorded
+Last updated: 2026-06-04
 Sprint: Sprint 3
 Ticket: WR3-007
 
@@ -10,7 +10,8 @@ Ticket: WR3-007
 WR3-007 is the first approval-gated model-evidence step for Sprint 3. It can collect local FLUX draft
 evidence where feasible, but it cannot close Qwen acceptance signoff.
 
-This packet prepares the run decision only. It does not approve or start a model run.
+This packet records the run decision and first approved local FLUX draft result. It does not authorize
+additional model runs.
 
 ## Recommended First Target
 
@@ -85,7 +86,20 @@ Do not approve if the goal is final Qwen quality signoff. That must remain off-b
 
 ## Current WR3-007 State
 
-- approval packet is prepared
-- no model run has been approved
-- no edit job has been submitted for WR3-007
-- next action is a user decision: preview only, approve the FLUX draft run, or defer WR3-007
+- one `flux-draft-smoke` run was approved and completed on 2026-06-03
+- job id: `dfc36b9bde8d4ee7b111c5196d8ecb24`
+- run id: `37706e19de514559a21a0696d3705d5d`
+- uploaded base image id: `d05dfaaaf8c840848d44551e759594b6`
+- pending output image id: `6ea3269b9814425fa91ab6bdf149b01a`
+- output path: `data/images/6ea3269b9814425fa91ab6bdf149b01a.png`
+- status: `pending_review`
+- stage/progress: `review`, `4/4`, `100%`
+- elapsed time: 2387 seconds; backend latency: 2383889 ms
+- wrapper exit: `0x00000000`
+- scratch-copy reveal validation passed on 2026-06-04
+- scratch reveal result: image `6ea3269b9814425fa91ab6bdf149b01a`, status `succeeded`, stage `complete`
+- scratch reuse result: run appeared in `GET /api/runs?status=succeeded` and disappeared from
+  `GET /api/runs?status=pending_review`
+- scratch image retrieval: `GET /api/images/6ea3269b9814425fa91ab6bdf149b01a` returned 200
+- real DB after validation remained `pending_review` with `pending_output_image_id` intact
+- next action: decide whether the live benchmark DB should stay pending as a fixture or be revealed for use

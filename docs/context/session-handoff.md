@@ -19,8 +19,8 @@ The repo now has:
 Continue Sprint 3 with the next non-model evidence/documentation slice:
 1. follow `docs/planning/sprint-3-outline.md`
 2. treat WR3-004 as nearly complete unless browser validation exposes a status-copy mismatch
-3. WR3-007 planning is prepared in `docs/testing/wr3-007-draft-preset-review-approval-packet.md`; ask the
-   user before running anything heavy
+3. WR3-007 has one approved FLUX draft result and scratch-copy reveal/reuse validation; next decide whether
+   the real benchmark DB should stay pending as a fixture or be revealed for live use
 4. keep any further reference-guided UX work to copy only unless a usability blocker appears
 5. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
@@ -34,6 +34,12 @@ Continue Sprint 3 with the next non-model evidence/documentation slice:
 - documented the status/recovery state contract in `docs/testing/job-status-and-recovery-states.md`
 - prepared WR3-007 without execution in `docs/testing/wr3-007-draft-preset-review-approval-packet.md`,
   including the preview command, approval-only FLUX draft command, expected cost, evidence fields, and go/no-go criteria
+- recorded the 2026-06-03 approved WR3-007 FLUX draft run: job `dfc36b9bde8d4ee7b111c5196d8ecb24`,
+  run `37706e19de514559a21a0696d3705d5d`, pending output `6ea3269b9814425fa91ab6bdf149b01a`,
+  `pending_review` after 2387 seconds, wrapper exit `0x00000000`
+- validated WR3-007 reveal/reuse against a scratch DB copy without launching a model: reveal promoted the
+  copied job to `succeeded`, cleared `pending_output_image_id`, exposed the run in reusable history, returned
+  image 200, and left the real benchmark DB unchanged at `pending_review`
 - started WR3-005 reference-guided UX copy polish without adding controls:
   `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
   and related notices now distinguish base identity/source image from optional visual guide image

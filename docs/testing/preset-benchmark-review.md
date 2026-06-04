@@ -130,6 +130,35 @@ Operational implication:
 - `pending_review` is a terminal successful generation state for smoke purposes; the harness must capture
   `pending_output_image_id` rather than continue polling for `output_image_id`
 
+On 2026-06-03, the user-approved `flux-draft-smoke` target completed again through the app job layer:
+
+- job id: `dfc36b9bde8d4ee7b111c5196d8ecb24`
+- run id: `37706e19de514559a21a0696d3705d5d`
+- uploaded base image id: `d05dfaaaf8c840848d44551e759594b6`
+- pending output image id: `6ea3269b9814425fa91ab6bdf149b01a`
+- output path: `data/images/6ea3269b9814425fa91ab6bdf149b01a.png`
+- status: `pending_review`
+- stage/progress: `review`, `4/4`, `100%`
+- elapsed time: 2387 seconds
+- backend latency: `2,383,889 ms` (about 39.7 minutes)
+- wrapper exit: `0x00000000`
+
+This is valid `flux-draft` evidence only. It does not change the Qwen acceptance blocker.
+
+On 2026-06-04, reveal/reuse behavior for the 2026-06-03 WR3-007 output was validated against a scratch
+copy of `data/app.benchmark-review.db`:
+
+- reveal returned image id `6ea3269b9814425fa91ab6bdf149b01a`
+- job status moved to `succeeded`
+- stage moved to `complete`
+- `output_image_id` became `6ea3269b9814425fa91ab6bdf149b01a`
+- `pending_output_image_id` cleared
+- `GET /api/runs?status=succeeded` exposed the run as reusable
+- `GET /api/runs?status=pending_review` no longer included the run
+- `GET /api/images/6ea3269b9814425fa91ab6bdf149b01a` returned 200
+- the real benchmark DB remained unchanged: status `pending_review`, output image `NULL`, pending output
+  image `6ea3269b9814425fa91ab6bdf149b01a`
+
 ## First-pass order
 
 Run the first review pass in this order:

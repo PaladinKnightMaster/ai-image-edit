@@ -3,7 +3,7 @@
 Status: Active
 Sprint name: Sprint 3 - Reliability, Iteration, Quality Review, and Beta Readiness
 Duration: 2 weeks
-Last updated: 2026-05-21
+Last updated: 2026-06-03
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -51,9 +51,14 @@ Sprint 3 is complete only when all of the following are true:
   states; raw job states now have clearer user-facing labels and failure details in the main UI and API.
 - `docs/testing/job-status-and-recovery-states.md` records the status/recovery contract and the remaining
   WR3-004 checks.
-- WR3-007 has an approval packet at `docs/testing/wr3-007-draft-preset-review-approval-packet.md`; no
-  draft model run has been approved or submitted.
-- No new edit job or model run was submitted for this Sprint 3 reliability and UI-hardening evidence.
+- WR3-007 has an approval packet at `docs/testing/wr3-007-draft-preset-review-approval-packet.md`.
+- WR3-007 completed one approved local FLUX draft run on 2026-06-03: job
+  `dfc36b9bde8d4ee7b111c5196d8ecb24` reached `pending_review` after 2387 seconds with pending output
+  image `6ea3269b9814425fa91ab6bdf149b01a`.
+- WR3-007 reveal/reuse was validated against a scratch DB copy on 2026-06-04: reveal promoted the run to
+  `succeeded`, made it visible in reusable history, cleared `pending_output_image_id`, and left the real
+  benchmark DB unchanged.
+- The WR3-007 result is draft-lane evidence only; Qwen edit acceptance remains off-box.
 
 ## 3. Inherited Constraints
 
@@ -166,8 +171,8 @@ Focus:
 - Owner: AI/ML
 - Priority: P1
 - Outcome: any local FLUX draft run is explicitly approved and logged as draft evidence only
-- Progress: prepared, not executed. The approval packet names `flux-draft-smoke` as the smallest first
-  target and preserves the boundary that FLUX is draft evidence only.
+- Progress: one approved `flux-draft-smoke` run completed to `pending_review`; scratch-copy reveal/reuse
+  validation passed for this specific run without launching a model.
 
 ### WR3-008 - Add beta readiness checklist and limitations doc
 
