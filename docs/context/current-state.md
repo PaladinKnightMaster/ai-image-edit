@@ -37,7 +37,7 @@ Last updated: 2026-06-04
 - backend launcher and startup smoke scripts now validate Python runtime viability and can fall back
   to the base interpreter plus venv site-packages when the Windows venv launcher is stale
 
-## Current Primary Sprint 3 Focus
+## Current Primary Sprint 4 Focus
 - Sprint 3 is closed in `docs/planning/sprint-3-closeout-audit.md`
 - Sprint 4 is active in `docs/planning/sprint-4-outline.md`
 - WR4-001 beta scope is locked in `docs/planning/beta-scope-decision.md`: proceed with draft-lane beta
@@ -49,7 +49,10 @@ Last updated: 2026-06-04
 - current workspace WR4-004 release smoke passed on 2026-06-04 with explicit Python runtime override; target
   clean-machine smoke remains required before tester handoff
 - WR4-005 tester handoff is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
-- start with local-only pending-review reveal validation and cheap job/recovery checks
+- WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
+  WR3-007 job pending as a benchmark fixture and use scratch DB copies for routine reveal/reuse checks
+- Sprint 3 local-only pending-review reveal validation and cheap job/recovery checks remain the reliability
+  baseline for Sprint 4 release readiness work
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
   API reveal responses, pending-output cleanup on delete, and queued/running recovery after restart
 - the existing `data/app.benchmark-review.db` pending-review artifact now has copy-based API validation:
@@ -90,12 +93,15 @@ Last updated: 2026-06-04
 - `docs/planning/sprint-1-backlog.md`
 - `docs/planning/sprint-2-outline.md`
 - `docs/planning/sprint-3-outline.md`
+- `docs/planning/sprint-4-outline.md`
+- `docs/planning/beta-scope-decision.md`
+- `docs/planning/wr3-007-fixture-decision.md`
 
 ## Documentation Entry Point
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. decide WR4-006: keep WR3-007 pending as a fixture or reveal it intentionally
+1. draft WR4-007 release checklist and risk register with owners, known blockers, and required evidence
 2. run or schedule clean-machine release smoke on the target beta machine
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 

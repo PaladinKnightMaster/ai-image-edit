@@ -102,4 +102,5 @@ Do not approve if the goal is final Qwen quality signoff. That must remain off-b
   `GET /api/runs?status=pending_review`
 - scratch image retrieval: `GET /api/images/6ea3269b9814425fa91ab6bdf149b01a` returned 200
 - real DB after validation remained `pending_review` with `pending_output_image_id` intact
-- next action: decide whether the live benchmark DB should stay pending as a fixture or be revealed for use
+- WR4-006 decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live benchmark DB
+  job pending as a fixture and use scratch DB copies for routine reveal/reuse validation

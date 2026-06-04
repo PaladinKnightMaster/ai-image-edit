@@ -23,8 +23,10 @@ Continue Sprint 4 from the locked beta scope:
 4. WR4-002 is prepared in `docs/testing/off-box-qwen-acceptance-packet.md`
 5. WR4-004 is prepared in `docs/testing/clean-machine-release-smoke.md`
 6. WR4-005 is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
-7. next decide WR4-006: keep the real WR3-007 pending output as a fixture or reveal it intentionally
-8. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
+7. WR4-006 is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the real WR3-007 pending
+   output as a fixture and validate reveal/reuse against scratch DB copies
+8. next prepare WR4-007 release checklist and risk register
+9. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - started WR3-004 status/error communication with `frontend/app/chat/status-copy.ts`
@@ -50,6 +52,8 @@ Continue Sprint 4 from the locked beta scope:
   `scripts/run_edit_benchmark_case.ps1` so off-box runs can pass explicit dotenv, model-root, and DB paths
 - prepared WR4-004 with `docs/testing/clean-machine-release-smoke.md` and `scripts/release_smoke.ps1`
 - finalized WR4-005 tester handoff for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
+- locked WR4-006 in `docs/planning/wr3-007-fixture-decision.md`: live WR3-007 remains pending as a
+  benchmark fixture, while routine reveal/reuse regression checks should use scratch DB copies
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:

@@ -99,6 +99,8 @@ Sprint 4 scope decision:
 - Owner: Tech Lead
 - Priority: P1
 - Outcome: keep job `dfc36b9bde8d4ee7b111c5196d8ecb24` pending as a fixture, or reveal it intentionally for live reuse
+- Progress: complete. Decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
+  job pending as a benchmark fixture and use scratch DB copies for routine reveal/reuse validation.
 
 ### WR4-007 - Release checklist and risk register
 
@@ -108,9 +110,9 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. WR4-006 Decide WR3-007 pending fixture handling
-2. WR4-003 Run or record off-box Qwen acceptance if required
-3. WR4-007 Release checklist and risk register
+1. WR4-007 Release checklist and risk register
+2. WR4-003 Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
+3. Schedule target clean-machine release smoke before any tester handoff
 
 ## 7. Exit Criteria
 
