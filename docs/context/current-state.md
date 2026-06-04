@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
 
 ## Product Status
 - MVP roadmap drafted
@@ -38,7 +38,8 @@ Last updated: 2026-06-03
   to the base interpreter plus venv site-packages when the Windows venv launcher is stale
 
 ## Current Primary Sprint 3 Focus
-- Sprint 3 is active in `docs/planning/sprint-3-outline.md`
+- Sprint 3 is closed in `docs/planning/sprint-3-closeout-audit.md`
+- Sprint 4 is proposed in `docs/planning/sprint-4-outline.md`
 - start with local-only pending-review reveal validation and cheap job/recovery checks
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
   API reveal responses, pending-output cleanup on delete, and queued/running recovery after restart
@@ -85,9 +86,9 @@ Last updated: 2026-06-03
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. decide whether to reveal the real WR3-007 pending output or keep it pending as a benchmark fixture
-2. finish WR3-004 only if browser validation shows a status-copy mismatch
-3. keep Qwen model-quality signoff off-box unless a stronger machine is explicitly approved
+1. review and approve the Sprint 4 beta scope: draft-lane closed beta vs Qwen-acceptance beta
+2. prepare off-box Qwen acceptance validation if final edit-model quality is required before beta
+3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 
 ## Supported Runtime Lanes
 - `qwen-image-2512` - local T2I smoke lane

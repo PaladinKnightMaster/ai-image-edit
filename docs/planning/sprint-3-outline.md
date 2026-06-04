@@ -1,9 +1,9 @@
 # Sprint 3 Outline
 
-Status: Active
+Status: Closed
 Sprint name: Sprint 3 - Reliability, Iteration, Quality Review, and Beta Readiness
 Duration: 2 weeks
-Last updated: 2026-06-03
+Last updated: 2026-06-04
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -59,6 +59,7 @@ Sprint 3 is complete only when all of the following are true:
   `succeeded`, made it visible in reusable history, cleared `pending_output_image_id`, and left the real
   benchmark DB unchanged.
 - The WR3-007 result is draft-lane evidence only; Qwen edit acceptance remains off-box.
+- Sprint 3 is closed in `docs/planning/sprint-3-closeout-audit.md`.
 
 ## 3. Inherited Constraints
 
@@ -267,3 +268,10 @@ After Sprint 3, choose one of:
 
 The decision must be based on benchmark evidence, reveal/recovery reliability, and honest runtime
 limitations, not only feature completeness.
+
+Closeout decision:
+
+- Sprint 3 is complete for local draft-lane hardening.
+- Final Qwen edit beta readiness remains blocked until off-box acceptance evidence exists or beta scope
+  explicitly excludes Qwen acceptance.
+- Recommended next sprint: `docs/planning/sprint-4-outline.md`.

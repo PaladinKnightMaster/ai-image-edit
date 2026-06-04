@@ -16,12 +16,11 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Continue Sprint 3 with the next non-model evidence/documentation slice:
-1. follow `docs/planning/sprint-3-outline.md`
-2. treat WR3-004 as nearly complete unless browser validation exposes a status-copy mismatch
-3. WR3-007 has one approved FLUX draft result and scratch-copy reveal/reuse validation; next decide whether
-   the real benchmark DB should stay pending as a fixture or be revealed for live use
-4. keep any further reference-guided UX work to copy only unless a usability blocker appears
+Review Sprint 4 scope before implementation:
+1. start from `docs/planning/sprint-3-closeout-audit.md`
+2. review `docs/planning/sprint-4-outline.md`
+3. choose draft-lane closed beta prep, off-box Qwen acceptance first, or one more hardening sprint
+4. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 5. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
@@ -40,6 +39,8 @@ Continue Sprint 3 with the next non-model evidence/documentation slice:
 - validated WR3-007 reveal/reuse against a scratch DB copy without launching a model: reveal promoted the
   copied job to `succeeded`, cleared `pending_output_image_id`, exposed the run in reusable history, returned
   image 200, and left the real benchmark DB unchanged at `pending_review`
+- closed Sprint 3 in `docs/planning/sprint-3-closeout-audit.md`
+- proposed Sprint 4 in `docs/planning/sprint-4-outline.md` as a beta scope lock and acceptance validation sprint
 - started WR3-005 reference-guided UX copy polish without adding controls:
   `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
   and related notices now distinguish base identity/source image from optional visual guide image

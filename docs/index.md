@@ -14,6 +14,8 @@ This repository now has four documentation layers:
 - Session handoff: `docs/context/session-handoff.md`
 - MVP roadmap: `docs/planning/mvp-war-room-plan.md`
 - Sprint 2 closeout audit: `docs/planning/sprint-2-closeout-audit.md`
+- Sprint 3 closeout audit: `docs/planning/sprint-3-closeout-audit.md`
+- Sprint 4 outline: `docs/planning/sprint-4-outline.md`
 - Beta readiness checklist: `docs/planning/beta-readiness-checklist.md`
 
 ## Architecture

@@ -1,7 +1,7 @@
 # MVP War Room Plan and Roadmap
 
 Status: Draft / Living document
-Last updated: 2026-04-17
+Last updated: 2026-06-04
 Primary owner: Tech Lead
 Audience: Product, Engineering, Design, AI/ML, DevOps, GTM
 Planning horizon: MVP through first public beta
@@ -281,6 +281,15 @@ Priority order:
 6. On-device assistant or critique features
 
 ## 10. Sprint Plan
+
+Status note, 2026-06-04:
+
+- Sprint 1 and Sprint 2 are complete for their local development and edit-first product-surface goals.
+- Sprint 3 is closed in `docs/planning/sprint-3-closeout-audit.md` as a reliability, reveal, iteration,
+  preset-review, and beta-readiness sprint.
+- Sprint 4 is proposed in `docs/planning/sprint-4-outline.md` as the beta scope lock and acceptance
+  validation sprint.
+- Local FLUX draft evidence can support product-flow review, but final Qwen edit acceptance remains off-box.
 
 ### Sprint 1: Stabilization and Dev Loop
 

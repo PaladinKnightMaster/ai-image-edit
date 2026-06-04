@@ -1,8 +1,8 @@
 # Beta Readiness Checklist
 
-Last updated: 2026-05-20
+Last updated: 2026-06-04
 Sprint: Sprint 3
-Status: Not beta-ready yet
+Status: Not beta-ready for final Qwen acceptance
 
 ## Purpose
 
@@ -12,11 +12,12 @@ based on evidence rather than feature count.
 
 ## Current Verdict
 
-Do not start closed beta yet.
+Do not start a final Qwen-acceptance beta yet.
 
-The edit-first product loop is credible enough for continued hardening, and the manual-review reveal
-path now has non-model API and browser evidence. The remaining blockers are preset quality review,
-off-box Qwen edit signoff, and explicit beta limitations copy.
+The edit-first product loop is credible enough for internal dogfooding or a narrowly scoped draft-lane
+closed beta if the limitations are explicit. Sprint 3 now has local FLUX draft evidence and scratch-copy
+reveal/reuse validation for the approved WR3-007 run. The remaining blocker for the intended edit-model
+beta is off-box `qwen-image-edit-2511` acceptance evidence.
 
 ## Beta Gate Summary
 
@@ -26,10 +27,10 @@ off-box Qwen edit signoff, and explicit beta limitations copy.
 | Edit-first workflow | Pass for local draft lane | Preserve `Edit Photo` as the primary path and keep Create as a supporting draft lane. |
 | Reveal and reuse reliability | Pass for current non-model evidence | Keep pending-review reveal/reuse checks green; do not expose unrevealed outputs in normal reuse. |
 | Job recovery semantics | Partial pass | Document restart behavior clearly in product/support notes; queued/running jobs currently fail on restart. |
-| Preset quality review | Not complete | Record a preset review worksheet with lane labels and outcome notes before beta. |
+| Preset quality review | Partial pass | Worksheet exists and includes local FLUX draft evidence; Qwen acceptance remains pending. |
 | Qwen edit acceptance signoff | Blocked locally | Complete off-box validation or explicitly mark beta as blocked for the intended Qwen edit lane. |
-| Runtime expectations | Partial pass | Document CPU-only latency and model-run approval expectations for testers. |
-| Known limitations | Partial pass | Publish a concise limitations note before beta invite or tester handoff. |
+| Runtime expectations | Pass for draft-lane disclosure | CPU-only latency and model-run approval expectations are documented. |
+| Known limitations | Pass for internal draft handoff | Tester limitations handoff exists; final invite copy still depends on beta scope. |
 
 ## Closed-Beta Entry Criteria
 
@@ -56,6 +57,7 @@ Counts for beta-flow readiness:
 - frontend lint, typecheck, and production build
 - successful reveal and reuse of an existing pending-review output
 - successful download/reuse/compare behavior on existing outputs
+- scratch-copy reveal/reuse validation for WR3-007 job `dfc36b9bde8d4ee7b111c5196d8ecb24`
 
 ### Draft model evidence
 
@@ -64,6 +66,7 @@ Counts only as local draft-lane evidence:
 - `flux2-klein-9b-gguf` output and pending-review behavior
 - FLUX draft smoke runs approved by the user
 - UI behavior around FLUX results, including reveal, compare, download, and reuse
+- the 2026-06-03 WR3-007 `flux-draft-smoke` run that reached `pending_review` after 2387 seconds
 
 ### Acceptance model evidence
 
@@ -102,6 +105,6 @@ At Sprint 3 closeout, choose one:
 
 ## Next Required Artifacts
 
-- WR3-006 preset quality review worksheet
-- concise beta known-limitations handoff for testers: `docs/testing/beta-tester-limitations-handoff.md`
+- Sprint 4 beta scope decision
 - off-box Qwen edit validation record, or an explicit decision that closed beta is draft-lane only
+- clean-machine release smoke record for the chosen beta target
