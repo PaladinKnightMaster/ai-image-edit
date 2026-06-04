@@ -82,6 +82,9 @@ Sprint 4 scope decision:
 - Owner: DevOps + Backend + Frontend
 - Priority: P0
 - Outcome: startup, `/health`, `/api/models`, frontend build, and launch instructions pass on the target beta environment
+- Progress: prepared and locally validated. Non-model release smoke runbook is in
+  `docs/testing/clean-machine-release-smoke.md` and aggregate command is `scripts/release_smoke.ps1`.
+  Target clean-machine smoke is still required before tester handoff.
 
 ### WR4-005 - Finalize beta tester handoff
 
@@ -103,11 +106,10 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. WR4-004 Clean-machine release smoke
-2. WR4-005 Finalize beta tester handoff
-3. WR4-006 Decide WR3-007 pending fixture handling
-4. WR4-003 Run or record off-box Qwen acceptance if required
-5. WR4-007 Release checklist and risk register
+1. WR4-005 Finalize beta tester handoff
+2. WR4-006 Decide WR3-007 pending fixture handling
+3. WR4-003 Run or record off-box Qwen acceptance if required
+4. WR4-007 Release checklist and risk register
 
 ## 7. Exit Criteria
 

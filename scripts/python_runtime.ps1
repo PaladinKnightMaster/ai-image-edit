@@ -86,12 +86,30 @@ function Resolve-PythonSpec {
     [string[]]$RequiredImports
   )
 
+  $attempted = @()
+  $overrideExecutable = $env:AI_IMAGE_EDIT_PYTHON
+  $overrideSitePackages = $env:AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES
+  if ($overrideExecutable) {
+    $overrideSpec = [pscustomobject]@{
+      Executable = $overrideExecutable
+      SitePackages = $overrideSitePackages
+      Source = "env-override"
+    }
+    $attempted += if ($overrideSitePackages) {
+      "$overrideExecutable + $overrideSitePackages"
+    }
+    else {
+      $overrideExecutable
+    }
+    if (Test-PythonSpec -Spec $overrideSpec -RequiredImports $RequiredImports) {
+      return $overrideSpec
+    }
+  }
+
   $venvRoots = @(
     (Join-Path $backendRoot ".venv"),
     (Join-Path $repoRoot ".venv")
   )
-
-  $attempted = @()
 
   foreach ($venvRoot in $venvRoots) {
     $launcher = Join-Path $venvRoot "Scripts\python.exe"
