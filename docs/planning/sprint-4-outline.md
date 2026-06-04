@@ -107,12 +107,14 @@ Sprint 4 scope decision:
 - Owner: Tech Lead + DevOps
 - Priority: P1
 - Outcome: release gate checklist includes known blockers, test commands, evidence artifacts, and owner assignments
+- Progress: complete and reviewable in `docs/planning/sprint-4-release-checklist-and-risk-register.md`.
+  Draft-lane beta preparation remains conditional on target clean-machine smoke and owner-reviewed tester copy.
 
 ## 6. Recommended Execution Order
 
-1. WR4-007 Release checklist and risk register
-2. WR4-003 Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
-3. Schedule target clean-machine release smoke before any tester handoff
+1. Run or schedule target clean-machine release smoke before any tester handoff
+2. Owner-review the draft-lane tester handoff copy
+3. Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
 
 ## 7. Exit Criteria
 

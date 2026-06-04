@@ -3,7 +3,7 @@
 ## Where the project is
 The repo now has:
 - MVP roadmap docs
-- Sprint 1, 2, and 3 planning docs
+- Sprint 1 through Sprint 4 planning docs
 - a project-local quality-first war-room operating layer
 - fast-check env profiles for CPU-only local iteration
 - a durable documentation knowledge base under `docs/index.md`
@@ -25,8 +25,9 @@ Continue Sprint 4 from the locked beta scope:
 6. WR4-005 is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
 7. WR4-006 is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the real WR3-007 pending
    output as a fixture and validate reveal/reuse against scratch DB copies
-8. next prepare WR4-007 release checklist and risk register
-9. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
+8. WR4-007 is reviewable in `docs/planning/sprint-4-release-checklist-and-risk-register.md`
+9. next run or schedule target clean-machine release smoke, then owner-review tester handoff copy
+10. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - started WR3-004 status/error communication with `frontend/app/chat/status-copy.ts`
@@ -54,6 +55,8 @@ Continue Sprint 4 from the locked beta scope:
 - finalized WR4-005 tester handoff for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
 - locked WR4-006 in `docs/planning/wr3-007-fixture-decision.md`: live WR3-007 remains pending as a
   benchmark fixture, while routine reveal/reuse regression checks should use scratch DB copies
+- prepared WR4-007 in `docs/planning/sprint-4-release-checklist-and-risk-register.md`, including release
+  gates, known blockers, evidence commands, owner actions, and the Sprint 4 exit readiness checklist
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:

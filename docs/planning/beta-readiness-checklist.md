@@ -112,3 +112,5 @@ At Sprint 3 closeout, choose one:
   decision that closed beta remains draft-lane only
 - clean-machine release smoke record using `docs/testing/clean-machine-release-smoke.md`
 - owner-reviewed tester invite/session copy based on `docs/testing/draft-lane-beta-tester-handoff.md`
+- Sprint 4 release checklist and risk register review based on
+  `docs/planning/sprint-4-release-checklist-and-risk-register.md`

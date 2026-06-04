@@ -19,6 +19,7 @@ This repository now has four documentation layers:
 - Beta scope decision: `docs/planning/beta-scope-decision.md`
 - Beta readiness checklist: `docs/planning/beta-readiness-checklist.md`
 - WR3-007 pending fixture decision: `docs/planning/wr3-007-fixture-decision.md`
+- Sprint 4 release checklist and risk register: `docs/planning/sprint-4-release-checklist-and-risk-register.md`
 
 ## Architecture
 

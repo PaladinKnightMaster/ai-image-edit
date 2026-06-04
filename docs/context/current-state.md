@@ -4,7 +4,7 @@ Last updated: 2026-06-04
 
 ## Product Status
 - MVP roadmap drafted
-- Sprint 1, Sprint 2, and Sprint 3 planning docs drafted
+- Sprint 1 through Sprint 4 planning docs drafted
 - Sprint 2 editor-first frontend work is engineering-complete for the local draft-lane product scope
 - local `qwen-image-edit-2511` benchmark/signoff is blocked on this machine by a reproducible native crash
 - the existing `flux2-klein-9b-gguf` lane is available as the local draft edit runtime and completed a
@@ -51,6 +51,9 @@ Last updated: 2026-06-04
 - WR4-005 tester handoff is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
 - WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
   WR3-007 job pending as a benchmark fixture and use scratch DB copies for routine reveal/reuse checks
+- WR4-007 release checklist and risk register is reviewable in
+  `docs/planning/sprint-4-release-checklist-and-risk-register.md`; draft-lane beta prep remains
+  conditional on target clean-machine smoke and owner-reviewed tester copy
 - Sprint 3 local-only pending-review reveal validation and cheap job/recovery checks remain the reliability
   baseline for Sprint 4 release readiness work
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
@@ -96,13 +99,14 @@ Last updated: 2026-06-04
 - `docs/planning/sprint-4-outline.md`
 - `docs/planning/beta-scope-decision.md`
 - `docs/planning/wr3-007-fixture-decision.md`
+- `docs/planning/sprint-4-release-checklist-and-risk-register.md`
 
 ## Documentation Entry Point
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. draft WR4-007 release checklist and risk register with owners, known blockers, and required evidence
-2. run or schedule clean-machine release smoke on the target beta machine
+1. run or schedule clean-machine release smoke on the target beta machine
+2. owner-review the draft-lane tester handoff copy before any tester invite
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 
 ## Supported Runtime Lanes
