@@ -1,11 +1,13 @@
 param(
-  [ValidateSet("headshot-cleanup", "studio-relight", "background-simplify", "multi-angle-portrait", "flux-draft-smoke")]
-  [string[]]$PresetRun = @("headshot-cleanup"),
+  [string]$PresetRun = "headshot-cleanup",
   [switch]$ListTargets,
   [switch]$RunApproved,
   [int]$MaxWaitSec = 7200,
   [int]$PollIntervalSec = 5,
-  [string]$SummaryPath = ".\\data\\benchmark-review-summary.json"
+  [string]$SummaryPath = ".\\data\\benchmark-review-summary.json",
+  [string]$DotenvPath,
+  [string]$ModelRoot,
+  [string]$DbPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -93,6 +95,30 @@ $targets = @{
     guidance_scale = 4.3
     true_cfg_scale = 1.2
   }
+  "softbox-relight" = [ordered]@{
+    preset_id = "softbox-relight"
+    case_id = "ref-001-softbox-relight"
+    model_id = "qwen-image-edit-2511"
+    base_fixture = "fixtures/private/benchmark-pack-v0/portrait-base-01-studio-headshot.png"
+    reference_fixture = "fixtures/private/benchmark-pack-v0/reference-lighting-01-softbox.png"
+    prompt = "Match the softbox lighting direction and softness from the reference while preserving the subject's identity, natural skin texture, crisp eyes, and believable portrait finish."
+    seed = 3101
+    steps = 14
+    guidance_scale = 4.5
+    true_cfg_scale = 1.25
+  }
+  "editorial-look-transfer" = [ordered]@{
+    preset_id = "editorial-look-transfer"
+    case_id = "ref-002-editorial-look-transfer"
+    model_id = "qwen-image-edit-2511"
+    base_fixture = "fixtures/private/benchmark-pack-v0/portrait-base-02-window-light-three-quarter.png"
+    reference_fixture = "fixtures/private/benchmark-pack-v0/reference-style-02-editorial-cool.png"
+    prompt = "Apply the reference mood and cool editorial color palette while keeping facial identity, skin realism, believable lighting, and a natural portrait structure."
+    seed = 3102
+    steps = 14
+    guidance_scale = 4.5
+    true_cfg_scale = 1.25
+  }
   "multi-angle-portrait" = [ordered]@{
     preset_id = "multi-angle-portrait"
     case_id = "ref-003-pose-and-crop-guidance"
@@ -123,13 +149,14 @@ if ($ListTargets) {
   foreach ($name in $targets.Keys) {
     $target = $targets[$name]
     $caseId = $target.case_id
-    Write-Host "  $name -> $caseId [$($target.model_id)]"
+    $reference = if ($target.Contains("reference_fixture")) { " + reference" } else { "" }
+    Write-Host "  $name -> $caseId [$($target.model_id)]$reference"
   }
   exit 0
 }
 
 $selectedTargets = @()
-foreach ($name in $PresetRun) {
+foreach ($name in ($PresetRun -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })) {
   if (-not $targets.ContainsKey($name)) {
     throw "Unknown preset review target '$name'. Use -ListTargets to inspect supported targets."
   }
@@ -194,14 +221,26 @@ try {
   Write-Host "Running approval-gated edit benchmark review using $($python.Executable)"
   Write-Host "Summary path: $summaryPathResolved"
   Write-Host "Launching benchmark harness..."
+  $harnessArgs = @(
+    $scriptPath,
+    "--repo-root", $repoRoot,
+    "--plan-path", $planPath,
+    "--summary-path", $summaryPathResolved,
+    "--model-id", $selectedModelLabel,
+    "--max-wait-seconds", $MaxWaitSec,
+    "--poll-seconds", $PollIntervalSec
+  )
+  if ($DotenvPath) {
+    $harnessArgs += @("--dotenv-path", $DotenvPath)
+  }
+  if ($ModelRoot) {
+    $harnessArgs += @("--model-root", $ModelRoot)
+  }
+  if ($DbPath) {
+    $harnessArgs += @("--db-path", $DbPath)
+  }
   Invoke-WithPythonSitePackages -SitePackages $python.SitePackages -ScriptBlock {
-    & $python.Executable $scriptPath `
-      --repo-root $repoRoot `
-      --plan-path $planPath `
-      --summary-path $summaryPathResolved `
-      --model-id $selectedModelLabel `
-      --max-wait-seconds $MaxWaitSec `
-      --poll-seconds $PollIntervalSec
+    & $python.Executable @harnessArgs
   }
   $pythonExitCode = $LASTEXITCODE
   $exitMeta = Get-ProcessExitMetadata -ExitCode $pythonExitCode

@@ -42,6 +42,8 @@ Last updated: 2026-06-04
 - Sprint 4 is active in `docs/planning/sprint-4-outline.md`
 - WR4-001 beta scope is locked in `docs/planning/beta-scope-decision.md`: proceed with draft-lane beta
   preparation only; final Qwen-acceptance beta remains no-go until off-box validation exists
+- WR4-002 off-box Qwen acceptance packet is prepared in `docs/testing/off-box-qwen-acceptance-packet.md`;
+  execution remains off-box and approval-gated
 - start with local-only pending-review reveal validation and cheap job/recovery checks
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
   API reveal responses, pending-output cleanup on delete, and queued/running recovery after restart
@@ -88,8 +90,8 @@ Last updated: 2026-06-04
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. prepare the WR4-002 off-box Qwen acceptance validation packet
-2. run clean-machine release smoke planning for the draft-lane beta target
+1. run clean-machine release smoke planning for the draft-lane beta target
+2. finalize tester handoff copy against the locked draft-lane beta scope
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 
 ## Supported Runtime Lanes

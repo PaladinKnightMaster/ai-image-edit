@@ -106,6 +106,7 @@ At Sprint 3 closeout, choose one:
 
 ## Next Required Artifacts
 
-- off-box Qwen edit validation record, or an explicit decision that closed beta is draft-lane only
+- off-box Qwen edit validation record from `docs/testing/off-box-qwen-acceptance-packet.md`, or an explicit
+  decision that closed beta remains draft-lane only
 - clean-machine release smoke record for the chosen beta target
 - finalized tester handoff aligned to `docs/planning/beta-scope-decision.md`

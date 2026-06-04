@@ -99,7 +99,7 @@ Use the benchmark pack dimensions consistently:
 ## Next Review Actions
 
 1. Decide whether to reveal the real WR3-007 pending output in the live benchmark DB, or keep it pending as a fixture.
-2. Keep local FLUX review explicitly labeled as `flux-draft`; do not promote it to Qwen acceptance.
-3. Prepare off-box Qwen review for `Headshot Cleanup` first because it is the primary crash-blocked case.
+2. Use `docs/testing/off-box-qwen-acceptance-packet.md` for any Qwen acceptance execution on stronger hardware.
+3. Keep local FLUX review explicitly labeled as `flux-draft`; do not promote it to Qwen acceptance.
 4. After one off-box pass, decide whether to keep current defaults, tune one preset, or add benchmark-pack cases
    for the current coverage gaps.

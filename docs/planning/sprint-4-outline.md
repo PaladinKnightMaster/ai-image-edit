@@ -68,6 +68,8 @@ Sprint 4 scope decision:
 - Owner: AI/ML + Infra
 - Priority: P0
 - Outcome: exact commands, fixture paths, expected artifacts, and review worksheet are ready for stronger hardware
+- Progress: complete. Packet is prepared in `docs/testing/off-box-qwen-acceptance-packet.md`; execution
+  remains approval-gated and off-box.
 
 ### WR4-003 - Run or record off-box Qwen acceptance
 
@@ -101,12 +103,11 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. WR4-002 Prepare off-box Qwen acceptance packet
-2. WR4-004 Clean-machine release smoke
-3. WR4-005 Finalize beta tester handoff
-4. WR4-006 Decide WR3-007 pending fixture handling
-5. WR4-003 Run or record off-box Qwen acceptance if required
-6. WR4-007 Release checklist and risk register
+1. WR4-004 Clean-machine release smoke
+2. WR4-005 Finalize beta tester handoff
+3. WR4-006 Decide WR3-007 pending fixture handling
+4. WR4-003 Run or record off-box Qwen acceptance if required
+5. WR4-007 Release checklist and risk register
 
 ## 7. Exit Criteria
 

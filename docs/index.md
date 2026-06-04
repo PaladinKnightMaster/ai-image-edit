@@ -53,6 +53,7 @@ This repository now has four documentation layers:
 - Preset benchmark review: `docs/testing/preset-benchmark-review.md`
 - Preset quality review worksheet: `docs/testing/preset-quality-review-worksheet.md`
 - WR3-007 draft preset review approval packet: `docs/testing/wr3-007-draft-preset-review-approval-packet.md`
+- Off-box Qwen acceptance packet: `docs/testing/off-box-qwen-acceptance-packet.md`
 - Fixture asset convention: `fixtures/README.md`
 
 ## ADRs

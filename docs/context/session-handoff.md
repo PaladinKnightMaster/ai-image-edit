@@ -20,7 +20,8 @@ Continue Sprint 4 from the locked beta scope:
 1. start from `docs/planning/sprint-3-closeout-audit.md`
 2. review `docs/planning/sprint-4-outline.md`
 3. use `docs/planning/beta-scope-decision.md` as the WR4-001 decision record
-4. next implement WR4-002: prepare the off-box Qwen acceptance packet
+4. WR4-002 is prepared in `docs/testing/off-box-qwen-acceptance-packet.md`; next implement WR4-004
+   clean-machine release smoke planning
 5. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 6. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
@@ -44,6 +45,8 @@ Continue Sprint 4 from the locked beta scope:
 - proposed Sprint 4 in `docs/planning/sprint-4-outline.md` as a beta scope lock and acceptance validation sprint
 - locked WR4-001 beta scope in `docs/planning/beta-scope-decision.md`: draft-lane beta preparation is allowed
   with explicit limitations, final Qwen-acceptance beta remains no-go until off-box validation exists
+- prepared WR4-002 in `docs/testing/off-box-qwen-acceptance-packet.md` and expanded
+  `scripts/run_edit_benchmark_case.ps1` so off-box runs can pass explicit dotenv, model-root, and DB paths
 - started WR3-005 reference-guided UX copy polish without adding controls:
   `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
   and related notices now distinguish base identity/source image from optional visual guide image

@@ -11,6 +11,7 @@ Source of truth:
 - benchmark pack guide: `docs/testing/benchmark-pack.md`
 - benchmark manifest: `docs/testing/benchmark-pack.v0.json`
 - active Sprint 3 worksheet: `docs/testing/preset-quality-review-worksheet.md`
+- Sprint 4 off-box Qwen acceptance packet: `docs/testing/off-box-qwen-acceptance-packet.md`
 
 ## Review rules
 
