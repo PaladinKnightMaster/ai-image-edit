@@ -1,6 +1,6 @@
 # Sprint 4 Outline
 
-Status: Proposed
+Status: Active
 Sprint name: Sprint 4 - Beta Scope Lock and Acceptance Validation
 Duration: 2 weeks
 Last updated: 2026-06-04
@@ -29,6 +29,12 @@ The best path is not to broaden the product. The best path is to choose one of t
    Qwen acceptance is incomplete.
 2. Qwen-acceptance beta: wait for off-box `qwen-image-edit-2511` benchmark evidence before inviting testers.
 
+Sprint 4 scope decision:
+
+- WR4-001 is locked in `docs/planning/beta-scope-decision.md`.
+- Proceed with draft-lane closed beta preparation only.
+- Final Qwen-acceptance beta remains no-go until off-box `qwen-image-edit-2511` evidence exists.
+
 ## 3. In Scope
 
 - final beta scope decision
@@ -55,6 +61,7 @@ The best path is not to broaden the product. The best path is to choose one of t
 - Owner: Tech Lead + Product
 - Priority: P0
 - Outcome: decide draft-lane beta, Qwen-acceptance beta, or another hardening sprint
+- Progress: complete. Scope is locked to draft-lane beta preparation; final Qwen-acceptance beta remains no-go.
 
 ### WR4-002 - Prepare off-box Qwen acceptance packet
 
@@ -94,13 +101,12 @@ The best path is not to broaden the product. The best path is to choose one of t
 
 ## 6. Recommended Execution Order
 
-1. WR4-001 Lock beta scope
-2. WR4-002 Prepare off-box Qwen acceptance packet
-3. WR4-004 Clean-machine release smoke
-4. WR4-005 Finalize beta tester handoff
-5. WR4-006 Decide WR3-007 pending fixture handling
-6. WR4-003 Run or record off-box Qwen acceptance if required
-7. WR4-007 Release checklist and risk register
+1. WR4-002 Prepare off-box Qwen acceptance packet
+2. WR4-004 Clean-machine release smoke
+3. WR4-005 Finalize beta tester handoff
+4. WR4-006 Decide WR3-007 pending fixture handling
+5. WR4-003 Run or record off-box Qwen acceptance if required
+6. WR4-007 Release checklist and risk register
 
 ## 7. Exit Criteria
 

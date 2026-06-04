@@ -1,7 +1,7 @@
 # Beta Tester Limitations Handoff
 
-Last updated: 2026-05-20
-Status: Internal draft for future closed-beta handoff
+Last updated: 2026-06-04
+Status: Internal draft for draft-lane closed-beta handoff
 
 ## Purpose
 
@@ -9,11 +9,12 @@ Use this note when preparing a closed-beta tester invite, runbook, or onboarding
 testers should expect from the current edit-first MVP without overstating model quality or runtime
 readiness.
 
-Do not send this as a beta invite yet. The current beta readiness verdict is still `Not beta-ready yet`.
+Do not send this as a beta invite yet. Sprint 4 has locked a draft-lane beta scope, but final invite copy
+still needs clean-machine smoke evidence and owner review.
 
 ## Current Scope
 
-The current MVP is an edit-first local studio workflow:
+The current draft-lane beta scope is an edit-first local studio workflow:
 
 1. start with `Edit Photo`
 2. add one base image
@@ -24,6 +25,8 @@ The current MVP is an edit-first local studio workflow:
 7. compare, download, or reuse a revealed output for another edit round
 
 `Create from Scratch` remains available as a supporting draft lane, not the main product promise.
+
+This scope validates workflow and local draft-lane behavior. It does not validate final Qwen edit quality.
 
 ## What Testers Can Evaluate
 
@@ -78,4 +81,5 @@ Ask testers to answer these questions after a session:
 Use this status until the beta gate changes:
 
 The product flow is ready for internal dogfooding and structured review. It is not ready for closed beta
-until preset quality review and the Qwen edit acceptance lane are resolved or explicitly scoped out.
+as a final Qwen-quality product. A limited draft-lane closed beta may proceed only if the invitation
+explicitly says Qwen edit acceptance is still pending off-box validation.

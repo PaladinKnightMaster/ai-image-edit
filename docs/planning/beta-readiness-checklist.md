@@ -2,7 +2,7 @@
 
 Last updated: 2026-06-04
 Sprint: Sprint 3
-Status: Not beta-ready for final Qwen acceptance
+Status: Draft-lane beta scope locked; not beta-ready for final Qwen acceptance
 
 ## Purpose
 
@@ -15,9 +15,9 @@ based on evidence rather than feature count.
 Do not start a final Qwen-acceptance beta yet.
 
 The edit-first product loop is credible enough for internal dogfooding or a narrowly scoped draft-lane
-closed beta if the limitations are explicit. Sprint 3 now has local FLUX draft evidence and scratch-copy
-reveal/reuse validation for the approved WR3-007 run. The remaining blocker for the intended edit-model
-beta is off-box `qwen-image-edit-2511` acceptance evidence.
+closed beta if the limitations are explicit. Sprint 4 locks that beta scope in
+`docs/planning/beta-scope-decision.md`. The remaining blocker for the intended edit-model beta is off-box
+`qwen-image-edit-2511` acceptance evidence.
 
 ## Beta Gate Summary
 
@@ -31,6 +31,7 @@ beta is off-box `qwen-image-edit-2511` acceptance evidence.
 | Qwen edit acceptance signoff | Blocked locally | Complete off-box validation or explicitly mark beta as blocked for the intended Qwen edit lane. |
 | Runtime expectations | Pass for draft-lane disclosure | CPU-only latency and model-run approval expectations are documented. |
 | Known limitations | Pass for internal draft handoff | Tester limitations handoff exists; final invite copy still depends on beta scope. |
+| Beta scope lock | Pass | Sprint 4 chose draft-lane beta preparation; final Qwen-acceptance beta remains no-go. |
 
 ## Closed-Beta Entry Criteria
 
@@ -105,6 +106,6 @@ At Sprint 3 closeout, choose one:
 
 ## Next Required Artifacts
 
-- Sprint 4 beta scope decision
 - off-box Qwen edit validation record, or an explicit decision that closed beta is draft-lane only
 - clean-machine release smoke record for the chosen beta target
+- finalized tester handoff aligned to `docs/planning/beta-scope-decision.md`

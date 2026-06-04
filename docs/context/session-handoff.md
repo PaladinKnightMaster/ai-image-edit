@@ -16,12 +16,13 @@ The repo now has:
 - documentation map: start at `docs/index.md`
 
 ## Immediate next action
-Review Sprint 4 scope before implementation:
+Continue Sprint 4 from the locked beta scope:
 1. start from `docs/planning/sprint-3-closeout-audit.md`
 2. review `docs/planning/sprint-4-outline.md`
-3. choose draft-lane closed beta prep, off-box Qwen acceptance first, or one more hardening sprint
-4. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
-5. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
+3. use `docs/planning/beta-scope-decision.md` as the WR4-001 decision record
+4. next implement WR4-002: prepare the off-box Qwen acceptance packet
+5. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
+6. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - started WR3-004 status/error communication with `frontend/app/chat/status-copy.ts`
@@ -41,6 +42,8 @@ Review Sprint 4 scope before implementation:
   image 200, and left the real benchmark DB unchanged at `pending_review`
 - closed Sprint 3 in `docs/planning/sprint-3-closeout-audit.md`
 - proposed Sprint 4 in `docs/planning/sprint-4-outline.md` as a beta scope lock and acceptance validation sprint
+- locked WR4-001 beta scope in `docs/planning/beta-scope-decision.md`: draft-lane beta preparation is allowed
+  with explicit limitations, final Qwen-acceptance beta remains no-go until off-box validation exists
 - started WR3-005 reference-guided UX copy polish without adding controls:
   `ModeSwitchHero`, `WorkflowLandingState`, `ComposerPanel`, `HistoryPickerModal`, `BeforeAfterCompare`,
   and related notices now distinguish base identity/source image from optional visual guide image

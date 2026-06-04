@@ -39,7 +39,9 @@ Last updated: 2026-06-04
 
 ## Current Primary Sprint 3 Focus
 - Sprint 3 is closed in `docs/planning/sprint-3-closeout-audit.md`
-- Sprint 4 is proposed in `docs/planning/sprint-4-outline.md`
+- Sprint 4 is active in `docs/planning/sprint-4-outline.md`
+- WR4-001 beta scope is locked in `docs/planning/beta-scope-decision.md`: proceed with draft-lane beta
+  preparation only; final Qwen-acceptance beta remains no-go until off-box validation exists
 - start with local-only pending-review reveal validation and cheap job/recovery checks
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
   API reveal responses, pending-output cleanup on delete, and queued/running recovery after restart
@@ -86,8 +88,8 @@ Last updated: 2026-06-04
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. review and approve the Sprint 4 beta scope: draft-lane closed beta vs Qwen-acceptance beta
-2. prepare off-box Qwen acceptance validation if final edit-model quality is required before beta
+1. prepare the WR4-002 off-box Qwen acceptance validation packet
+2. run clean-machine release smoke planning for the draft-lane beta target
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 
 ## Supported Runtime Lanes
