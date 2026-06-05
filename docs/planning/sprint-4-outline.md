@@ -91,8 +91,9 @@ Sprint 4 scope decision:
 - Owner: Product + Tech Lead
 - Priority: P0
 - Outcome: tester-facing limitations and feedback prompts are ready and aligned with the chosen beta scope
-- Progress: complete. Tester-facing handoff is in `docs/testing/draft-lane-beta-tester-handoff.md`, backed
-  by `docs/testing/beta-tester-limitations-handoff.md`.
+- Progress: complete. Tester-facing handoff is owner-reviewed in
+  `docs/testing/draft-lane-beta-tester-handoff.md`, backed by
+  `docs/testing/beta-tester-limitations-handoff.md`. Tester invite remains gated by target clean-machine smoke.
 
 ### WR4-006 - Decide WR3-007 pending fixture handling
 

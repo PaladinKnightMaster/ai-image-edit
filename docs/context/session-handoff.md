@@ -22,11 +22,12 @@ Continue Sprint 4 from the locked beta scope:
 3. use `docs/planning/beta-scope-decision.md` as the WR4-001 decision record
 4. WR4-002 is prepared in `docs/testing/off-box-qwen-acceptance-packet.md`
 5. WR4-004 is prepared in `docs/testing/clean-machine-release-smoke.md`
-6. WR4-005 is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
+6. WR4-005 is owner-reviewed in `docs/testing/draft-lane-beta-tester-handoff.md`; tester invite remains
+   gated by target clean-machine smoke
 7. WR4-006 is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the real WR3-007 pending
    output as a fixture and validate reveal/reuse against scratch DB copies
 8. WR4-007 is reviewable in `docs/planning/sprint-4-release-checklist-and-risk-register.md`
-9. next run or schedule target clean-machine release smoke, then owner-review tester handoff copy
+9. next run or schedule target clean-machine release smoke, then record the result or owner-assigned blocker
 10. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
@@ -60,6 +61,8 @@ Continue Sprint 4 from the locked beta scope:
 - reran non-model release smoke at commit `837d4ef`: direct run failed on local Python launcher resolution,
   rerun with `AI_IMAGE_EDIT_PYTHON` plus repo site-packages override passed backend fast-check smoke,
   frontend lint, typecheck, and build; target clean-machine smoke is still required
+- owner-reviewed the draft-lane beta tester handoff and limitations copy; it now blocks tester invite on
+  target clean-machine smoke and explicitly says local FLUX draft outputs are not final Qwen quality evidence
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:

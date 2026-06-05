@@ -41,8 +41,8 @@ Not allowed:
 | Off-box Qwen acceptance result | `data/qwen-acceptance-summary.json`, `data/qwen-acceptance.db`, worksheet rows | Missing | AI/ML | Not required for draft-lane beta; required for Qwen beta |
 | Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `837d4ef` with Python override and noted build warning | DevOps | Pass as local evidence |
 | Target clean-machine smoke | Target run of `scripts/release_smoke.ps1` | Not recorded | DevOps | Required before tester handoff |
-| Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Ready for owner review | Product + Tech Lead | Conditional pass |
-| Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Draft limitations exist | Product | Conditional pass |
+| Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product + Tech Lead | Conditional pass |
+| Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product | Conditional pass |
 | Pending-review reveal/reuse | Scratch-copy reveal validation and backend/API tests | Pass; live WR3-007 fixture intentionally remains pending | Backend + Frontend | Pass |
 | WR3-007 fixture decision | `docs/planning/wr3-007-fixture-decision.md` | Complete; live fixture preserved | Tech Lead | Pass |
 | Preset quality worksheet | `docs/testing/preset-quality-review-worksheet.md` | Draft and local FLUX evidence mapped; Qwen acceptance pending | AI/ML + Product | Partial |
@@ -98,8 +98,7 @@ Do not add `-RunApproved` unless the reviewer explicitly approves the heavy off-
 
 | Priority | Action | Owner | Output |
 | --- | --- | --- | --- |
-| P0 | Run target clean-machine release smoke | DevOps | Updated `docs/testing/clean-machine-release-smoke.md` evidence row |
-| P0 | Owner-review tester handoff copy | Product + Tech Lead | Approved or revised `docs/testing/draft-lane-beta-tester-handoff.md` |
+| P0 | Run and record target clean-machine release smoke before tester invite | DevOps | Updated `docs/testing/clean-machine-release-smoke.md` evidence row |
 | P1 | Decide whether to execute off-box Qwen acceptance | AI/ML + Product | Acceptance run result or explicit deferral |
 | P1 | Prepare tester session result log | Product | Filled tester result rows after any session |
 

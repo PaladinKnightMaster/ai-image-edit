@@ -1,7 +1,7 @@
 # Beta Tester Limitations Handoff
 
 Last updated: 2026-06-04
-Status: Ready for owner review
+Status: Owner-reviewed; gated by target clean-machine smoke
 
 ## Purpose
 
@@ -63,7 +63,7 @@ Testers should not treat these as final acceptance evidence:
 - Reference images are guidance only. The base image remains the source identity and primary edit input.
 - Some preset benchmark coverage is still proxy coverage. `Natural Skin Retouch` and `Fashion Portrait`
   do not yet have exact one-to-one dedicated benchmark cases.
-- New editing surfaces such as masking, batch editing, and hosted GPU execution are outside Sprint 3 scope.
+- New editing surfaces such as masking, batch editing, and hosted GPU execution are outside Sprint 4 scope.
 
 ## Tester Feedback Prompts
 
@@ -81,8 +81,9 @@ Ask testers to answer these questions after a session:
 Use this status until the beta gate changes:
 
 The product flow is ready for internal dogfooding and structured review. It is not ready for closed beta
-as a final Qwen-quality product. A limited draft-lane closed beta may proceed only if the invitation
-explicitly says Qwen edit acceptance is still pending off-box validation.
+as a final Qwen-quality product. A limited draft-lane closed beta may proceed only after target
+clean-machine smoke is recorded or owner-accepted as blocked, and only if the invitation explicitly says
+Qwen edit acceptance is still pending off-box validation.
 
 ## Tester-Facing Handoff
 

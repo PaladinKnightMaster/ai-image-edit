@@ -48,12 +48,13 @@ Last updated: 2026-06-04
   aggregate script `scripts/release_smoke.ps1`
 - current workspace WR4-004 release smoke reran at commit `837d4ef` on 2026-06-04 with explicit Python
   runtime override; target clean-machine smoke remains required before tester handoff
-- WR4-005 tester handoff is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
+- WR4-005 tester handoff is owner-reviewed in `docs/testing/draft-lane-beta-tester-handoff.md`; tester
+  invite remains gated by target clean-machine smoke
 - WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
   WR3-007 job pending as a benchmark fixture and use scratch DB copies for routine reveal/reuse checks
 - WR4-007 release checklist and risk register is reviewable in
   `docs/planning/sprint-4-release-checklist-and-risk-register.md`; draft-lane beta prep remains
-  conditional on target clean-machine smoke and owner-reviewed tester copy
+  conditional on target clean-machine smoke
 - Sprint 3 local-only pending-review reveal validation and cheap job/recovery checks remain the reliability
   baseline for Sprint 4 release readiness work
 - WR3-001 / WR3-003 local reliability coverage has started with temp-DB tests for pending-review reveal,
@@ -106,7 +107,7 @@ Last updated: 2026-06-04
 
 ## Current Recommended Immediate Work
 1. run or schedule clean-machine release smoke on the target beta machine
-2. owner-review the draft-lane tester handoff copy before any tester invite
+2. record the target clean-machine smoke result or owner-assigned blocker before any tester invite
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 
 ## Supported Runtime Lanes
