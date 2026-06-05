@@ -1,7 +1,7 @@
 # Clean-Machine Release Smoke
 
 Status: Prepared; local workspace smoke passed
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 Sprint: Sprint 4
 Ticket: WR4-004
 
@@ -144,5 +144,6 @@ For target beta-machine evidence, paste back the result block from
 | --- | --- | --- | --- | --- |
 | 2026-06-04 | Current Codex workspace | `837d4ef` | pass with warning | Direct run failed before checks because the local venv launcher could not resolve Python. Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted a Windows ESLint cache `EPERM` warning after successful build output. |
 | 2026-06-04 | Current Codex workspace | `c16e7fe` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
+| 2026-06-05 | Current Codex workspace | `e676d9a` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
 
 Target clean-machine smoke is still required before a tester handoff.

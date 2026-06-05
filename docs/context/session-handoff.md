@@ -59,7 +59,7 @@ Continue Sprint 4 from the locked beta scope:
   benchmark fixture, while routine reveal/reuse regression checks should use scratch DB copies
 - prepared WR4-007 in `docs/planning/sprint-4-release-checklist-and-risk-register.md`, including release
   gates, known blockers, evidence commands, owner actions, and the Sprint 4 exit readiness checklist
-- reran non-model release smoke at commit `c16e7fe` with `AI_IMAGE_EDIT_PYTHON` plus repo site-packages
+- reran non-model release smoke at commit `e676d9a` on 2026-06-05 with `AI_IMAGE_EDIT_PYTHON` plus repo site-packages
   override; backend fast-check smoke, frontend lint, typecheck, and build passed; target clean-machine
   smoke is still required
 - owner-reviewed the draft-lane beta tester handoff and limitations copy; it now blocks tester invite on
