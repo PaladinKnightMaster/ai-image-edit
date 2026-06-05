@@ -46,7 +46,7 @@ Last updated: 2026-06-04
   execution remains off-box and approval-gated
 - WR4-004 clean-machine release smoke is prepared in `docs/testing/clean-machine-release-smoke.md` with
   aggregate script `scripts/release_smoke.ps1`
-- current workspace WR4-004 release smoke reran at commit `837d4ef` on 2026-06-04 with explicit Python
+- current workspace WR4-004 release smoke reran at commit `c16e7fe` on 2026-06-04 with explicit Python
   runtime override; target clean-machine smoke remains required before tester handoff
 - target clean-machine smoke operator packet is ready in
   `docs/testing/target-clean-machine-smoke-operator-packet.md`; target result remains unrecorded
