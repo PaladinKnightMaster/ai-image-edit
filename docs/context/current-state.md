@@ -48,6 +48,8 @@ Last updated: 2026-06-04
   aggregate script `scripts/release_smoke.ps1`
 - current workspace WR4-004 release smoke reran at commit `837d4ef` on 2026-06-04 with explicit Python
   runtime override; target clean-machine smoke remains required before tester handoff
+- target clean-machine smoke operator packet is ready in
+  `docs/testing/target-clean-machine-smoke-operator-packet.md`; target result remains unrecorded
 - WR4-005 tester handoff is owner-reviewed in `docs/testing/draft-lane-beta-tester-handoff.md`; tester
   invite remains gated by target clean-machine smoke
 - WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
@@ -106,7 +108,7 @@ Last updated: 2026-06-04
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. run or schedule clean-machine release smoke on the target beta machine
+1. run `docs/testing/target-clean-machine-smoke-operator-packet.md` on the target beta machine
 2. record the target clean-machine smoke result or owner-assigned blocker before any tester invite
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 

@@ -50,6 +50,9 @@ From repo root:
 powershell.exe -ExecutionPolicy Bypass -File .\scripts\release_smoke.ps1
 ```
 
+For target beta-machine execution, use the operator packet in
+`docs/testing/target-clean-machine-smoke-operator-packet.md`.
+
 This runs:
 
 - `.\scripts\smoke_backend.ps1`
@@ -131,6 +134,9 @@ For Sprint 4 release readiness, record:
 - frontend lint/typecheck/build result
 - optional inference smoke result, if run
 - blockers and owner assignments
+
+For target beta-machine evidence, paste back the result block from
+`docs/testing/target-clean-machine-smoke-operator-packet.md`.
 
 ## Current Evidence
 

@@ -40,7 +40,7 @@ Not allowed:
 | Off-box Qwen packet | `docs/testing/off-box-qwen-acceptance-packet.md` | Prepared; execution not started | AI/ML + Infra | Pass for draft-lane beta; blocker for Qwen beta |
 | Off-box Qwen acceptance result | `data/qwen-acceptance-summary.json`, `data/qwen-acceptance.db`, worksheet rows | Missing | AI/ML | Not required for draft-lane beta; required for Qwen beta |
 | Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `837d4ef` with Python override and noted build warning | DevOps | Pass as local evidence |
-| Target clean-machine smoke | Target run of `scripts/release_smoke.ps1` | Not recorded | DevOps | Required before tester handoff |
+| Target clean-machine smoke | Target run using `docs/testing/target-clean-machine-smoke-operator-packet.md` | Operator packet ready; result not recorded | DevOps | Required before tester handoff |
 | Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product + Tech Lead | Conditional pass |
 | Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product | Conditional pass |
 | Pending-review reveal/reuse | Scratch-copy reveal validation and backend/API tests | Pass; live WR3-007 fixture intentionally remains pending | Backend + Frontend | Pass |
@@ -64,7 +64,7 @@ Not allowed:
 | ID | Risk | Severity | Status | Owner | Mitigation / next action |
 | --- | --- | --- | --- | --- | --- |
 | R1 | Final Qwen edit acceptance is missing. | High | Open | AI/ML + Infra | Keep Qwen beta and public beta no-go until off-box packet results are recorded. |
-| R2 | Target clean-machine release smoke is not recorded. | High | Open | DevOps | Run `powershell.exe -ExecutionPolicy Bypass -File .\scripts\release_smoke.ps1` on the target beta machine. |
+| R2 | Target clean-machine release smoke is not recorded. | High | Operator packet ready | DevOps | Run `docs/testing/target-clean-machine-smoke-operator-packet.md` on the target beta machine and record the result. |
 | R3 | Tester may confuse FLUX draft output with final Qwen quality. | High | Mitigated for handoff | Product + Tech Lead | Use the required wording boundary in every tester session and invite. |
 | R4 | CPU-only edit runs can take tens of minutes. | Medium | Open | Product + Support | Frame beta around workflow and available draft results; warn before any model execution. |
 | R5 | Queued/running jobs fail on backend restart. | Medium | Known limitation | Backend | Keep restart behavior in support notes; do not promise durable replay queue. |
@@ -98,7 +98,7 @@ Do not add `-RunApproved` unless the reviewer explicitly approves the heavy off-
 
 | Priority | Action | Owner | Output |
 | --- | --- | --- | --- |
-| P0 | Run and record target clean-machine release smoke before tester invite | DevOps | Updated `docs/testing/clean-machine-release-smoke.md` evidence row |
+| P0 | Run and record target clean-machine release smoke before tester invite | DevOps | Returned operator result block and updated `docs/testing/clean-machine-release-smoke.md` evidence row |
 | P1 | Decide whether to execute off-box Qwen acceptance | AI/ML + Product | Acceptance run result or explicit deferral |
 | P1 | Prepare tester session result log | Product | Filled tester result rows after any session |
 

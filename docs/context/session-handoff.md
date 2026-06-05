@@ -27,7 +27,8 @@ Continue Sprint 4 from the locked beta scope:
 7. WR4-006 is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the real WR3-007 pending
    output as a fixture and validate reveal/reuse against scratch DB copies
 8. WR4-007 is reviewable in `docs/planning/sprint-4-release-checklist-and-risk-register.md`
-9. next run or schedule target clean-machine release smoke, then record the result or owner-assigned blocker
+9. next run `docs/testing/target-clean-machine-smoke-operator-packet.md` on the target beta machine,
+   then record the result or owner-assigned blocker
 10. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
@@ -63,6 +64,8 @@ Continue Sprint 4 from the locked beta scope:
   frontend lint, typecheck, and build; target clean-machine smoke is still required
 - owner-reviewed the draft-lane beta tester handoff and limitations copy; it now blocks tester invite on
   target clean-machine smoke and explicitly says local FLUX draft outputs are not final Qwen quality evidence
+- added `docs/testing/target-clean-machine-smoke-operator-packet.md` so the beta-machine operator has exact
+  non-model commands, fallback instructions, pass criteria, and a result block to return
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:
