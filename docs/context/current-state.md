@@ -46,8 +46,8 @@ Last updated: 2026-06-04
   execution remains off-box and approval-gated
 - WR4-004 clean-machine release smoke is prepared in `docs/testing/clean-machine-release-smoke.md` with
   aggregate script `scripts/release_smoke.ps1`
-- current workspace WR4-004 release smoke passed on 2026-06-04 with explicit Python runtime override; target
-  clean-machine smoke remains required before tester handoff
+- current workspace WR4-004 release smoke reran at commit `837d4ef` on 2026-06-04 with explicit Python
+  runtime override; target clean-machine smoke remains required before tester handoff
 - WR4-005 tester handoff is ready for owner review in `docs/testing/draft-lane-beta-tester-handoff.md`
 - WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
   WR3-007 job pending as a benchmark fixture and use scratch DB copies for routine reveal/reuse checks

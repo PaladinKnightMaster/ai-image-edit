@@ -136,6 +136,6 @@ For Sprint 4 release readiness, record:
 
 | Date | Environment | Commit | Result | Notes |
 | --- | --- | --- | --- | --- |
-| 2026-06-04 | Current Codex workspace | pending commit | pass with warning | `scripts/release_smoke.ps1` passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted a Windows ESLint cache `EPERM` warning after successful build output. |
+| 2026-06-04 | Current Codex workspace | `837d4ef` | pass with warning | Direct run failed before checks because the local venv launcher could not resolve Python. Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted a Windows ESLint cache `EPERM` warning after successful build output. |
 
 Target clean-machine smoke is still required before a tester handoff.

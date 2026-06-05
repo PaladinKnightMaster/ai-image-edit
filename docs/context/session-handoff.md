@@ -57,6 +57,9 @@ Continue Sprint 4 from the locked beta scope:
   benchmark fixture, while routine reveal/reuse regression checks should use scratch DB copies
 - prepared WR4-007 in `docs/planning/sprint-4-release-checklist-and-risk-register.md`, including release
   gates, known blockers, evidence commands, owner actions, and the Sprint 4 exit readiness checklist
+- reran non-model release smoke at commit `837d4ef`: direct run failed on local Python launcher resolution,
+  rerun with `AI_IMAGE_EDIT_PYTHON` plus repo site-packages override passed backend fast-check smoke,
+  frontend lint, typecheck, and build; target clean-machine smoke is still required
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:

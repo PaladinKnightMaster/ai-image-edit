@@ -39,7 +39,7 @@ Not allowed:
 | Beta scope lock | `docs/planning/beta-scope-decision.md` | Complete; draft-lane beta prep only | Tech Lead + Product | Pass |
 | Off-box Qwen packet | `docs/testing/off-box-qwen-acceptance-packet.md` | Prepared; execution not started | AI/ML + Infra | Pass for draft-lane beta; blocker for Qwen beta |
 | Off-box Qwen acceptance result | `data/qwen-acceptance-summary.json`, `data/qwen-acceptance.db`, worksheet rows | Missing | AI/ML | Not required for draft-lane beta; required for Qwen beta |
-| Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed on current workspace with Python override and noted build warning | DevOps | Pass as local evidence |
+| Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `837d4ef` with Python override and noted build warning | DevOps | Pass as local evidence |
 | Target clean-machine smoke | Target run of `scripts/release_smoke.ps1` | Not recorded | DevOps | Required before tester handoff |
 | Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Ready for owner review | Product + Tech Lead | Conditional pass |
 | Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Draft limitations exist | Product | Conditional pass |
@@ -69,7 +69,7 @@ Not allowed:
 | R4 | CPU-only edit runs can take tens of minutes. | Medium | Open | Product + Support | Frame beta around workflow and available draft results; warn before any model execution. |
 | R5 | Queued/running jobs fail on backend restart. | Medium | Known limitation | Backend | Keep restart behavior in support notes; do not promise durable replay queue. |
 | R6 | Pending-review outputs can be misused if reveal is bypassed. | Medium | Mitigated | Backend + Frontend | Keep reveal/reuse tests green and preserve WR3-007 as a pending fixture for regression checks. |
-| R7 | Windows Python/venv launcher mismatch can block setup. | Medium | Mitigated locally | DevOps | Use `AI_IMAGE_EDIT_PYTHON` and `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` overrides when needed. |
+| R7 | Windows Python/venv launcher mismatch can block setup. | Medium | Confirmed locally; mitigated with override | DevOps | Use `AI_IMAGE_EDIT_PYTHON` and `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` overrides when needed. |
 | R8 | Preset quality evidence is partial and partly proxy-based. | Medium | Open | AI/ML + Product | Label local FLUX results as draft evidence; require Qwen acceptance worksheet rows for acceptance claims. |
 | R9 | Frontend build can emit Windows ESLint cache warnings. | Low | Known issue | Frontend + DevOps | Treat as warning only if build exits 0; record if it appears on target machine. |
 
