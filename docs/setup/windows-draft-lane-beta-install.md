@@ -16,6 +16,7 @@ After installation, run:
 
 1. `docs/testing/target-clean-machine-smoke-operator-packet.md`
 2. `docs/testing/draft-lane-beta-tester-handoff.md`
+3. `docs/testing/draft-lane-beta-session-runbook.md`
 
 ## Supported Beta Boundary
 
@@ -305,7 +306,7 @@ Before any model execution:
 - confirm the tester understands FLUX is draft-lane evidence only
 - confirm CPU inference can take tens of minutes
 - keep `SAFETY_REVIEW_MODE=manual`
-- follow `docs/testing/draft-lane-beta-tester-handoff.md`
+- follow `docs/testing/draft-lane-beta-session-runbook.md`
 
 ## 12. Common Windows Failures
 

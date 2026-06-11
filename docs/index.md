@@ -57,6 +57,7 @@ This repository now has four documentation layers:
 - Smoke validation path: `docs/testing/smoke-validation-path.md`
 - Beta tester limitations handoff: `docs/testing/beta-tester-limitations-handoff.md`
 - Draft-lane beta tester handoff: `docs/testing/draft-lane-beta-tester-handoff.md`
+- Draft-lane beta session runbook: `docs/testing/draft-lane-beta-session-runbook.md`
 - Benchmark pack: `docs/testing/benchmark-pack.md`
 - Benchmark manifest: `docs/testing/benchmark-pack.v0.json`
 - Preset benchmark review: `docs/testing/preset-benchmark-review.md`

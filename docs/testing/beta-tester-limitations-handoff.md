@@ -1,6 +1,6 @@
 # Beta Tester Limitations Handoff
 
-Last updated: 2026-06-04
+Last updated: 2026-06-11
 Status: Owner-reviewed; gated by target clean-machine smoke
 
 ## Purpose
@@ -11,6 +11,8 @@ readiness.
 
 Use `docs/testing/draft-lane-beta-tester-handoff.md` for invite/session wording. This file remains the
 limitations source of truth behind that handoff.
+
+Use `docs/testing/draft-lane-beta-session-runbook.md` for session operation and evidence capture.
 
 ## Current Scope
 

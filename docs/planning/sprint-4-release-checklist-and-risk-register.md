@@ -43,6 +43,7 @@ Not allowed:
 | Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `e676d9a` with Python override and noted build warning | DevOps | Pass as local evidence |
 | Target clean-machine smoke | Target run using `docs/testing/target-clean-machine-smoke-operator-packet.md` | Operator packet ready; result not recorded | DevOps | Required before tester handoff |
 | Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product + Tech Lead | Conditional pass |
+| Tester session runbook | `docs/testing/draft-lane-beta-session-runbook.md` | Prepared; first controlled session pending | Product + Tech Lead | Pass for preparation |
 | Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product | Conditional pass |
 | Pending-review reveal/reuse | Scratch-copy reveal validation and backend/API tests | Pass; live WR3-007 fixture intentionally remains pending | Backend + Frontend | Pass |
 | WR3-007 fixture decision | `docs/planning/wr3-007-fixture-decision.md` | Complete; live fixture preserved | Tech Lead | Pass |
@@ -59,6 +60,7 @@ Not allowed:
 3. Confirm no tester task asks for final Qwen quality evaluation.
 4. Keep live job `dfc36b9bde8d4ee7b111c5196d8ecb24` pending unless the fixture decision changes explicitly.
 5. Record tester session result rows in `docs/testing/draft-lane-beta-tester-handoff.md`.
+6. Operate the session using `docs/testing/draft-lane-beta-session-runbook.md`.
 
 ## Risk Register
 
@@ -100,6 +102,7 @@ Do not add `-RunApproved` unless the reviewer explicitly approves the heavy off-
 | Priority | Action | Owner | Output |
 | --- | --- | --- | --- |
 | P0 | Run and record target clean-machine release smoke before tester invite | DevOps | Returned operator result block and updated `docs/testing/clean-machine-release-smoke.md` evidence row |
+| P0 | Run the first controlled tester session after smoke passes | Product + Session Operator | Returned `docs/testing/draft-lane-beta-session-runbook.md` result block |
 | P1 | Decide whether to execute off-box Qwen acceptance | AI/ML + Product | Acceptance run result or explicit deferral |
 | P1 | Prepare tester session result log | Product | Filled tester result rows after any session |
 

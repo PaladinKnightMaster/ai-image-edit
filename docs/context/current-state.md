@@ -52,6 +52,8 @@ Last updated: 2026-06-11
   `docs/testing/target-clean-machine-smoke-operator-packet.md`; target result remains unrecorded
 - Windows draft-lane beta installation guide is prepared in
   `docs/setup/windows-draft-lane-beta-install.md`; first clean-machine installation trial remains pending
+- draft-lane beta session runbook is prepared in `docs/testing/draft-lane-beta-session-runbook.md`;
+  first controlled tester session remains pending
 - WR4-005 tester handoff is owner-reviewed in `docs/testing/draft-lane-beta-tester-handoff.md`; tester
   invite remains gated by target clean-machine smoke
 - WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
@@ -112,7 +114,7 @@ Last updated: 2026-06-11
 ## Current Recommended Immediate Work
 1. install the project on the target beta machine using `docs/setup/windows-draft-lane-beta-install.md`
 2. run `docs/testing/target-clean-machine-smoke-operator-packet.md` and record the result
-3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
+3. run the first controlled session with `docs/testing/draft-lane-beta-session-runbook.md`
 
 ## Supported Runtime Lanes
 - `qwen-image-2512` - local T2I smoke lane

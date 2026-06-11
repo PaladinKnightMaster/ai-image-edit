@@ -10,6 +10,9 @@ Ticket: WR4-005
 This is the tester-facing handoff for a limited draft-lane closed beta. It is aligned to
 `docs/planning/beta-scope-decision.md`.
 
+The session operator should run the workflow through
+`docs/testing/draft-lane-beta-session-runbook.md`.
+
 Do not use this as a final Qwen-quality beta invite. This beta validates local workflow, setup, reveal,
 reuse, and draft-lane behavior only. Tester access remains blocked until target clean-machine smoke is
 passed or an owner-assigned blocker is accepted.
@@ -111,6 +114,7 @@ Before sending an invite, the owner must confirm:
 - any model execution plan has explicit approval before the tester session starts
 - feedback questions are prepared
 - tester session result will be recorded in a Sprint 4 evidence artifact
+- session operator is using `docs/testing/draft-lane-beta-session-runbook.md`
 
 ## Result Logging Template
 

@@ -29,7 +29,8 @@ Continue Sprint 4 from the locked beta scope:
 8. WR4-007 is reviewable in `docs/planning/sprint-4-release-checklist-and-risk-register.md`
 9. next install the target beta machine using `docs/setup/windows-draft-lane-beta-install.md`
 10. run `docs/testing/target-clean-machine-smoke-operator-packet.md`, then record the result or blocker
-11. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
+11. operate the first tester session using `docs/testing/draft-lane-beta-session-runbook.md`
+12. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 
 ## Completed in this session
 - started WR3-004 status/error communication with `frontend/app/chat/status-copy.ts`
@@ -69,6 +70,8 @@ Continue Sprint 4 from the locked beta scope:
 - added `docs/setup/windows-draft-lane-beta-install.md` as the clean Windows tester-machine setup source
   of truth, covering prerequisites, dependencies, env configuration, FLUX asset provisioning, launch,
   non-model validation, troubleshooting, updates, and installation evidence
+- added `docs/testing/draft-lane-beta-session-runbook.md` for controlled session preflight, launch,
+  approval gating, tester tasks, evidence capture, privacy handling, shutdown, and result return
 - added `AI_IMAGE_EDIT_PYTHON` / `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` runtime overrides after release smoke
   exposed stale venv launcher metadata on this machine
 - started WR3-005 reference-guided UX copy polish without adding controls:
