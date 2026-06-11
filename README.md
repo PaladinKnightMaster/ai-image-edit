@@ -32,6 +32,10 @@ use their own env-configured local asset paths.
 
 ## Quickstart
 
+For a clean Windows tester machine, use the governed beta installation guide:
+
+- `docs/setup/windows-draft-lane-beta-install.md`
+
 Backend:
 1) `python -m venv .venv`
 2) Activate the venv

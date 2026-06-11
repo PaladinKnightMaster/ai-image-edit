@@ -1,7 +1,7 @@
 # Target Clean-Machine Smoke Operator Packet
 
 Status: Ready for operator execution
-Last updated: 2026-06-04
+Last updated: 2026-06-11
 Sprint: Sprint 4
 Related ticket: WR4-004
 Required before: draft-lane tester invite
@@ -34,6 +34,7 @@ block below before running the smoke.
 
 Confirm these before running:
 
+- installation completed using `docs/setup/windows-draft-lane-beta-install.md`
 - repository is cloned on the target beta machine
 - dependencies are installed or restored
 - `backend/.env.fast-check` exists

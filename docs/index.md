@@ -5,7 +5,7 @@ This repository now has four documentation layers:
 1. `docs/context/` - live project state and handoff memory
 2. `docs/planning/` - roadmap, phases, and sprint planning
 3. `docs/adr/` - durable architectural and product decisions
-4. `docs/architecture/`, `docs/design/`, `docs/workflows/`, `docs/models/`, `docs/testing/` - the system knowledge base
+4. `docs/setup/`, `docs/architecture/`, `docs/design/`, `docs/workflows/`, `docs/models/`, `docs/testing/` - the system knowledge base
 
 ## Start here
 
@@ -43,6 +43,10 @@ This repository now has four documentation layers:
 - Developer workflow: `docs/workflows/developer-workflow.md`
 - Fast-check runbook: `docs/workflows/fast-check-runbook.md`
 - Preset ladder: `docs/workflows/preset-ladder.md`
+
+## Setup
+
+- Windows draft-lane beta installation: `docs/setup/windows-draft-lane-beta-install.md`
 
 ## Testing
 

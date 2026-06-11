@@ -1,7 +1,7 @@
 # Sprint 4 Release Checklist and Risk Register
 
 Status: Reviewable
-Last updated: 2026-06-05
+Last updated: 2026-06-11
 Sprint: Sprint 4
 Ticket: WR4-007
 Owner: Tech Lead + DevOps
@@ -37,6 +37,7 @@ Not allowed:
 | Gate | Required evidence | Current state | Owner | Release status |
 | --- | --- | --- | --- | --- |
 | Beta scope lock | `docs/planning/beta-scope-decision.md` | Complete; draft-lane beta prep only | Tech Lead + Product | Pass |
+| Target-machine installation guide | `docs/setup/windows-draft-lane-beta-install.md` | Prepared; first clean-machine trial pending | DevOps + Tech Lead | Pass for preparation |
 | Off-box Qwen packet | `docs/testing/off-box-qwen-acceptance-packet.md` | Prepared; execution not started | AI/ML + Infra | Pass for draft-lane beta; blocker for Qwen beta |
 | Off-box Qwen acceptance result | `data/qwen-acceptance-summary.json`, `data/qwen-acceptance.db`, worksheet rows | Missing | AI/ML | Not required for draft-lane beta; required for Qwen beta |
 | Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `e676d9a` with Python override and noted build warning | DevOps | Pass as local evidence |

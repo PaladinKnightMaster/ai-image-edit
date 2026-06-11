@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-06-05
+Last updated: 2026-06-11
 
 ## Product Status
 - MVP roadmap drafted
@@ -50,6 +50,8 @@ Last updated: 2026-06-05
   runtime override; target clean-machine smoke remains required before tester handoff
 - target clean-machine smoke operator packet is ready in
   `docs/testing/target-clean-machine-smoke-operator-packet.md`; target result remains unrecorded
+- Windows draft-lane beta installation guide is prepared in
+  `docs/setup/windows-draft-lane-beta-install.md`; first clean-machine installation trial remains pending
 - WR4-005 tester handoff is owner-reviewed in `docs/testing/draft-lane-beta-tester-handoff.md`; tester
   invite remains gated by target clean-machine smoke
 - WR4-006 fixture decision is locked in `docs/planning/wr3-007-fixture-decision.md`: keep the live
@@ -108,8 +110,8 @@ Last updated: 2026-06-05
 - `docs/index.md`
 
 ## Current Recommended Immediate Work
-1. run `docs/testing/target-clean-machine-smoke-operator-packet.md` on the target beta machine
-2. record the target clean-machine smoke result or owner-assigned blocker before any tester invite
+1. install the project on the target beta machine using `docs/setup/windows-draft-lane-beta-install.md`
+2. run `docs/testing/target-clean-machine-smoke-operator-packet.md` and record the result
 3. keep the real WR3-007 pending output unrevealed unless the fixture decision changes explicitly
 
 ## Supported Runtime Lanes

@@ -3,7 +3,7 @@
 Status: Active
 Sprint name: Sprint 4 - Beta Scope Lock and Acceptance Validation
 Duration: 2 weeks
-Last updated: 2026-06-04
+Last updated: 2026-06-11
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -84,7 +84,8 @@ Sprint 4 scope decision:
 - Outcome: startup, `/health`, `/api/models`, frontend build, and launch instructions pass on the target beta environment
 - Progress: prepared and locally validated. Non-model release smoke runbook is in
   `docs/testing/clean-machine-release-smoke.md` and aggregate command is `scripts/release_smoke.ps1`.
-  Target clean-machine smoke is still required before tester handoff.
+  Clean-machine installation guide is in `docs/setup/windows-draft-lane-beta-install.md`.
+  Target clean-machine installation and smoke are still required before tester handoff.
 
 ### WR4-005 - Finalize beta tester handoff
 

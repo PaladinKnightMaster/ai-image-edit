@@ -1,7 +1,7 @@
 # Draft-Lane Beta Tester Handoff
 
 Status: Owner-reviewed; gated by target clean-machine smoke
-Last updated: 2026-06-04
+Last updated: 2026-06-11
 Sprint: Sprint 4
 Ticket: WR4-005
 
@@ -40,6 +40,7 @@ draft-lane evidence only, and CPU-only runs can take a long time.
 
 Before a tester session:
 
+- confirm installation completed using `docs/setup/windows-draft-lane-beta-install.md`
 - confirm the target machine passed the clean-machine release smoke runbook
 - confirm the session is using `http://localhost:3000/chat`
 - confirm the tester knows this is local/offline-after-setup workflow testing

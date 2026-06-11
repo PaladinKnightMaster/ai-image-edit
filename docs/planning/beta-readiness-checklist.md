@@ -1,6 +1,6 @@
 # Beta Readiness Checklist
 
-Last updated: 2026-06-04
+Last updated: 2026-06-11
 Sprint: Sprint 3
 Status: Draft-lane beta scope locked; not beta-ready for final Qwen acceptance
 
@@ -33,6 +33,7 @@ closed beta if the limitations are explicit. Sprint 4 locks that beta scope in
 | Known limitations | Pass for internal draft handoff | Tester limitations handoff exists; final invite copy still depends on beta scope. |
 | Tester handoff | Conditional pass | Draft-lane tester handoff is owner-reviewed; tester invite remains gated by target clean-machine smoke. |
 | Beta scope lock | Pass | Sprint 4 chose draft-lane beta preparation; final Qwen-acceptance beta remains no-go. |
+| Target-machine installation guide | Pass for preparation | Windows draft-lane setup guide exists; first clean-machine trial is pending. |
 | Release smoke | Partial pass | Current workspace smoke passed with Python override; target clean-machine smoke record is still required. |
 
 ## Closed-Beta Entry Criteria
@@ -108,6 +109,7 @@ At Sprint 3 closeout, choose one:
 
 ## Next Required Artifacts
 
+- target-machine installation record from `docs/setup/windows-draft-lane-beta-install.md`
 - off-box Qwen edit validation record from `docs/testing/off-box-qwen-acceptance-packet.md`, or an explicit
   decision that closed beta remains draft-lane only
 - clean-machine release smoke record using `docs/testing/clean-machine-release-smoke.md`
