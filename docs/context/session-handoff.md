@@ -29,6 +29,7 @@ Continue Sprint 4 from the locked beta scope:
 8. WR4-007 is reviewable in `docs/planning/sprint-4-release-checklist-and-risk-register.md`
 9. next install the target beta machine using `docs/setup/windows-draft-lane-beta-install.md`
 10. run `docs/testing/target-clean-machine-smoke-operator-packet.md`, then record the result or blocker
+    in `docs/testing/target-clean-machine-smoke-result-log.md`
 11. operate the first tester session using `docs/testing/draft-lane-beta-session-runbook.md`
 12. do not submit a new edit job or run any model unless the user explicitly approves a heavy run
 

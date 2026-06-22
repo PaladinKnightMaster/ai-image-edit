@@ -1,7 +1,7 @@
 # Target Clean-Machine Smoke Operator Packet
 
 Status: Ready for operator execution
-Last updated: 2026-06-11
+Last updated: 2026-06-21
 Sprint: Sprint 4
 Related ticket: WR4-004
 Required before: draft-lane tester invite
@@ -116,4 +116,5 @@ Terminal summary:
 ## Recording Rule
 
 After the operator returns the result, update `docs/testing/clean-machine-release-smoke.md` and
-`docs/planning/sprint-4-release-checklist-and-risk-register.md` before any tester invite.
+`docs/planning/sprint-4-release-checklist-and-risk-register.md` before any tester invite. Record the
+returned result first in `docs/testing/target-clean-machine-smoke-result-log.md`.

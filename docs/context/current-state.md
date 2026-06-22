@@ -1,6 +1,6 @@
 ﻿# Current State
 
-Last updated: 2026-06-11
+Last updated: 2026-06-21
 
 ## Product Status
 - MVP roadmap drafted
@@ -50,6 +50,9 @@ Last updated: 2026-06-11
   runtime override; target clean-machine smoke remains required before tester handoff
 - target clean-machine smoke operator packet is ready in
   `docs/testing/target-clean-machine-smoke-operator-packet.md`; target result remains unrecorded
+- target clean-machine smoke result log is ready in
+  `docs/testing/target-clean-machine-smoke-result-log.md`; tester handoff remains blocked until a pass
+  or an owner-accepted blocker is recorded
 - Windows draft-lane beta installation guide is prepared in
   `docs/setup/windows-draft-lane-beta-install.md`; first clean-machine installation trial remains pending
 - draft-lane beta session runbook is prepared in `docs/testing/draft-lane-beta-session-runbook.md`;
@@ -114,6 +117,7 @@ Last updated: 2026-06-11
 ## Current Recommended Immediate Work
 1. install the project on the target beta machine using `docs/setup/windows-draft-lane-beta-install.md`
 2. run `docs/testing/target-clean-machine-smoke-operator-packet.md` and record the result
+   in `docs/testing/target-clean-machine-smoke-result-log.md`
 3. run the first controlled session with `docs/testing/draft-lane-beta-session-runbook.md`
 
 ## Supported Runtime Lanes

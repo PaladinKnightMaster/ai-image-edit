@@ -1,7 +1,7 @@
 # Clean-Machine Release Smoke
 
-Status: Prepared; local workspace smoke passed
-Last updated: 2026-06-05
+Status: Prepared; local workspace smoke passed; target result pending
+Last updated: 2026-06-21
 Sprint: Sprint 4
 Ticket: WR4-004
 
@@ -52,6 +52,9 @@ powershell.exe -ExecutionPolicy Bypass -File .\scripts\release_smoke.ps1
 
 For target beta-machine execution, use the operator packet in
 `docs/testing/target-clean-machine-smoke-operator-packet.md`.
+
+Record the returned target-machine result in `docs/testing/target-clean-machine-smoke-result-log.md`
+before any tester handoff.
 
 This runs:
 
@@ -147,3 +150,4 @@ For target beta-machine evidence, paste back the result block from
 | 2026-06-05 | Current Codex workspace | `e676d9a` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
 
 Target clean-machine smoke is still required before a tester handoff.
+Record the returned target result in `docs/testing/target-clean-machine-smoke-result-log.md`.
