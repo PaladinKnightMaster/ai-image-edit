@@ -62,7 +62,20 @@ A Windows ESLint cache `EPERM` warning is acceptable only if the frontend build 
 
 | Date | Evidence class | Machine/environment | Commit | Result | Python override | Warnings | Blockers | Owner | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| pending | Windows Sandbox surrogate | isolated Windows environment | pending | pending | pending | pending | harness implemented; isolated smoke not yet run | DevOps | Required before tester handoff unless owner explicitly accepts the blocker. |
+| 2026-07-16 | Windows Sandbox surrogate | Windows 10 Pro 25H2 build 26200.8655; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | First launch installed/updated the Sandbox app | `WindowsSandboxRemoteSession.exe` crashed because `WinRT.Runtime, Version=2.2.0.0` was missing; no mapped evidence files were created | DevOps + host owner | Restart the host, retry the same immutable package, then repair/reset Sandbox if the crash persists. No model ran. |
+
+## 2026-07-16 Blocker Detail
+
+- source package: `.artifacts/windows-sandbox-smoke/20260716T234119Z-e829507/`
+- source archive commit: `e829507b551c3ec8e362359c4d1f8e1df7b79b6b`
+- source archive SHA-256: `6dff9c31fad646e0c687b3c5dd12d31e7debc5a73bf40de5884062819d66839a`
+- package validation: passed; host worktree clean; three installers had valid Authenticode signatures
+- launch attempt 1: Windows Update installed `MicrosoftWindows.WindowsSandbox` app version `0.8.107.0`
+- launch attempt 2: remote-session process crashed before the mapped bootstrap started
+- event evidence: .NET Runtime event 1026, Application Error event 1000, and Windows Error Reporting event 1001
+- exception: `System.IO.FileNotFoundException` for `WinRT.Runtime, Version=2.2.0.0`
+- bootstrap transcript/result: absent because the Sandbox VM did not reach `LogonCommand`
+- model execution: none
 
 ## Follow-Up After A Pass
 

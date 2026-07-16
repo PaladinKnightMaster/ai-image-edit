@@ -62,6 +62,7 @@ Complete or prepared:
 - current-workstation non-model release smoke passed
 - installation guide, operator packet, result log, tester handoff, session runbook, and risk register exist
 - Windows Sandbox clean-export, dependency-install, smoke, and evidence harness is implemented
+- immutable `e829507` Sandbox package and signed installer manifest are prepared
 - tester copy is owner-reviewed
 
 Pending:
@@ -91,7 +92,8 @@ Sprint 5 is planned in `docs/planning/sprint-5-outline.md`:
 
 | Risk | State | Next action |
 | --- | --- | --- |
-| No isolated clean-Windows result | Harness implemented; run pending | Commit and run Windows Sandbox non-model smoke. |
+| No isolated clean-Windows result | Host Sandbox app blocker | Restart the host, retry the prepared `e829507` package, then repair/reset Sandbox if needed. |
+| Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Reproduced twice before bootstrap | Keep tester handoff blocked unless the owner explicitly accepts this residual risk. |
 | Current host Python environment cannot rerun backend smoke | Open, environment-specific | Install dependencies only in Sandbox and use that result as the clean proof. |
 | Local Qwen Edit native crash | Open, off-box | Do not force local acceptance; keep packet ready. |
 | Frontend has no automated flow suite | Open | Add Playwright in Sprint 5. |
@@ -103,8 +105,9 @@ Sprint 5 is planned in `docs/planning/sprint-5-outline.md`:
 
 ## Immediate Next Action
 
-Commit the documentation and harness checkpoint, run only the Windows Sandbox non-model installation and release
-checks, and record the real result before closing Sprint 4 or beginning runtime orchestration changes.
+Restart the host after the Sandbox app update, retry the existing `e829507` package, and record the real result.
+If the same app crash persists, repair/reset Windows Sandbox before deciding whether to accept the blocker. Do not
+begin runtime orchestration changes or tester handoff yet.
 
 ## Heavy-Run Rule
 

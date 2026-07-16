@@ -94,3 +94,25 @@ powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-sandbox\prepare_s
 
 This verifies the Sandbox executable, clean host state, source commit, required committed paths, and manifest
 schema. It is not smoke evidence.
+
+## Current Host Blocker
+
+On 2026-07-16, package preparation for commit `e829507` passed, but Windows Sandbox app `0.8.107.0` crashed before
+the VM reached `LogonCommand`. Event Viewer recorded a missing `WinRT.Runtime, Version=2.2.0.0` assembly.
+
+Recovery order:
+
+1. restart the host after the Sandbox app installation/update
+2. retry the same generated `.wsb` package
+3. if the crash persists, use Windows Settings to repair, then reset, the Windows Sandbox system component
+4. only if repair/reset fails, consider disabling and re-enabling the Windows Sandbox optional feature with the
+   required administrator approval and restarts
+
+Microsoft references:
+
+- [Install Windows Sandbox](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-install)
+- [Troubleshoot Windows Sandbox](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-troubleshoot)
+- [Repair apps and programs](https://support.microsoft.com/en-US/Windows/Apps/repair-apps-and-programs-in-windows)
+
+Do not regenerate the package for a host-app repair retry; reuse the immutable `e829507` package so only the host
+condition changes.

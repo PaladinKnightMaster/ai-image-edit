@@ -44,7 +44,7 @@ Not allowed:
 | Off-box Qwen packet | `docs/testing/off-box-qwen-acceptance-packet.md` | Prepared; execution not started | AI/ML + Infra | Pass for draft-lane beta; blocker for Qwen beta |
 | Off-box Qwen acceptance result | `data/qwen-acceptance-summary.json`, `data/qwen-acceptance.db`, worksheet rows | Missing | AI/ML | Not required for draft-lane beta; required for Qwen beta |
 | Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `e676d9a` with Python override and noted build warning | DevOps | Pass as local evidence |
-| Isolated clean-Windows smoke | Windows Sandbox or physical target run using `docs/testing/target-clean-machine-smoke-operator-packet.md`, recorded in `docs/testing/target-clean-machine-smoke-result-log.md` | Sandbox harness implemented; isolated result not recorded | DevOps | Required before tester handoff |
+| Isolated clean-Windows smoke | Windows Sandbox or physical target run using `docs/testing/target-clean-machine-smoke-operator-packet.md`, recorded in `docs/testing/target-clean-machine-smoke-result-log.md` | `e829507` package prepared; host Sandbox app crashes before bootstrap | DevOps + host owner | Blocked; required before tester handoff unless owner accepts residual risk |
 | Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product + Tech Lead | Conditional pass |
 | Tester session runbook | `docs/testing/draft-lane-beta-session-runbook.md` | Prepared; first controlled session pending | Product + Tech Lead | Pass for preparation |
 | Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product | Conditional pass |
@@ -70,7 +70,7 @@ Not allowed:
 | ID | Risk | Severity | Status | Owner | Mitigation / next action |
 | --- | --- | --- | --- | --- | --- |
 | R1 | Final Qwen edit acceptance is missing. | High | Open | AI/ML + Infra | Keep Qwen beta and public beta no-go until off-box packet results are recorded. |
-| R2 | Isolated clean-Windows release smoke is not recorded. | High | Windows Sandbox harness implemented; result pending | DevOps | Commit the checkpoint, run the clean-source Sandbox package, and record the returned result. |
+| R2 | Isolated clean-Windows release smoke cannot start because Sandbox app 0.8.107.0 is missing `WinRT.Runtime 2.2.0.0`. | High | Host blocker recorded; smoke not executed | DevOps + host owner | Restart the host and retry the immutable package; repair/reset Sandbox if the crash persists. |
 | R3 | Tester may confuse FLUX draft output with final Qwen quality. | High | Mitigated for handoff | Product + Tech Lead | Use the required wording boundary in every tester session and invite. |
 | R4 | CPU-only edit runs can take tens of minutes. | Medium | Open | Product + Support | Frame beta around workflow and available draft results; warn before any model execution. |
 | R5 | Queued/running jobs fail on backend restart. | Medium | Known limitation | Backend | Keep restart behavior in support notes; do not promise durable replay queue. |
@@ -105,7 +105,7 @@ Do not add `-RunApproved` unless the reviewer explicitly approves the heavy off-
 
 | Priority | Action | Owner | Output |
 | --- | --- | --- | --- |
-| P0 | Commit, run, and record Windows Sandbox clean-source release smoke before tester invite | DevOps | Operator result block labeled `Windows Sandbox surrogate`, updated result log, and updated release-smoke evidence row |
+| P0 | Restart host, retry, and record the prepared Windows Sandbox package before tester invite | DevOps + host owner | Operator result block labeled `Windows Sandbox surrogate`, or an owner acceptance of the recorded blocker |
 | P0 | Run the first controlled tester session after smoke passes | Product + Session Operator | Returned `docs/testing/draft-lane-beta-session-runbook.md` result block |
 | P1 | Decide whether to execute off-box Qwen acceptance | AI/ML + Product | Acceptance run result or explicit deferral |
 | P1 | Prepare tester session result log | Product | Filled tester result rows after any session |

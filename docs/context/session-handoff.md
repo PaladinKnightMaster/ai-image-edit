@@ -39,7 +39,8 @@ Decision sources:
 - one approved FLUX CPU edit reached `pending_review` in 2387 seconds
 - non-model reveal/reuse and restart-classification tests exist
 - current-workstation backend smoke, frontend lint, typecheck, and build passed
-- Windows Sandbox clean-export/install/evidence harness is implemented but not yet run
+- Windows Sandbox clean-export/install/evidence harness and immutable `e829507` package are prepared
+- Sandbox app 0.8.107.0 crashes before bootstrap because `WinRT.Runtime 2.2.0.0` is missing; no mapped result exists
 - current frontend lint, typecheck, and build pass; the fallback host Python correctly blocks backend smoke because
   Pillow is absent
 - clean isolated Windows result is not yet recorded
@@ -49,12 +50,12 @@ Decision sources:
 
 Complete WR5-001 as the final Sprint 4 evidence slice:
 
-1. commit the approved documentation and harness checkpoint
-2. run `scripts/windows-sandbox/prepare_smoke.ps1 -DownloadPrerequisites -Launch`
-3. let the bootstrap install dependencies without copying `.venv` or `node_modules`
+1. restart the host after the Windows Sandbox app installation/update
+2. retry `.artifacts/windows-sandbox-smoke/20260716T234119Z-e829507/ai-image-edit-smoke.wsb`
+3. if the app starts, let the bootstrap install dependencies without copying `.venv` or `node_modules`
 4. collect `sandbox-smoke-result.json`, `.txt`, and the transcript
-5. record the environment as `Windows Sandbox surrogate`
-6. do not run a model
+5. if the app crash persists, repair/reset Windows Sandbox and retry before accepting the blocker
+6. record the environment as `Windows Sandbox surrogate`; do not run a model
 
 Record the result in:
 

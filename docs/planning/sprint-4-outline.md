@@ -89,7 +89,8 @@ Sprint 4 scope decision:
   physical machine is available, a Windows Sandbox run is accepted as Sprint 4 surrogate evidence when it is
   labeled honestly. Independent physical-machine compatibility remains a residual risk. Record the result in
   `docs/testing/target-clean-machine-smoke-result-log.md`. The clean-export harness is implemented in
-  `scripts/windows-sandbox/`; its first isolated execution remains pending.
+  `scripts/windows-sandbox/`. The `e829507` package is prepared, but Sandbox app `0.8.107.0` crashes before the
+  bootstrap because `WinRT.Runtime 2.2.0.0` is missing. A host restart and same-package retry are pending.
 
 ### WR4-005 - Finalize beta tester handoff
 
@@ -119,8 +120,8 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. Commit the harness checkpoint, run the Windows Sandbox clean-source release smoke before any tester handoff,
-   then record the result in `docs/testing/target-clean-machine-smoke-result-log.md`
+1. Restart the host, retry the prepared `e829507` Windows Sandbox package before any tester handoff, then update
+   `docs/testing/target-clean-machine-smoke-result-log.md`
 2. Owner-review the draft-lane tester handoff copy
 3. Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
 

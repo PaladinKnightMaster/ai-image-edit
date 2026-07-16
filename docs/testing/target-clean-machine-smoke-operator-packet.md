@@ -1,6 +1,6 @@
 # Target Clean-Machine Smoke Operator Packet
 
-Status: Ready; Windows Sandbox harness implemented and first run pending
+Status: Ready; Windows Sandbox host-app blocker recorded before bootstrap
 Last updated: 2026-07-16
 Sprint: Sprint 4
 Related ticket: WR4-004

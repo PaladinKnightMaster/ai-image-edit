@@ -1,6 +1,6 @@
 # Windows Draft-Lane Beta Installation Guide
 
-Status: Ready for physical trial; Windows Sandbox harness implemented and trial pending
+Status: Ready for physical trial; Windows Sandbox harness ready and host-app restart/retry pending
 Last updated: 2026-07-16
 Scope: Windows local draft-lane closed beta
 Owner: DevOps + Tech Lead

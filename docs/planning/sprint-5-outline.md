@@ -57,8 +57,8 @@ No model run is needed for the entry gate.
 - Owner: DevOps + Release Guard
 - Work: export a clean commit, launch Windows Sandbox, install dependencies inside it, run
   `scripts/release_smoke.ps1`, and record the environment honestly
-- Progress: clean-export, signed-prerequisite, bootstrap, and evidence harness implemented; first isolated run
-  pending
+- Progress: clean-export, signed-prerequisite, bootstrap, and evidence harness implemented; `e829507` package
+  prepared; host Sandbox app crashes before bootstrap due to missing `WinRT.Runtime 2.2.0.0`; restart/retry pending
 - Done when: result or owner-accepted blocker is captured in the Sprint 4 result log
 
 ### WR5-002 - Reproducible dependency baseline
