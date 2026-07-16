@@ -111,7 +111,7 @@ $requiredSourcePaths = @(
   "scripts/windows-sandbox/prerequisites.json"
 )
 foreach ($path in $requiredSourcePaths) {
-  $null = Invoke-Git cat-file -e "${sourceCommit}:$path"
+  $null = Invoke-Git -Arguments @("cat-file", "-e", "${sourceCommit}:$path")
 }
 
 $definitionsJson = (Invoke-Git show "${sourceCommit}:scripts/windows-sandbox/prerequisites.json") -join "`n"
