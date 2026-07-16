@@ -25,9 +25,24 @@ if (-not $PrerequisiteCache) {
 function Invoke-Git {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
 
-  $output = & git @Arguments 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($Arguments -join ' ') failed: $($output -join [Environment]::NewLine)"
+  $stderrPath = [IO.Path]::GetTempFileName()
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    $output = @(& git @Arguments 2> $stderrPath)
+    $exitCode = $LASTEXITCODE
+    $stderr = @(Get-Content -LiteralPath $stderrPath -ErrorAction SilentlyContinue)
+  }
+  finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+    Remove-Item -LiteralPath $stderrPath -Force -ErrorAction SilentlyContinue
+  }
+
+  if ($exitCode -ne 0) {
+    throw "git $($Arguments -join ' ') failed: $($stderr -join [Environment]::NewLine)"
+  }
+  foreach ($line in $stderr) {
+    Write-Verbose "git: $line"
   }
   return $output
 }
@@ -87,18 +102,7 @@ $null = Get-Command git -ErrorAction Stop
 $sandboxCommand = Get-Command WindowsSandbox.exe -ErrorAction Stop
 $sourceCommit = (Invoke-Git rev-parse "$SourceRef^{commit}" | Select-Object -First 1).Trim()
 $sourceCommitShort = (Invoke-Git rev-parse --short $sourceCommit | Select-Object -First 1).Trim()
-$previousErrorActionPreference = $ErrorActionPreference
-try {
-  $ErrorActionPreference = "Continue"
-  $hostStatus = @(& git status --porcelain 2>$null)
-  $gitStatusExitCode = $LASTEXITCODE
-}
-finally {
-  $ErrorActionPreference = $previousErrorActionPreference
-}
-if ($gitStatusExitCode -ne 0) {
-  throw "git status --porcelain failed with exit code $gitStatusExitCode."
-}
+$hostStatus = @(Invoke-Git -Arguments @("status", "--porcelain"))
 $hostIsClean = $hostStatus.Count -eq 0
 
 if (-not $hostIsClean -and -not $AllowDirtyHost) {
