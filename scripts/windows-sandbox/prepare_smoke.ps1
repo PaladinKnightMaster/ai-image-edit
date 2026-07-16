@@ -87,9 +87,17 @@ $null = Get-Command git -ErrorAction Stop
 $sandboxCommand = Get-Command WindowsSandbox.exe -ErrorAction Stop
 $sourceCommit = (Invoke-Git rev-parse "$SourceRef^{commit}" | Select-Object -First 1).Trim()
 $sourceCommitShort = (Invoke-Git rev-parse --short $sourceCommit | Select-Object -First 1).Trim()
-$hostStatus = @(& git status --porcelain 2>$null)
-if ($LASTEXITCODE -ne 0) {
-  throw "git status --porcelain failed with exit code $LASTEXITCODE."
+$previousErrorActionPreference = $ErrorActionPreference
+try {
+  $ErrorActionPreference = "Continue"
+  $hostStatus = @(& git status --porcelain 2>$null)
+  $gitStatusExitCode = $LASTEXITCODE
+}
+finally {
+  $ErrorActionPreference = $previousErrorActionPreference
+}
+if ($gitStatusExitCode -ne 0) {
+  throw "git status --porcelain failed with exit code $gitStatusExitCode."
 }
 $hostIsClean = $hostStatus.Count -eq 0
 
