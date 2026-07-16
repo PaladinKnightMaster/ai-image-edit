@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "prerequisites": [
+    {
+      "name": "python",
+      "version": "3.12.10",
+      "file_name": "python-3.12.10-amd64.exe",
+      "url": "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe",
+      "install_type": "python-exe",
+      "signature_required": true
+    },
+    {
+      "name": "node",
+      "version": "22.17.0",
+      "file_name": "node-v22.17.0-x64.msi",
+      "url": "https://nodejs.org/dist/v22.17.0/node-v22.17.0-x64.msi",
+      "install_type": "node-msi",
+      "signature_required": true
+    },
+    {
+      "name": "git",
+      "version": "2.50.0.windows.1",
+      "file_name": "Git-2.50.0-64-bit.exe",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.50.0.windows.1/Git-2.50.0-64-bit.exe",
+      "install_type": "git-exe",
+      "signature_required": true
+    }
+  ]
+}

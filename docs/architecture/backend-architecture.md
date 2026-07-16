@@ -1,100 +1,92 @@
 # Backend Architecture
 
-## Scope
+Status: Active
+Last updated: 2026-07-16
+Owner: Backend Architect
 
-This document describes the current backend implementation, not the ideal future state.
+## Current Modules
 
-## Main modules
+- `backend/app/main.py`: FastAPI routes, startup, status, job, run, image, export, and cleanup surfaces
+- `backend/app/jobs.py`: queue submission, local worker loop, execution lifecycle, persistence updates, SSE events,
+  reveal, deletion, and restart classification
+- `backend/app/db.py`: SQLite connection and schema initialization
+- `backend/app/images.py`: image persistence and metadata
+- `backend/app/status_copy.py`: API presentation metadata for machine states
+- `backend/inference/*`: runner contract and model-specific execution
+- `backend/worker/main.py`: optional remote/local HTTP worker and callback relay
 
-- `backend/app/main.py`
-  - FastAPI app
-  - readiness, health, version, models, system, job, image, stats, replay, export endpoints
-- `backend/app/jobs.py`
-  - job queue submission
-  - local worker loop
-  - SSE event publication
-  - run persistence and job lifecycle
-- `backend/worker/main.py`
-  - worker-mode HTTP listener
-  - queue dispatch from API to worker
-  - callback-based event relay to the API
-- `backend/app/db.py`
-  - SQLite connection and schema init
-- `backend/app/images.py`
-  - image persistence and metadata
-- `backend/inference/*`
-  - model runner abstraction and concrete runtime lanes
+## API Ownership
 
-## API surface
+The backend owns:
 
-The backend exposes four main surfaces:
+- machine-readable job and run state
+- immutable-enough request snapshots for replay/retry
+- image and output metadata
+- runner capability and asset validation
+- readiness and system information
+- reveal and reuse gates
+- future cancellation, retry, attempt, lease, and recovery semantics
 
-1. platform status
-   - `/health`
-   - `/ready`
-   - `/api/version`
-   - `/api/system`
-   - `/api/models`
-   - `/api/stats`
+The backend does not own product wording, top-level information architecture, or preset marketing language.
 
-2. queued job workflow
-   - `/api/jobs/t2i`
-   - `/api/jobs/edit`
-   - `/api/jobs/{job_id}`
-   - `/api/jobs/{job_id}/events`
-   - `/api/jobs/{job_id}/reveal`
+## Current Execution
 
-3. direct inference workflow
-   - `/api/infer/t2i`
-   - `/api/infer/edit`
+Local mode uses an in-memory queue and daemon worker threads. Runners cache loaded pipelines in process. Worker
+mode persists the job then dispatches its id over HTTP; the worker calls back with events.
 
-4. image and run management
-   - `/api/images/upload`
-   - `/api/images/{image_id}`
-   - `/api/images/{image_id}/meta`
-   - `/api/runs`
-   - `/api/runs/{run_id}`
-   - export, replay, delete, cleanup endpoints
+Startup recovery currently marks queued and running jobs `failed` with `server restarted`. This is metadata-safe
+but not durable execution.
 
-## Execution model
+## Current Strengths
 
-### Local mode
+- startup and fast-check API smoke are working
+- job/run/image persistence is established
+- runner capabilities are normalized
+- progress and activity fields survive EventSource reconnection
+- pending-review reveal has transactional state checks and cheap regression tests
+- local and worker modes share one API contract
 
-- jobs are queued in process memory
-- worker threads run inside the API process
-- simplest local setup
+## Current Risks
 
-### Worker mode
+- queue ownership is in process memory
+- no persisted attempt, worker lease, or heartbeat contract exists
+- no durable cancel or retry command exists
+- native work may run inside a process that cannot be stopped safely
+- automatic retry could duplicate expensive work without idempotent commit
+- direct inference routes bypass the queued lifecycle and should not expand
+- dependency versions are not reproducibly pinned
 
-- API persists job metadata in SQLite
-- API dispatches `job_id` to the worker over HTTP
-- worker calls back into the API with event payloads
-- result lifecycle remains API-owned
+## Target Boundaries
 
-## Strengths
+### JobOrchestrator
 
-- The API contract is already broad enough for a real product.
-- Runner isolation is clean enough to support multiple runtime lanes.
-- SSE progress is already present.
-- Manual reveal support exists for lanes that require review gating.
+Owns submit, cancel, retry, recovery, policy, and state transitions.
 
-## Risks
+### AttemptExecutor
 
-- Startup is currently blocked by `backend/app/config.py`.
-- Queue durability is weak because in-memory job execution is lost on restart.
-- Worker mode still depends on callback availability and short HTTP hops.
-- The model lifecycle is not centralized in one authoritative catalog.
+Owns one invocation, progress heartbeat, cancellation cooperation, temporary output, failure normalization, and
+atomic result commit.
 
-## What this backend should own
+### Runner
 
-- API contract stability
-- job lifecycle and recovery semantics
-- storage conventions
-- runner loading and capability checks
-- system and readiness reporting
+Owns model loading, capability, parameter translation, and model-specific execution. It does not decide retry or
+job-level recovery policy.
 
-## What it should not own
+### Event Publisher
 
-- product copy and UI mode selection
-- preset wording
-- top-level information architecture
+Publishes presentation-independent state changes. Transport loss must not mutate persisted job outcome.
+
+## Default And Experimental Orchestration
+
+- default: SQLite-backed local orchestrator
+- experimental: Temporal adapter using the same orchestration contract
+
+Temporal begins with fake activities and must not become a release dependency without an ADR follow-up.
+
+## Safety Rules
+
+- use one heavy local model at a time
+- run non-cooperative native inference in a child process before promising cancellation
+- cap automatic retries at one by default
+- never auto-retry invalid input, missing assets, OOM, deterministic native crash, or user cancellation
+- do not claim mid-step resume without real runner checkpoints

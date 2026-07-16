@@ -21,6 +21,9 @@ try {
   $env:DOTENV_PATH = $dotenvPath
   Invoke-WithPythonSitePackages -SitePackages $python.SitePackages -ScriptBlock {
     & $python.Executable -m unittest discover -s tests -p "test_startup_smoke.py"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Backend fast-check startup smoke failed with exit code $LASTEXITCODE."
+    }
   }
 }
 finally {

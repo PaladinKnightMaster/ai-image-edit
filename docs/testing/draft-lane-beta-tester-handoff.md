@@ -1,7 +1,7 @@
 # Draft-Lane Beta Tester Handoff
 
-Status: Owner-reviewed; gated by target clean-machine smoke
-Last updated: 2026-06-11
+Status: Owner-reviewed; gated by isolated clean-Windows smoke
+Last updated: 2026-07-16
 Sprint: Sprint 4
 Ticket: WR4-005
 
@@ -14,7 +14,7 @@ The session operator should run the workflow through
 `docs/testing/draft-lane-beta-session-runbook.md`.
 
 Do not use this as a final Qwen-quality beta invite. This beta validates local workflow, setup, reveal,
-reuse, and draft-lane behavior only. Tester access remains blocked until target clean-machine smoke is
+reuse, and draft-lane behavior only. Tester access remains blocked until isolated clean-Windows smoke is
 passed or an owner-assigned blocker is accepted.
 
 ## One-Sentence Scope Boundary
@@ -44,7 +44,7 @@ draft-lane evidence only, and CPU-only runs can take a long time.
 Before a tester session:
 
 - confirm installation completed using `docs/setup/windows-draft-lane-beta-install.md`
-- confirm the target machine passed the clean-machine release smoke runbook
+- confirm the isolated Windows environment passed the clean-machine release smoke runbook
 - confirm the session is using `http://localhost:3000/chat`
 - confirm the tester knows this is local/offline-after-setup workflow testing
 - confirm no hosted GPU, masking, batch editing, final Qwen acceptance, or mobile workflow is expected
@@ -107,7 +107,7 @@ Ask these after the session:
 Before sending an invite, the owner must confirm:
 
 - beta scope decision is linked
-- target clean-machine release smoke is passed or the blocker is explicitly assigned and accepted
+- isolated clean-Windows release smoke is passed or the blocker is explicitly assigned and accepted
 - tester limitations are included in the invite or session notes
 - Qwen acceptance is not implied
 - local FLUX output is described as draft-lane evidence only

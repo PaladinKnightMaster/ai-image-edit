@@ -1,81 +1,102 @@
 # Documentation Index
 
-This repository now has four documentation layers:
+Status: Active
+Last updated: 2026-07-16
+Owner: Docs Architect
+Governance: `docs/documentation-governance.md`
 
-1. `docs/context/` - live project state and handoff memory
-2. `docs/planning/` - roadmap, phases, and sprint planning
-3. `docs/adr/` - durable architectural and product decisions
-4. `docs/setup/`, `docs/architecture/`, `docs/design/`, `docs/workflows/`, `docs/models/`, `docs/testing/` - the system knowledge base
+## Start Here
 
-## Start here
+Read in this order:
 
-- Project brief: `docs/context/project-brief.md`
-- Current state: `docs/context/current-state.md`
-- Session handoff: `docs/context/session-handoff.md`
-- MVP roadmap: `docs/planning/mvp-war-room-plan.md`
-- Sprint 2 closeout audit: `docs/planning/sprint-2-closeout-audit.md`
-- Sprint 3 closeout audit: `docs/planning/sprint-3-closeout-audit.md`
-- Sprint 4 outline: `docs/planning/sprint-4-outline.md`
-- Beta scope decision: `docs/planning/beta-scope-decision.md`
-- Beta readiness checklist: `docs/planning/beta-readiness-checklist.md`
-- WR3-007 pending fixture decision: `docs/planning/wr3-007-fixture-decision.md`
-- Sprint 4 release checklist and risk register: `docs/planning/sprint-4-release-checklist-and-risk-register.md`
+1. `docs/context/project-brief.md`
+2. `docs/context/current-state.md`
+3. `docs/context/session-handoff.md`
+4. `docs/planning/strategy-checkpoint.md`
+5. `docs/planning/sprint-4-outline.md`
+6. `docs/planning/sprint-5-outline.md`
+
+## Current Authority
+
+- roadmap: `docs/planning/mvp-war-room-plan.md`
+- active sprint: `docs/planning/sprint-4-outline.md`
+- planned sprint: `docs/planning/sprint-5-outline.md`
+- release gates: `docs/planning/sprint-4-release-checklist-and-risk-register.md`
+- beta scope: `docs/planning/beta-scope-decision.md`
+- documentation audit: `docs/planning/documentation-realignment-audit.md`
 
 ## Architecture
 
-- System overview: `docs/architecture/system-overview.md`
-- Backend architecture: `docs/architecture/backend-architecture.md`
-- Frontend architecture: `docs/architecture/frontend-architecture.md`
-- Job and data flow: `docs/architecture/job-and-data-flow.md`
+- `docs/architecture/system-overview.md`
+- `docs/architecture/backend-architecture.md`
+- `docs/architecture/frontend-architecture.md`
+- `docs/architecture/job-and-data-flow.md`
 
-## Models and runtime
+## Decisions
 
-- Model catalog: `docs/models/model-catalog.md`
+- ADR 0001: edit-first product direction
+- ADR 0002: quality-first CPU development loop
+- ADR 0003: runner-based multi-lane runtime
+- ADR 0004: repo-backed AI operating model
+- ADR 0005: CPU-first product and validation strategy
+- ADR 0006: durable job orchestration
 
-## Product and design
+All ADRs live under `docs/adr/`.
 
-- Product and UX principles: `docs/design/product-and-ux-principles.md`
-- UI information architecture: `docs/design/ui-information-architecture.md`
+## Product, UX, And Workflows
 
-## Workflows
+- `docs/design/product-and-ux-principles.md`
+- `docs/design/ui-information-architecture.md`
+- `docs/workflows/user-workflows.md`
+- `docs/workflows/developer-workflow.md`
+- `docs/workflows/fast-check-runbook.md`
+- `docs/workflows/preset-ladder.md`
 
-- User workflows: `docs/workflows/user-workflows.md`
-- Developer workflow: `docs/workflows/developer-workflow.md`
-- Fast-check runbook: `docs/workflows/fast-check-runbook.md`
-- Preset ladder: `docs/workflows/preset-ladder.md`
+## Models And Runtime
 
-## Setup
+- `docs/models/model-catalog.md`
+- `docs/engines/flux2_sdcli_windows.md`
+- `backend/ENV.md`
+- `frontend/ENV.md`
 
-- Windows draft-lane beta installation: `docs/setup/windows-draft-lane-beta-install.md`
+## Setup And Release Smoke
 
-## Testing
+- `docs/setup/windows-draft-lane-beta-install.md`
+- `docs/testing/clean-machine-release-smoke.md`
+- `docs/testing/windows-sandbox-release-smoke.md`
+- `docs/testing/target-clean-machine-smoke-operator-packet.md`
+- `docs/testing/target-clean-machine-smoke-result-log.md`
+- `docs/testing/smoke-validation-path.md`
 
-- Test strategy: `docs/testing/test-strategy.md`
-- Job status and recovery states: `docs/testing/job-status-and-recovery-states.md`
-- Clean-machine release smoke: `docs/testing/clean-machine-release-smoke.md`
-- Target clean-machine smoke operator packet: `docs/testing/target-clean-machine-smoke-operator-packet.md`
-- Target clean-machine smoke result log: `docs/testing/target-clean-machine-smoke-result-log.md`
-- Smoke validation path: `docs/testing/smoke-validation-path.md`
-- Beta tester limitations handoff: `docs/testing/beta-tester-limitations-handoff.md`
-- Draft-lane beta tester handoff: `docs/testing/draft-lane-beta-tester-handoff.md`
-- Draft-lane beta session runbook: `docs/testing/draft-lane-beta-session-runbook.md`
-- Benchmark pack: `docs/testing/benchmark-pack.md`
-- Benchmark manifest: `docs/testing/benchmark-pack.v0.json`
-- Preset benchmark review: `docs/testing/preset-benchmark-review.md`
-- Preset quality review worksheet: `docs/testing/preset-quality-review-worksheet.md`
-- WR3-007 draft preset review approval packet: `docs/testing/wr3-007-draft-preset-review-approval-packet.md`
-- Off-box Qwen acceptance packet: `docs/testing/off-box-qwen-acceptance-packet.md`
-- Fixture asset convention: `fixtures/README.md`
+## Reliability And Testing
 
-## ADRs
+- `docs/testing/test-strategy.md`
+- `docs/testing/job-status-and-recovery-states.md`
+- `docs/testing/benchmark-pack.md`
+- `docs/testing/benchmark-pack.v0.json`
+- `docs/testing/preset-benchmark-review.md`
+- `docs/testing/preset-quality-review-worksheet.md`
+- `docs/testing/off-box-qwen-acceptance-packet.md`
 
-- `docs/adr/0001-edit-first-mvp-product-direction.md`
-- `docs/adr/0002-quality-first-cpu-development-loop.md`
-- `docs/adr/0003-runner-based-multi-lane-runtime.md`
-- `docs/adr/0004-repo-backed-ai-operating-model.md`
+## Tester Operations
 
-## Existing reference docs
+- `docs/testing/beta-tester-limitations-handoff.md`
+- `docs/testing/draft-lane-beta-tester-handoff.md`
+- `docs/testing/draft-lane-beta-session-runbook.md`
 
-- FLUX sd-cli Windows guide: `docs/engines/flux2_sdcli_windows.md`
-- Backend env reference: `backend/ENV.md`
-- Frontend env reference: `frontend/ENV.md`
+## Historical Evidence
+
+Closed sprint plans and closeouts remain under `docs/planning/` for stable links. Superseded live snapshots and
+architecture drafts are preserved under `docs/archive/` and are not current authority.
+
+Primary historical records:
+
+- `docs/planning/sprint-1-backlog.md`
+- `docs/planning/sprint-2-outline.md`
+- `docs/planning/sprint-2-closeout-audit.md`
+- `docs/planning/sprint-3-outline.md`
+- `docs/planning/sprint-3-closeout-audit.md`
+- `docs/planning/wr3-007-fixture-decision.md`
+- `docs/testing/wr3-007-draft-preset-review-approval-packet.md`
+
+Fixture convention: `fixtures/README.md`.

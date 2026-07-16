@@ -1,7 +1,7 @@
 # Draft-Lane Beta Session Runbook
 
 Status: Ready for first controlled session
-Last updated: 2026-06-11
+Last updated: 2026-07-16
 Sprint: Sprint 4
 Scope: Private Windows draft-lane beta
 Owner: Product + Tech Lead + Session Operator
@@ -63,7 +63,7 @@ session as blocked before inference.
 The operator must confirm:
 
 - target installation record is complete
-- target clean-machine smoke result is recorded or an owner-assigned blocker is explicitly accepted
+- isolated clean-Windows smoke result is recorded or an owner-assigned blocker is explicitly accepted
 - repo commit is approved for the session
 - `backend\.env` uses `DB_PATH=./data/app.beta.db`
 - `ENABLED_MODELS=flux2-klein-9b-gguf`

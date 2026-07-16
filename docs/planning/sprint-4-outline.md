@@ -3,7 +3,7 @@
 Status: Active
 Sprint name: Sprint 4 - Beta Scope Lock and Acceptance Validation
 Duration: 2 weeks
-Last updated: 2026-06-21
+Last updated: 2026-07-16
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -85,8 +85,11 @@ Sprint 4 scope decision:
 - Progress: prepared and locally validated. Non-model release smoke runbook is in
   `docs/testing/clean-machine-release-smoke.md` and aggregate command is `scripts/release_smoke.ps1`.
   Clean-machine installation guide is in `docs/setup/windows-draft-lane-beta-install.md`.
-  Target clean-machine installation and smoke are still required before tester handoff; returned target
-  evidence should be recorded in `docs/testing/target-clean-machine-smoke-result-log.md`.
+  An isolated clean-Windows installation and smoke are still required before tester handoff. Because no fresh
+  physical machine is available, a Windows Sandbox run is accepted as Sprint 4 surrogate evidence when it is
+  labeled honestly. Independent physical-machine compatibility remains a residual risk. Record the result in
+  `docs/testing/target-clean-machine-smoke-result-log.md`. The clean-export harness is implemented in
+  `scripts/windows-sandbox/`; its first isolated execution remains pending.
 
 ### WR4-005 - Finalize beta tester handoff
 
@@ -116,8 +119,8 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. Run or schedule target clean-machine release smoke before any tester handoff and record the returned
-   result in `docs/testing/target-clean-machine-smoke-result-log.md`
+1. Commit the harness checkpoint, run the Windows Sandbox clean-source release smoke before any tester handoff,
+   then record the result in `docs/testing/target-clean-machine-smoke-result-log.md`
 2. Owner-review the draft-lane tester handoff copy
 3. Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
 
@@ -127,7 +130,7 @@ Sprint 4 is complete when:
 
 - the beta scope is explicit
 - Qwen acceptance is either recorded off-box or excluded from the beta scope in writing
-- clean-machine setup/run checks pass or have owner-assigned blockers
+- isolated clean-Windows setup/run checks pass or have owner-assigned blockers
 - tester limitations are ready for use
 - release checklist and risk register are reviewable
 - no Sprint 4 work depends on a new engine or new editing surface

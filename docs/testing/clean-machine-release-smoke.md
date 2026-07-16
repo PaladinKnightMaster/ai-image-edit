@@ -1,14 +1,22 @@
 # Clean-Machine Release Smoke
 
-Status: Prepared; local workspace smoke passed; target result pending
-Last updated: 2026-06-21
+Status: Prepared; local workspace smoke passed; isolated Windows result pending
+Last updated: 2026-07-16
 Sprint: Sprint 4
 Ticket: WR4-004
 
 ## Purpose
 
 This runbook defines the non-model release smoke path for the locked draft-lane beta scope. It verifies
-that the repo can start and build on a target machine before any tester invite or off-box acceptance run.
+that the repo can start and build in an isolated Windows environment before any tester invite or off-box
+acceptance run.
+
+Windows Sandbox is accepted as surrogate evidence for Sprint 4. It does not prove compatibility on an independent
+physical machine.
+
+The automated clean-export path is `scripts/windows-sandbox/prepare_smoke.ps1`; see
+`docs/testing/windows-sandbox-release-smoke.md`. The harness is implemented, but no isolated result has been
+recorded yet.
 
 This is not a model-quality benchmark and does not run Qwen edit acceptance.
 
@@ -33,7 +41,8 @@ On the target machine:
 - dependencies are installed or restored
 - `backend/.env.fast-check` exists
 - `frontend/package.json` dependencies are installed
-- model assets required by the selected smoke profile exist if inference smoke will be run
+- model assets are not required for the required non-model smoke
+- model assets required by the selected smoke profile exist only if a separately approved inference smoke runs
 
 If the repo venv launcher points at a missing base Python, set explicit runtime overrides before smoke:
 
@@ -50,7 +59,7 @@ From repo root:
 powershell.exe -ExecutionPolicy Bypass -File .\scripts\release_smoke.ps1
 ```
 
-For target beta-machine execution, use the operator packet in
+For isolated Windows execution, use the operator packet in
 `docs/testing/target-clean-machine-smoke-operator-packet.md`.
 
 Record the returned target-machine result in `docs/testing/target-clean-machine-smoke-result-log.md`
@@ -149,5 +158,6 @@ For target beta-machine evidence, paste back the result block from
 | 2026-06-04 | Current Codex workspace | `c16e7fe` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
 | 2026-06-05 | Current Codex workspace | `e676d9a` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
 
-Target clean-machine smoke is still required before a tester handoff.
-Record the returned target result in `docs/testing/target-clean-machine-smoke-result-log.md`.
+Isolated clean-Windows smoke is still required before a tester handoff. The planned first environment is Windows
+Sandbox and must be labeled as surrogate evidence. Record the returned result in
+`docs/testing/target-clean-machine-smoke-result-log.md`.

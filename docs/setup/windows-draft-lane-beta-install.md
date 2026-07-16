@@ -1,13 +1,14 @@
 # Windows Draft-Lane Beta Installation Guide
 
-Status: Ready for first clean-machine trial
-Last updated: 2026-06-11
+Status: Ready for physical trial; Windows Sandbox harness implemented and trial pending
+Last updated: 2026-07-16
 Scope: Windows local draft-lane closed beta
 Owner: DevOps + Tech Lead
 
 ## Purpose
 
-Use this guide to install and configure the project on a clean Windows tester machine.
+Use this guide to install and configure the project on a clean Windows environment. A physical tester machine is
+preferred; Windows Sandbox is the approved Sprint 4 surrogate while no separate machine is available.
 
 This guide prepares the local edit-first workflow and FLUX draft lane. It does not approve a model run,
 provide final Qwen acceptance, or authorize public-beta use.
@@ -38,9 +39,9 @@ It does not support or claim:
 
 ## 1. Machine Requirements
 
-Verified project baseline:
+Supported validation baseline:
 
-- Windows 11 x64
+- Windows 10 or Windows 11 x64
 - Python 3.12.x; current workspace was created with Python 3.12.10
 - Node.js 18.17 or newer; Node 20 or 22 LTS is recommended for a tester machine
 - npm included with Node.js
@@ -63,6 +64,33 @@ Network:
 
 - internet is required for clone, dependency installation, and asset download
 - after dependencies and model assets are present, the app can run with `OFFLINE_MODE=1`
+
+### Windows Sandbox Surrogate
+
+For the required Sprint 4 non-model smoke:
+
+- use a clean export of the approved commit
+- do not copy the host `.venv`, `frontend\node_modules`, databases, generated data, or model assets
+- install Python and frontend dependencies inside Sandbox
+- model asset provisioning in section 7 is not required
+- run only section 8 release smoke
+- record the evidence class as `Windows Sandbox surrogate`
+
+This proves disposable Windows setup and build behavior on the host OS. It does not prove compatibility on an
+independent physical machine.
+
+The automated path is documented in `docs/testing/windows-sandbox-release-smoke.md`. After committing the
+approved source checkpoint, prepare and launch it from the host with:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-sandbox\prepare_smoke.ps1 `
+  -DownloadPrerequisites `
+  -Launch
+```
+
+The harness creates a Git archive, stages signed prerequisite installers, writes a commit/hash manifest, installs
+all dependencies inside Sandbox, runs section 8, and returns structured evidence under ignored `.artifacts/`.
+It does not provision or execute a model.
 
 ## 2. Install Prerequisites
 

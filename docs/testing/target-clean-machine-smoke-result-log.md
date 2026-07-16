@@ -1,15 +1,16 @@
 # Target Clean-Machine Smoke Result Log
 
-Status: Awaiting first target-machine result
-Last updated: 2026-06-21
+Status: Awaiting first isolated clean-Windows result
+Last updated: 2026-07-16
 Sprint: Sprint 4
 Related ticket: WR4-004
 Owner: DevOps + Tech Lead
 
 ## Purpose
 
-Use this log to record the target beta-machine non-model release smoke result returned from
-`docs/testing/target-clean-machine-smoke-operator-packet.md`.
+Use this log to record an isolated Windows non-model release smoke result returned from
+`docs/testing/target-clean-machine-smoke-operator-packet.md`. A physical target machine is preferred, but a
+Windows Sandbox surrogate is accepted for Sprint 4 because no separate fresh machine is currently available.
 
 This log is evidence intake only. It does not authorize a model run, submit an edit job, or change the
 Qwen acceptance status.
@@ -18,7 +19,7 @@ Qwen acceptance status.
 
 Before any draft-lane tester session, record either:
 
-- a target clean-machine smoke pass, or
+- an isolated clean-Windows smoke pass, or
 - a blocker with an assigned owner and an explicit decision that the tester session may proceed despite it.
 
 If neither exists, tester invite and tester session remain blocked.
@@ -28,8 +29,9 @@ If neither exists, tester invite and tester session remain blocked.
 Paste or summarize the operator result block with these fields:
 
 ```text
-Target clean-machine smoke result
+Isolated clean-Windows smoke result
 Date:
+Evidence class: physical target machine / Windows Sandbox surrogate
 Machine/environment:
 Repo path:
 Commit:
@@ -58,13 +60,13 @@ A Windows ESLint cache `EPERM` warning is acceptable only if the frontend build 
 
 ## Current Result Entries
 
-| Date | Machine/environment | Commit | Result | Python override | Warnings | Blockers | Owner | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| pending | target beta machine | pending | pending | pending | pending | target clean-machine smoke not yet returned | DevOps | Required before tester handoff unless owner explicitly accepts the blocker. |
+| Date | Evidence class | Machine/environment | Commit | Result | Python override | Warnings | Blockers | Owner | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| pending | Windows Sandbox surrogate | isolated Windows environment | pending | pending | pending | pending | harness implemented; isolated smoke not yet run | DevOps | Required before tester handoff unless owner explicitly accepts the blocker. |
 
 ## Follow-Up After A Pass
 
-After the first target-machine pass:
+After the first isolated clean-Windows pass:
 
 1. update the table above with the actual result
 2. update `docs/testing/clean-machine-release-smoke.md`

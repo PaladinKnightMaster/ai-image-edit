@@ -1,20 +1,29 @@
 # Target Clean-Machine Smoke Operator Packet
 
-Status: Ready for operator execution
-Last updated: 2026-06-21
+Status: Ready; Windows Sandbox harness implemented and first run pending
+Last updated: 2026-07-16
 Sprint: Sprint 4
 Related ticket: WR4-004
 Required before: draft-lane tester invite
 
 ## Purpose
 
-Use this packet on the target beta machine to collect the remaining release-smoke evidence for Sprint 4.
+Use this packet in an isolated clean Windows environment to collect the remaining release-smoke evidence for
+Sprint 4. The environment may be a physical target machine or Windows Sandbox.
 
 This is a non-model smoke. It must not submit an edit job, run Qwen acceptance, or load an inference model.
 
+## Evidence Classification
+
+- `physical target machine`: independent-machine compatibility evidence
+- `Windows Sandbox surrogate`: clean host-OS installation evidence on the development machine
+- `current workstation`: local regression evidence only
+
+Record the exact class. Docker/WSL2 output is not valid for this Windows-specific gate.
+
 ## Target Commit
 
-Run the latest committed checkout that contains this packet. Record the actual target commit before running:
+Run the latest committed checkout that contains this packet. For a cloned checkout, record the actual commit:
 
 ```powershell
 git rev-parse --short HEAD
@@ -30,12 +39,28 @@ If the target machine is on a different commit, keep going only if the checkout 
 `docs/testing/target-clean-machine-smoke-operator-packet.md`, then record the actual commit in the result
 block below before running the smoke.
 
+The Sandbox clean-export harness writes the full source commit to `SOURCE_COMMIT.txt` and
+`package-manifest.json`. Record that value when `.git` is intentionally absent from the exported source.
+
+## Windows Sandbox Command
+
+After committing the approved checkpoint, run from the host repository root:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-sandbox\prepare_smoke.ps1 `
+  -DownloadPrerequisites `
+  -Launch
+```
+
+Detailed package, safety, and evidence behavior is in `docs/testing/windows-sandbox-release-smoke.md`. The
+generated `output\sandbox-smoke-result.txt` contains the result block below.
+
 ## Operator Preconditions
 
 Confirm these before running:
 
 - installation completed using `docs/setup/windows-draft-lane-beta-install.md`
-- repository is cloned on the target beta machine
+- repository is cloned or cleanly exported into the isolated environment
 - dependencies are installed or restored
 - `backend/.env.fast-check` exists
 - frontend dependencies are installed
@@ -96,8 +121,9 @@ if `npm.cmd run build` exits 0.
 Paste this back to the Commander after the target-machine run:
 
 ```text
-Target clean-machine smoke result
+Isolated clean-Windows smoke result
 Date:
+Evidence class: physical target machine / Windows Sandbox surrogate
 Machine/environment:
 Repo path:
 Commit:
