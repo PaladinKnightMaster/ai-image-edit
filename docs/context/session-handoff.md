@@ -42,6 +42,7 @@ Decision sources:
 - Windows Sandbox clean-export/install/evidence harness and immutable `e829507` package are prepared
 - Sandbox app 0.8.107.0 crashes before bootstrap because `WinRT.Runtime 2.2.0.0` is missing; no mapped result exists
 - the 2026-07-17 retry after host restart reproduced the identical crash
+- the 2026-07-17 retry after Windows Settings Repair also reproduced the identical crash
 - current frontend lint, typecheck, and build pass; the fallback host Python correctly blocks backend smoke because
   Pillow is absent
 - clean isolated Windows result is not yet recorded
@@ -51,11 +52,11 @@ Decision sources:
 
 Complete WR5-001 as the final Sprint 4 evidence slice:
 
-1. use Windows Settings to repair the Windows Sandbox system component
+1. use Windows Settings to reset the Windows Sandbox system component
 2. retry `.artifacts/windows-sandbox-smoke/20260716T234119Z-e829507/ai-image-edit-smoke.wsb`
 3. if the app starts, let the bootstrap install dependencies without copying `.venv` or `node_modules`
 4. collect `sandbox-smoke-result.json`, `.txt`, and the transcript
-5. if repair fails, reset Windows Sandbox and retry before accepting the blocker
+5. if Reset fails, record the persistent blocker before considering optional-feature reinstallation
 6. record the environment as `Windows Sandbox surrogate`; do not run a model
 
 Record the result in:

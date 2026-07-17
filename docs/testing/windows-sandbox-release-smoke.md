@@ -99,13 +99,14 @@ schema. It is not smoke evidence.
 
 On 2026-07-16, package preparation for commit `e829507` passed, but Windows Sandbox app `0.8.107.0` crashed before
 the VM reached `LogonCommand`. Event Viewer recorded a missing `WinRT.Runtime, Version=2.2.0.0` assembly. A
-2026-07-17 retry after restarting the host reproduced the identical crash.
+2026-07-17 retry after restarting the host and another retry after Windows Settings Repair both reproduced the
+identical crash.
 
 Recovery order:
 
 1. completed: restart the host and retry the same generated `.wsb` package
-2. next: use Windows Settings to repair the Windows Sandbox system component, then retry
-3. if repair fails, reset the Windows Sandbox system component, then retry
+2. completed: repair the Windows Sandbox system component and retry
+3. next: reset the Windows Sandbox system component, then retry once
 4. only if repair/reset fails, consider disabling and re-enabling the Windows Sandbox optional feature with the
    required administrator approval and restarts
 

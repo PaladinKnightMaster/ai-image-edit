@@ -91,7 +91,7 @@ Sprint 4 scope decision:
   `docs/testing/target-clean-machine-smoke-result-log.md`. The clean-export harness is implemented in
   `scripts/windows-sandbox/`. The `e829507` package is prepared, but Sandbox app `0.8.107.0` crashes before the
   bootstrap because `WinRT.Runtime 2.2.0.0` is missing. A post-restart retry reproduced the crash; Windows Settings
-  repair/reset and another same-package retry are pending.
+  Repair also failed to change it. Windows Settings Reset and one same-package retry are pending.
 
 ### WR4-005 - Finalize beta tester handoff
 
@@ -121,7 +121,7 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. Repair the Windows Sandbox system component through Windows Settings, retry the prepared `e829507` package
+1. Reset the Windows Sandbox system component through Windows Settings, retry the prepared `e829507` package once
    before any tester handoff, then update `docs/testing/target-clean-machine-smoke-result-log.md`
 2. Owner-review the draft-lane tester handoff copy
 3. Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
