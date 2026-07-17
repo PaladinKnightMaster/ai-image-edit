@@ -92,8 +92,8 @@ Sprint 5 is planned in `docs/planning/sprint-5-outline.md`:
 
 | Risk | State | Next action |
 | --- | --- | --- |
-| No isolated clean-Windows result | Host Sandbox app blocker | Restart the host, retry the prepared `e829507` package, then repair/reset Sandbox if needed. |
-| Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Reproduced twice before bootstrap | Keep tester handoff blocked unless the owner explicitly accepts this residual risk. |
+| No isolated clean-Windows result | Host Sandbox app blocker | Repair Sandbox through Windows Settings and retry the prepared `e829507` package; reset and retry if needed. |
+| Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Reproduced after host restart | Keep tester handoff blocked unless the owner explicitly accepts this residual risk. |
 | Current host Python environment cannot rerun backend smoke | Open, environment-specific | Install dependencies only in Sandbox and use that result as the clean proof. |
 | Local Qwen Edit native crash | Open, off-box | Do not force local acceptance; keep packet ready. |
 | Frontend has no automated flow suite | Open | Add Playwright in Sprint 5. |
@@ -105,9 +105,9 @@ Sprint 5 is planned in `docs/planning/sprint-5-outline.md`:
 
 ## Immediate Next Action
 
-Restart the host after the Sandbox app update, retry the existing `e829507` package, and record the real result.
-If the same app crash persists, repair/reset Windows Sandbox before deciding whether to accept the blocker. Do not
-begin runtime orchestration changes or tester handoff yet.
+Use Windows Settings to repair the Windows Sandbox system component, retry the existing `e829507` package, and
+record the real result. If repair does not resolve startup, reset Sandbox and retry before deciding whether to
+accept the blocker. Do not begin runtime orchestration changes or tester handoff yet.
 
 ## Heavy-Run Rule
 

@@ -158,7 +158,8 @@ For target beta-machine evidence, paste back the result block from
 | 2026-06-04 | Current Codex workspace | `c16e7fe` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
 | 2026-06-05 | Current Codex workspace | `e676d9a` | pass with warning | Rerun passed using `AI_IMAGE_EDIT_PYTHON` and repo site-packages override. Backend fast-check smoke, frontend lint, typecheck, and build exited 0. Next build emitted the same Windows ESLint cache `EPERM` warning after successful build output. |
 | 2026-07-16 | Windows Sandbox surrogate | `e829507` | blocked before bootstrap | Clean package and signed prerequisites validated. Sandbox app 0.8.107.0 crashed twice before `LogonCommand` because `WinRT.Runtime, Version=2.2.0.0` was missing. No smoke check or model ran. |
+| 2026-07-17 | Windows Sandbox surrogate post-restart | `e829507` | blocked before bootstrap | Host restart did not change the missing `WinRT.Runtime 2.2.0.0` crash. Mapped output remained empty; no smoke check or model ran. |
 
-Isolated clean-Windows smoke is still required before a tester handoff. Restart the host and retry the prepared
-Sandbox package; record the returned result in
+Isolated clean-Windows smoke is still required before a tester handoff. Repair the Windows Sandbox system component
+through Windows Settings and retry the prepared package; record the returned result in
 `docs/testing/target-clean-machine-smoke-result-log.md`.

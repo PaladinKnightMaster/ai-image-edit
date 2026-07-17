@@ -63,6 +63,7 @@ A Windows ESLint cache `EPERM` warning is acceptable only if the frontend build 
 | Date | Evidence class | Machine/environment | Commit | Result | Python override | Warnings | Blockers | Owner | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-07-16 | Windows Sandbox surrogate | Windows 10 Pro 25H2 build 26200.8655; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | First launch installed/updated the Sandbox app | `WindowsSandboxRemoteSession.exe` crashed because `WinRT.Runtime, Version=2.2.0.0` was missing; no mapped evidence files were created | DevOps + host owner | Restart the host, retry the same immutable package, then repair/reset Sandbox if the crash persists. No model ran. |
+| 2026-07-17 | Windows Sandbox surrogate | Post-restart retry; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | Host restart completed | Identical missing `WinRT.Runtime, Version=2.2.0.0` crash; all-users package inspection also denied by host permissions | Host owner | Use Windows Settings to repair Sandbox, retry, then reset and retry if repair fails. No model ran. |
 
 ## 2026-07-16 Blocker Detail
 
@@ -75,6 +76,19 @@ A Windows ESLint cache `EPERM` warning is acceptable only if the frontend build 
 - event evidence: .NET Runtime event 1026, Application Error event 1000, and Windows Error Reporting event 1001
 - exception: `System.IO.FileNotFoundException` for `WinRT.Runtime, Version=2.2.0.0`
 - bootstrap transcript/result: absent because the Sandbox VM did not reach `LogonCommand`
+- model execution: none
+
+## 2026-07-17 Post-Restart Retry
+
+- unchanged package and source commit: `e829507`
+- launch time: approximately 12:02 PM America/New_York
+- result: Sandbox client exited before bootstrap; mapped output remained empty
+- event evidence: .NET Runtime event 1026, Application Error event 1000, Windows Error Reporting event 1001
+- repeated exception: `System.IO.FileNotFoundException` for `WinRT.Runtime, Version=2.2.0.0`
+- package process: `WindowsSandboxRemoteSession.exe` version `0.8.107.0`
+- permission boundary: `Get-AppxPackage -AllUsers` and `Get-AppxProvisionedPackage -Online` were denied
+- next action: host owner uses Windows Settings to repair the Windows Sandbox system component, then retries the
+  same immutable `.wsb`; reset only if repair does not fix startup
 - model execution: none
 
 ## Follow-Up After A Pass
