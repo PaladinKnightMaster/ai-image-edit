@@ -160,7 +160,8 @@ For target beta-machine evidence, paste back the result block from
 | 2026-07-16 | Windows Sandbox surrogate | `e829507` | blocked before bootstrap | Clean package and signed prerequisites validated. Sandbox app 0.8.107.0 crashed twice before `LogonCommand` because `WinRT.Runtime, Version=2.2.0.0` was missing. No smoke check or model ran. |
 | 2026-07-17 | Windows Sandbox surrogate post-restart | `e829507` | blocked before bootstrap | Host restart did not change the missing `WinRT.Runtime 2.2.0.0` crash. Mapped output remained empty; no smoke check or model ran. |
 | 2026-07-17 | Windows Sandbox surrogate post-repair | `e829507` | blocked before bootstrap | Windows Settings Repair did not change the missing `WinRT.Runtime 2.2.0.0` crash. Reset and one retry remain. No smoke check or model ran. |
+| 2026-07-17 | Windows Sandbox surrogate post-reset | `e829507` | blocked before bootstrap | Windows Settings Reset did not change the missing `WinRT.Runtime 2.2.0.0` crash. Restart/Repair/Reset recovery is exhausted; no smoke check or model ran. |
 
-Isolated clean-Windows smoke is still required before a tester handoff. Reset the Windows Sandbox system component
-through Windows Settings and retry the prepared package once; record the returned result in
-`docs/testing/target-clean-machine-smoke-result-log.md`.
+Isolated clean-Windows smoke remains unavailable before tester handoff. The owner must either accept the persistent
+external blocker under the Sprint 4 gate or explicitly approve optional-feature reinstallation and restarts. Record
+that decision in `docs/testing/target-clean-machine-smoke-result-log.md`.

@@ -106,9 +106,10 @@ Recovery order:
 
 1. completed: restart the host and retry the same generated `.wsb` package
 2. completed: repair the Windows Sandbox system component and retry
-3. next: reset the Windows Sandbox system component, then retry once
-4. only if repair/reset fails, consider disabling and re-enabling the Windows Sandbox optional feature with the
-   required administrator approval and restarts
+3. completed: reset the Windows Sandbox system component and retry once
+4. blocked: restart, Repair, and Reset all reproduced the same missing assembly
+5. owner decision: accept the external blocker, or explicitly approve disabling and re-enabling the Windows
+   Sandbox optional feature with administrator rights and required restarts
 
 Microsoft references:
 
@@ -116,5 +117,5 @@ Microsoft references:
 - [Troubleshoot Windows Sandbox](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-troubleshoot)
 - [Repair apps and programs](https://support.microsoft.com/en-US/Windows/Apps/repair-apps-and-programs-in-windows)
 
-Do not regenerate the package for a host-app repair retry; reuse the immutable `e829507` package so only the host
-condition changes.
+Do not regenerate the package for any host-app retry; reuse the immutable `e829507` package so only the host
+condition changes. Do not perform optional-feature reinstallation without explicit owner approval.

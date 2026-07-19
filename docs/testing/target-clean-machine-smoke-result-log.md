@@ -65,6 +65,7 @@ A Windows ESLint cache `EPERM` warning is acceptable only if the frontend build 
 | 2026-07-16 | Windows Sandbox surrogate | Windows 10 Pro 25H2 build 26200.8655; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | First launch installed/updated the Sandbox app | `WindowsSandboxRemoteSession.exe` crashed because `WinRT.Runtime, Version=2.2.0.0` was missing; no mapped evidence files were created | DevOps + host owner | Restart the host, retry the same immutable package, then repair/reset Sandbox if the crash persists. No model ran. |
 | 2026-07-17 | Windows Sandbox surrogate | Post-restart retry; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | Host restart completed | Identical missing `WinRT.Runtime, Version=2.2.0.0` crash; all-users package inspection also denied by host permissions | Host owner | Use Windows Settings to repair Sandbox, retry, then reset and retry if repair fails. No model ran. |
 | 2026-07-17 | Windows Sandbox surrogate | Post-repair retry; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | Windows Settings Repair completed | Identical missing `WinRT.Runtime, Version=2.2.0.0` crash at 12:11:07 PM; mapped output remained empty | Host owner | Reset Windows Sandbox in Settings, then retry the same package once. No model ran. |
+| 2026-07-17 | Windows Sandbox surrogate | Post-reset retry; Sandbox app 0.8.107.0 | `e829507` | blocked before bootstrap | n/a | Windows Settings Reset completed | Identical missing `WinRT.Runtime, Version=2.2.0.0` crash at 12:18:33 PM; mapped output remained empty | Host owner + Release Guard | Choose owner acceptance of the persistent blocker or explicitly approve optional-feature reinstall and restarts. No model ran. |
 
 ## 2026-07-16 Blocker Detail
 
@@ -101,6 +102,19 @@ A Windows ESLint cache `EPERM` warning is acceptable only if the frontend build 
 - repeated exception: `System.IO.FileNotFoundException` for `WinRT.Runtime, Version=2.2.0.0`
 - event evidence: .NET Runtime 1026 at 12:11:07 PM, Application Error 1000, Windows Error Reporting 1001
 - next action: host owner resets the Windows Sandbox system component, then retries the same immutable `.wsb` once
+- model execution: none
+
+## 2026-07-17 Post-Reset Retry
+
+- unchanged package and source commit: `e829507`
+- launch time: approximately 12:18 PM America/New_York
+- prerequisite: host owner completed Windows Settings Reset
+- result: Sandbox client exited before bootstrap; mapped output remained empty
+- repeated exception: `System.IO.FileNotFoundException` for `WinRT.Runtime, Version=2.2.0.0`
+- event evidence: .NET Runtime 1026 at 12:18:33 PM, Application Error 1000, Windows Error Reporting 1001
+- recovery ladder exhausted: restart, Repair, and Reset all reproduced the same host-app failure
+- owner decision required: accept the persistent external blocker for Sprint 4 entry-gate purposes, or explicitly
+  approve optional-feature disable/re-enable plus required host restarts
 - model execution: none
 
 ## Follow-Up After A Pass

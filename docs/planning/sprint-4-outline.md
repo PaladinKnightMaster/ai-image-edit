@@ -91,7 +91,8 @@ Sprint 4 scope decision:
   `docs/testing/target-clean-machine-smoke-result-log.md`. The clean-export harness is implemented in
   `scripts/windows-sandbox/`. The `e829507` package is prepared, but Sandbox app `0.8.107.0` crashes before the
   bootstrap because `WinRT.Runtime 2.2.0.0` is missing. A post-restart retry reproduced the crash; Windows Settings
-  Repair also failed to change it. Windows Settings Reset and one same-package retry are pending.
+  Repair and Reset also failed to change it. The persistent external blocker now requires an owner accept/reinstall
+  decision.
 
 ### WR4-005 - Finalize beta tester handoff
 
@@ -121,8 +122,8 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. Reset the Windows Sandbox system component through Windows Settings, retry the prepared `e829507` package once
-   before any tester handoff, then update `docs/testing/target-clean-machine-smoke-result-log.md`
+1. Owner decides whether to accept the persistent Sandbox blocker for Sprint 4 closure or approve optional-feature
+   reinstallation and restarts; tester handoff remains blocked until that decision is recorded
 2. Owner-review the draft-lane tester handoff copy
 3. Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
 
