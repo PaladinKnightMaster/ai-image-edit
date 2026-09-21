@@ -1,5 +1,9 @@
 # Model Catalog
 
+Status: Active
+Last updated: 2026-07-16
+Owner: AI/ML Reviewer
+
 This document separates three concepts that were previously mixed together:
 
 1. mirrored model assets
@@ -77,6 +81,15 @@ the mirror script refuses to pull it onto an unsuitable machine unless `--force`
   - `flux2-klein-9b-gguf`
 - research lane:
   - `sdxl-openvino`
+
+## Current Selection Policy
+
+- CPU compatibility is required for the local default roadmap
+- model replacement requires fixture-based quality, latency, peak-RAM, stability, and integration evidence
+- private non-commercial use means a commercial-use restriction is not a current selection blocker
+- provenance and license terms remain recorded for future sharing or commercialization review
+- `flux2-klein-9b-gguf` remains draft evidence; it does not replace Qwen acceptance claims
+- no model candidate becomes a release dependency before non-model reliability work is complete
 
 ## Documentation rule
 

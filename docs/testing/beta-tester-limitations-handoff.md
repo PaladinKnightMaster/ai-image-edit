@@ -1,7 +1,7 @@
 # Beta Tester Limitations Handoff
 
-Last updated: 2026-06-04
-Status: Owner-reviewed; gated by target clean-machine smoke
+Last updated: 2026-07-16
+Status: Owner-reviewed; gated by isolated clean-Windows smoke
 
 ## Purpose
 
@@ -11,6 +11,8 @@ readiness.
 
 Use `docs/testing/draft-lane-beta-tester-handoff.md` for invite/session wording. This file remains the
 limitations source of truth behind that handoff.
+
+Use `docs/testing/draft-lane-beta-session-runbook.md` for session operation and evidence capture.
 
 ## Current Scope
 
@@ -81,8 +83,8 @@ Ask testers to answer these questions after a session:
 Use this status until the beta gate changes:
 
 The product flow is ready for internal dogfooding and structured review. It is not ready for closed beta
-as a final Qwen-quality product. A limited draft-lane closed beta may proceed only after target
-clean-machine smoke is recorded or owner-accepted as blocked, and only if the invitation explicitly says
+as a final Qwen-quality product. A limited draft-lane closed beta may proceed only after isolated
+clean-Windows smoke is recorded or owner-accepted as blocked, and only if the invitation explicitly says
 Qwen edit acceptance is still pending off-box validation.
 
 ## Tester-Facing Handoff

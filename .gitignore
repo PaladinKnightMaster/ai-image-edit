@@ -42,3 +42,6 @@ tools/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local validation artifacts
+.artifacts/

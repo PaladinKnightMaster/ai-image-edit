@@ -1,6 +1,6 @@
 # Sprint 2 Outline
 
-Status: Active with local-runtime constraint
+Status: Closed; see `docs/planning/sprint-2-closeout-audit.md`
 Sprint name: Sprint 2 - Editor-First UX and Core Editing Flow
 Duration: 2 weeks
 Last updated: 2026-05-17

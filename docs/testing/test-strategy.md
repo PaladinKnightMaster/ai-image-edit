@@ -1,79 +1,134 @@
 # Test Strategy
 
+Status: Active
+Last updated: 2026-07-16
+Owner: Reviewer + Release Guard
+
 ## Goal
 
-Keep the project testable on a CPU-only machine while preserving a real quality bar for the product.
+Keep daily validation fast on a CPU-only machine while preserving strong evidence for workflow correctness,
+release reproducibility, and model quality.
 
-## Current state
+## Current Coverage
 
-### Backend
+Backend automated coverage includes:
 
-- current automated tests are mostly inference-dependent
-- a fast startup and model-availability smoke suite now exists
-- queue and inference smoke coverage is still thinner than startup smoke coverage
-- the current suite is too slow and environment-sensitive for day-to-day regression safety
+- startup, `/health`, `/ready`, and `/api/models`
+- model registration and runner-load behavior
+- pending-review reveal and API response contracts
+- reusable history after reveal
+- pending-output cleanup on deletion
+- queued/running restart classification
+- seed determinism and FLUX adapter behavior
 
-### Frontend
+Frontend currently has:
 
-- `lint` exists
-- `typecheck` exists
-- `build` exists
-- there is no automated frontend flow test suite yet
-- most flow validation is currently manual
+- lint
+- TypeScript typecheck
+- production build
+- manual browser evidence for reveal, reuse, download, and output-library flows
 
-## Test pyramid for this repo
+The primary current gap is automated frontend workflow coverage.
 
-### 1. Smoke
+## Validation Layers
 
-Runs often.
+### 1. Static
 
-Backend:
-- import/app startup
-- `/health`
-- `/ready`
-- `/api/models`
-- worker auth path
-- queue submission happy path with mocked or lightweight conditions
-- standard Sprint 1 inference smoke via `.\scripts\smoke_qwen_t2i.ps1`
+Run on every frontend change:
 
-Frontend:
-- `npm run lint`
-- `npm run build`
-- later: explicit `tsc --noEmit`
+- `npm.cmd run lint`
+- `npm.cmd run typecheck`
+- `npm.cmd run build`
 
-### 2. Draft
+### 2. Unit And State Machine
 
-Runs during feature work.
+Use for:
 
-- fast-check inference on one active model
-- history and replay flow
-- upload and edit flow
-- generated-image-to-edit flow
+- status transitions
+- retry classification
+- cancellation policy
+- idempotent output commit
+- frontend reducers, persistence, and transport reconciliation
 
-### 3. Acceptance
+No model may load.
 
-Runs at milestone gates.
+### 3. API And Temporary Database
 
-- benchmark pack execution using `docs/testing/benchmark-pack.md`
-- fixed-case manifest review via `docs/testing/benchmark-pack.v0.json`
-- before/after product walkthrough
-- manual visual review
-- engine-specific validation for active MVP lanes
+Use temporary SQLite databases and temporary image roots for:
 
-## CI recommendation
+- submit validation
+- reveal and reuse
+- delete and compensation
+- attempts, leases, heartbeat, retry, and recovery
+- cancel command lifecycle
+- worker callback and auth behavior
 
-CI should focus on smoke-level checks:
+### 4. Browser Flow
 
-- backend import
-- backend static checks
-- frontend lint
-- frontend build
-- selected API smoke tests
+Use Playwright with deterministic backend states or API interception for:
 
-Do not make CI depend on full local inference or multi-hour CPU runs.
+- explicit edit/create mode
+- base/reference input roles
+- progress and disconnected/reconnecting state
+- pending review and reveal
+- compare, download, and reuse
+- cancel and retry commands
+- restart-recovery presentation
 
-## Current gaps to close
+Browser tests must not submit a real model job.
 
-- add backend smoke tests that do not require real model loading
-- keep `docs/testing/preset-benchmark-review.md` aligned with the active benchmark pack and preset metadata
-- separate smoke and acceptance responsibilities clearly in docs and scripts
+### 5. Release Smoke
+
+Run `scripts/release_smoke.ps1` on:
+
+- current workstation
+- Windows Sandbox clean-Windows surrogate
+- Docker/WSL2 reproducibility lane after it exists
+
+Record environment and commit. Do not flatten these evidence types into one compatibility claim.
+
+### 6. Draft Model Evidence
+
+Run only after explicit resource warning and approval. Record model, hardware, prompt/case, seed, parameters,
+latency, peak RAM where available, output id, status, and review notes.
+
+### 7. Acceptance Evidence
+
+Use the fixed benchmark pack and review worksheet. Qwen acceptance may run off-box; it is separate from local
+workflow and release-smoke evidence.
+
+## Sprint 5 Required Tests
+
+- EventSource disconnect reconciles through persisted job state
+- server job error remains distinct from transport error
+- cancel request reaches cooperative fake runner
+- non-cooperative fake child process terminates and cleans temporary output
+- transient failure retries once with a new attempt
+- deterministic failure does not auto-retry
+- restart requeues eligible work and interrupts expired running attempts
+- pending-review remains stable across restart
+- output commit is idempotent
+- Windows Sandbox smoke records truthful environment metadata
+
+## Test Data Policy
+
+- use temporary databases for mutation tests
+- preserve the live WR3-007 pending fixture
+- avoid storing private source images in committed fixtures
+- store model outputs only when they are intentional benchmark evidence
+- keep model execution out of CI and default smoke
+
+## Release Rule
+
+A prepared script or packet is not evidence. A gate passes only when the exact command, environment, commit,
+result, warnings, and blockers are recorded.
+
+The Windows Sandbox harness has a cheap no-download contract check:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-sandbox\test_harness_contract.ps1
+```
+
+It validates script syntax, pinned HTTPS prerequisite sources, signature requirements, package/hash guards,
+native exit propagation, and absence of known model-execution entry points. It does not satisfy the isolated
+Windows smoke gate by itself.

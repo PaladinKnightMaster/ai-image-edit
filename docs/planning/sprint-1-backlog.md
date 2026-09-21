@@ -1,6 +1,6 @@
 # Sprint 1 Backlog
 
-Status: Draft
+Status: Historical; Sprint 1 completed
 Sprint name: Sprint 1 - Stabilization and Dev Loop
 Duration: 2 weeks
 Last updated: 2026-04-17

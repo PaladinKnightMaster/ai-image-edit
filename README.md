@@ -2,7 +2,19 @@
 
 Offline-first, self-hosted AI image generator/editor oriented around a local studio workflow. The
 current build ships a Next.js frontend and FastAPI backend with local-first job flows, health checks,
-and Sprint 1 developer tooling for normal vs fast-check operation.
+and CPU-first draft, review, reveal, recovery, and validation flows.
+
+## Project status and strategy
+
+- Sprint 4 beta readiness is active; the current gate is an isolated clean-Windows non-model smoke.
+- CPU-only operation on the development machine is a hard product and release constraint.
+- Windows Sandbox is the accepted clean-Windows surrogate; Docker/WSL2 is for reproducibility only.
+- FLUX.2 Klein 9B GGUF supplies local draft-lane evidence. Qwen edit acceptance remains off-box.
+- Durable local orchestration comes before any optional Temporal learning spike.
+
+Start with `docs/index.md`. The accepted strategy is recorded in
+`docs/adr/0005-cpu-first-product-and-validation-strategy.md` and the active roadmap in
+`docs/planning/mvp-war-room-plan.md`.
 
 ## Repo layout
 
@@ -31,6 +43,10 @@ use their own env-configured local asset paths.
 - Run cleanup, failed-run recovery, and thread maintenance now sit behind a secondary utilities surface.
 
 ## Quickstart
+
+For a clean Windows tester machine, use the governed beta installation guide:
+
+- `docs/setup/windows-draft-lane-beta-install.md`
 
 Backend:
 1) `python -m venv .venv`
@@ -169,7 +185,11 @@ cd frontend
 npm run dev
 ```
 
-GPU setup from scratch (Windows/Linux/macOS):
+Optional GPU reference (outside the active roadmap):
+
+No GPU is required or planned for the active CPU-first product and release path. Keep this only as
+an operator reference for a future explicitly approved experiment.
+
 ```bash
 # Install GPU-enabled torch (replace cu121 with your CUDA version)
 pip install -r backend/requirements-gpu.txt

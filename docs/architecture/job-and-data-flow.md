@@ -1,70 +1,95 @@
-# Job and Data Flow
+# Job And Data Flow
 
-## Core entities
+Status: Active; target orchestration states are planned
+Last updated: 2026-07-16
+Owner: Backend Architect
 
-The backend stores three main entity types:
+## Current Entities
 
-- `jobs`
-  - top-level execution state
-- `runs`
-  - parameters and results for one job execution
-- `images`
-  - uploaded or generated image metadata
+- `jobs`: top-level lifecycle and progress
+- `runs`: model, prompt, inputs, parameters, output ids, and latency
+- `images`: uploaded and generated image metadata
+- filesystem: image bytes and engine-specific temporary output
 
-## Current state machine
+## Current States
 
-### Job states
+```text
+queued -> running -> succeeded
+                  -> pending_review -> succeeded after reveal
+                  -> failed
+```
 
-- `queued`
-- `running`
-- `pending_review`
-- `succeeded`
-- `failed`
+On backend restart, persisted queued and running jobs are marked failed. Pending-review and terminal jobs remain
+stable.
 
-`pending_review` is used for lanes such as FLUX when manual reveal is required before the output image is exposed to the normal result flow.
+## Current Edit Flow
 
-## Generation flow
-
-1. frontend submits `/api/jobs/t2i`
-2. backend validates params and runner capability
-3. job and run rows are inserted
-4. job is either queued locally or dispatched to the worker
-5. SSE events stream status, stage, and progress
-6. output image is saved to filesystem and `images` metadata is recorded
-7. run is updated with `output_image_id` and latency
-
-## Edit flow
-
-1. frontend uploads or reuses image ids
+1. frontend uploads or reuses base and optional reference image ids
 2. frontend submits `/api/jobs/edit`
-3. backend validates runner capability and input images
-4. run proceeds through the same queue and event system
-5. result is written as a new output image
+3. backend validates runner capability, assets, inputs, and limits
+4. backend inserts job and run rows
+5. local queue or worker executes the runner
+6. backend persists progress and emits SSE events
+7. output is committed as visible or pending review
+8. reveal promotes `pending_output_image_id` to `output_image_id`
+9. succeeded outputs become available for compare, download, and reuse
 
-## Worker flow
+## Target Entities
 
-1. API persists the job
-2. API sends `job_id` to `/worker/run`
-3. worker enqueues the job id
-4. worker executes `jobs.run_job(...)`
-5. worker sends event payloads back to `/api/internal/jobs/{job_id}/event`
-6. API pushes those events to SSE subscribers
+Add `job_attempts` so retry and recovery do not overwrite execution history. The target record contains attempt
+number, worker, lease, heartbeat, timings, exit status, failure class, retryability, and temporary/committed output
+references.
 
-## Persistence
+## Target State Model
 
-- database file: `backend/app/db.py` initializes SQLite at `config.DB_PATH`
-- image files: `data/images/<image_id>.png`
-- extra engine artifacts may be written elsewhere, such as FLUX output directories
+```text
+queued -> running -> pending_review -> succeeded
+              |             |
+              |             -> cancelled
+              -> cancel_requested -> cancelled
+              -> interrupted -> retry_wait -> queued
+              -> failed
+```
 
-## Known limitations
+These states are introduced incrementally with migrations and contract tests.
 
-- queued and running jobs are marked failed on restart
-- no durable replay queue exists today
-- restart behavior is safe for metadata consistency, but not resilient for long-running CPU jobs
+## Cancellation Flow
 
-## Recommended future direction
+1. client requests cancellation
+2. orchestrator persists `cancel_requested`
+3. attempt executor signals a cooperative runner or terminates its child process
+4. executor removes only uncommitted temporary artifacts
+5. orchestrator records `cancelled`
+6. API publishes the persisted outcome
 
-- keep the current state machine
-- document restart semantics clearly
-- add smoke tests for queue and worker behavior
-- later, add durable requeue or resumable recovery if the product needs stronger long-run reliability
+Closing the browser or losing EventSource does not cancel a job.
+
+## Retry Flow
+
+1. failure is normalized
+2. policy classifies retryable or terminal
+3. automatic retry is capped at one by default
+4. a retry creates a new attempt with the same request snapshot
+5. output commit uses attempt identity to prevent duplicate publication
+
+Manual retry remains available for eligible failed/interrupted jobs. Deterministic native crashes, invalid input,
+missing assets, OOM, and cancellation do not auto-retry.
+
+## Restart Recovery
+
+- `queued` and `retry_wait` may be re-enqueued
+- expired running leases become `interrupted`
+- interrupted work may restart from step 1 when policy allows
+- no mid-step diffusion resume is promised
+- terminal and pending-review states survive unchanged
+
+## Saga Compensation
+
+Compensation may remove orphaned temporary output, clear uncommitted references, release leases, and reverse a
+partial metadata write. It must not delete user uploads or previously committed successful outputs.
+
+## Temporal Learning Flow
+
+The optional Temporal adapter first models a fake attempt Activity. It uses heartbeat, cancellation, retry,
+worker/service restart, a review signal, and idempotent result commit. Image bytes remain in the filesystem; only
+small identifiers and metadata belong in workflow history.

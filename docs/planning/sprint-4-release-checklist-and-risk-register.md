@@ -1,7 +1,7 @@
 # Sprint 4 Release Checklist and Risk Register
 
 Status: Reviewable
-Last updated: 2026-06-05
+Last updated: 2026-07-16
 Sprint: Sprint 4
 Ticket: WR4-007
 Owner: Tech Lead + DevOps
@@ -11,8 +11,11 @@ Owner: Tech Lead + DevOps
 Draft-lane closed beta preparation is conditionally allowed.
 
 Do not start a final Qwen-acceptance beta or public beta from the current evidence. The tester handoff can
-move to owner review, but actual tester use still requires target clean-machine smoke evidence and explicit
+move to owner review, but actual tester use still requires isolated clean-Windows smoke evidence and explicit
 scope wording from `docs/planning/beta-scope-decision.md`.
+
+Windows Sandbox surrogate evidence is accepted for this Sprint 4 gate because no fresh physical machine is
+available. It must be labeled as surrogate evidence and does not prove independent-machine compatibility.
 
 ## Scope Boundary
 
@@ -37,11 +40,13 @@ Not allowed:
 | Gate | Required evidence | Current state | Owner | Release status |
 | --- | --- | --- | --- | --- |
 | Beta scope lock | `docs/planning/beta-scope-decision.md` | Complete; draft-lane beta prep only | Tech Lead + Product | Pass |
+| Target-machine installation guide | `docs/setup/windows-draft-lane-beta-install.md` | Prepared; first clean-machine trial pending | DevOps + Tech Lead | Pass for preparation |
 | Off-box Qwen packet | `docs/testing/off-box-qwen-acceptance-packet.md` | Prepared; execution not started | AI/ML + Infra | Pass for draft-lane beta; blocker for Qwen beta |
 | Off-box Qwen acceptance result | `data/qwen-acceptance-summary.json`, `data/qwen-acceptance.db`, worksheet rows | Missing | AI/ML | Not required for draft-lane beta; required for Qwen beta |
 | Current workspace release smoke | `docs/testing/clean-machine-release-smoke.md` | Passed at commit `e676d9a` with Python override and noted build warning | DevOps | Pass as local evidence |
-| Target clean-machine smoke | Target run using `docs/testing/target-clean-machine-smoke-operator-packet.md` | Operator packet ready; result not recorded | DevOps | Required before tester handoff |
+| Isolated clean-Windows smoke | Windows Sandbox or physical target run using `docs/testing/target-clean-machine-smoke-operator-packet.md`, recorded in `docs/testing/target-clean-machine-smoke-result-log.md` | `e829507` package prepared; restart, Repair, and Reset did not resolve host Sandbox crash | DevOps + host owner | Persistent external blocker; owner accept/reinstall decision required |
 | Tester handoff | `docs/testing/draft-lane-beta-tester-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product + Tech Lead | Conditional pass |
+| Tester session runbook | `docs/testing/draft-lane-beta-session-runbook.md` | Prepared; first controlled session pending | Product + Tech Lead | Pass for preparation |
 | Tester limitations | `docs/testing/beta-tester-limitations-handoff.md` | Owner-reviewed; gated by target clean-machine smoke | Product | Conditional pass |
 | Pending-review reveal/reuse | Scratch-copy reveal validation and backend/API tests | Pass; live WR3-007 fixture intentionally remains pending | Backend + Frontend | Pass |
 | WR3-007 fixture decision | `docs/planning/wr3-007-fixture-decision.md` | Complete; live fixture preserved | Tech Lead | Pass |
@@ -50,7 +55,7 @@ Not allowed:
 
 ## Required Before Any Draft-Lane Tester Session
 
-1. Run or schedule target clean-machine release smoke and record the result in
+1. Run the isolated clean-Windows release smoke and record the result in
    `docs/testing/clean-machine-release-smoke.md`.
 2. Confirm the invite/session copy includes the required draft-lane boundary:
    "This beta validates the local edit-first workflow and draft-lane behavior; final Qwen edit-quality
@@ -58,13 +63,14 @@ Not allowed:
 3. Confirm no tester task asks for final Qwen quality evaluation.
 4. Keep live job `dfc36b9bde8d4ee7b111c5196d8ecb24` pending unless the fixture decision changes explicitly.
 5. Record tester session result rows in `docs/testing/draft-lane-beta-tester-handoff.md`.
+6. Operate the session using `docs/testing/draft-lane-beta-session-runbook.md`.
 
 ## Risk Register
 
 | ID | Risk | Severity | Status | Owner | Mitigation / next action |
 | --- | --- | --- | --- | --- | --- |
 | R1 | Final Qwen edit acceptance is missing. | High | Open | AI/ML + Infra | Keep Qwen beta and public beta no-go until off-box packet results are recorded. |
-| R2 | Target clean-machine release smoke is not recorded. | High | Operator packet ready | DevOps | Run `docs/testing/target-clean-machine-smoke-operator-packet.md` on the target beta machine and record the result. |
+| R2 | Isolated clean-Windows release smoke cannot start because Sandbox app 0.8.107.0 is missing `WinRT.Runtime 2.2.0.0`. | High | Persistent after restart, Repair, and Reset; smoke not executed | DevOps + host owner | Owner accepts blocker or explicitly approves optional-feature reinstall and restarts. |
 | R3 | Tester may confuse FLUX draft output with final Qwen quality. | High | Mitigated for handoff | Product + Tech Lead | Use the required wording boundary in every tester session and invite. |
 | R4 | CPU-only edit runs can take tens of minutes. | Medium | Open | Product + Support | Frame beta around workflow and available draft results; warn before any model execution. |
 | R5 | Queued/running jobs fail on backend restart. | Medium | Known limitation | Backend | Keep restart behavior in support notes; do not promise durable replay queue. |
@@ -72,6 +78,7 @@ Not allowed:
 | R7 | Windows Python/venv launcher mismatch can block setup. | Medium | Confirmed locally; mitigated with override | DevOps | Use `AI_IMAGE_EDIT_PYTHON` and `AI_IMAGE_EDIT_PYTHON_SITE_PACKAGES` overrides when needed. |
 | R8 | Preset quality evidence is partial and partly proxy-based. | Medium | Open | AI/ML + Product | Label local FLUX results as draft evidence; require Qwen acceptance worksheet rows for acceptance claims. |
 | R9 | Frontend build can emit Windows ESLint cache warnings. | Low | Known issue | Frontend + DevOps | Treat as warning only if build exits 0; record if it appears on target machine. |
+| R10 | Sandbox does not prove independent physical-machine compatibility. | Medium | Accepted residual risk | Release Guard | Label evidence as surrogate and revisit when another machine becomes available. |
 
 ## Evidence Commands
 
@@ -98,7 +105,8 @@ Do not add `-RunApproved` unless the reviewer explicitly approves the heavy off-
 
 | Priority | Action | Owner | Output |
 | --- | --- | --- | --- |
-| P0 | Run and record target clean-machine release smoke before tester invite | DevOps | Returned operator result block and updated `docs/testing/clean-machine-release-smoke.md` evidence row |
+| P0 | Decide persistent Sandbox blocker disposition before tester invite | Host owner + Release Guard | Written blocker acceptance, or approved optional-feature reinstall/retry result |
+| P0 | Run the first controlled tester session after smoke passes | Product + Session Operator | Returned `docs/testing/draft-lane-beta-session-runbook.md` result block |
 | P1 | Decide whether to execute off-box Qwen acceptance | AI/ML + Product | Acceptance run result or explicit deferral |
 | P1 | Prepare tester session result log | Product | Filled tester result rows after any session |
 
@@ -106,7 +114,7 @@ Do not add `-RunApproved` unless the reviewer explicitly approves the heavy off-
 
 Sprint 4 can close as a draft-lane beta-prep sprint when:
 
-- target clean-machine smoke is passed or has an owner-assigned blocker
+- isolated clean-Windows smoke is passed or has an owner-assigned blocker
 - tester handoff is owner-reviewed
 - Qwen acceptance is either recorded off-box or explicitly excluded from beta scope
 - all high risks above have an owner and next action

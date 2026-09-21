@@ -8,6 +8,21 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $frontendRoot = Join-Path $repoRoot "frontend"
 
+function Invoke-NpmCheck {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Name,
+    [Parameter(Mandatory = $true)]
+    [string]$Script
+  )
+
+  Write-Host "== $Name =="
+  npm.cmd run $Script
+  if ($LASTEXITCODE -ne 0) {
+    throw "$Name failed with exit code $LASTEXITCODE."
+  }
+}
+
 if (-not $SkipBackend) {
   Write-Host "== Backend fast-check startup smoke =="
   & (Join-Path $PSScriptRoot "smoke_backend.ps1")
@@ -20,12 +35,9 @@ if (-not $SkipFrontend) {
 
   Push-Location $frontendRoot
   try {
-    Write-Host "== Frontend lint =="
-    npm.cmd run lint
-    Write-Host "== Frontend typecheck =="
-    npm.cmd run typecheck
-    Write-Host "== Frontend build =="
-    npm.cmd run build
+    Invoke-NpmCheck -Name "Frontend lint" -Script "lint"
+    Invoke-NpmCheck -Name "Frontend typecheck" -Script "typecheck"
+    Invoke-NpmCheck -Name "Frontend build" -Script "build"
   }
   finally {
     Pop-Location

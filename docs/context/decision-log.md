@@ -1,30 +1,66 @@
-﻿# Decision Log
+# Decision Log
+
+Status: Active index
+Last updated: 2026-07-16
+
+## 2026-07-16
+
+### CPU-only operation is a hard roadmap constraint
+
+- no current GPU budget or hosted-GPU plan
+- daily development and release smoke remain viable without model execution
+- source: `docs/adr/0005-cpu-first-product-and-validation-strategy.md`
+
+### Windows Sandbox is the clean-Windows surrogate
+
+- no independent fresh tester machine is available
+- Sandbox can provide disposable Windows installation evidence
+- Docker/WSL2 remains reproducibility evidence, not native Windows acceptance
+
+### SQLite-backed orchestration remains the default
+
+- the product is single-user, local, and offline-first
+- attempts, leases, cancellation, retry, and recovery are proven before adding a required workflow service
+- source: `docs/adr/0006-durable-job-orchestration.md`
+
+### Temporal is an optional learning lane
+
+- the first spike uses fake activities and no model
+- Temporal must justify its local service and packaging overhead before adoption
+
+### Saga compensation is selective
+
+- compensation applies to temporary output, leases, and partial metadata
+- user uploads and committed successful outputs are preserved
+
+### Documentation uses explicit lifecycle authority
+
+- live context is concise and current
+- accepted ADRs hold durable decisions
+- prepared runbooks do not count as execution evidence
+- superseded live snapshots are archived
 
 ## 2026-04-17
 
-### Decision: Public MVP is edit-first
-Reason:
-- stronger product wedge than generic T2I
-- better fit for local/privacy-first positioning
+### Public MVP is edit-first
 
-### Decision: T2I remains a supporting workflow
-Reason:
-- current codebase is already relatively mature there
-- it supports the generate-to-edit bridge
+The edit-first direction is a stronger product wedge than a generic image generator and fits local/private use.
 
-### Decision: CPU-only development requires a fast-check loop
-Reason:
-- full local Qwen runs are too slow for normal iteration
+### T2I remains a supporting workflow
 
-### Decision: Quality is primary, efficiency is a guardrail
-Reason:
-- war-room orchestration should improve decision quality and reduce hallucination, not optimize tokens at the expense of confidence
+Generation supports the generate-to-edit bridge.
 
-### Decision: Repo-backed continuity is the memory model
-Reason:
-- new sessions need durable docs, not dependence on prior chat history
+### CPU development uses a fast-check loop
 
-### Decision: The durable docs stack is now the canonical project knowledge base
-Reason:
-- `docs/index.md` now anchors ADRs, architecture, workflows, models, design, and testing docs
-- new sessions should recover system understanding from repo docs first, then planning docs, instead of reconstructing context from chat
+Full local model runs are too slow for normal iteration.
+
+### Quality is primary and efficiency is a guardrail
+
+The war-room process optimizes decision quality before speed or token savings.
+
+### Repo-backed continuity is canonical
+
+New sessions recover the project from repository docs rather than prior chat history.
+
+The full original 2026-04-17 snapshot is preserved at
+`docs/archive/context/decision-log-2026-04-17.md`.

@@ -3,7 +3,7 @@
 Status: Active
 Sprint name: Sprint 4 - Beta Scope Lock and Acceptance Validation
 Duration: 2 weeks
-Last updated: 2026-06-04
+Last updated: 2026-07-16
 Parent plan: `docs/planning/mvp-war-room-plan.md`
 Depends on:
 
@@ -84,7 +84,15 @@ Sprint 4 scope decision:
 - Outcome: startup, `/health`, `/api/models`, frontend build, and launch instructions pass on the target beta environment
 - Progress: prepared and locally validated. Non-model release smoke runbook is in
   `docs/testing/clean-machine-release-smoke.md` and aggregate command is `scripts/release_smoke.ps1`.
-  Target clean-machine smoke is still required before tester handoff.
+  Clean-machine installation guide is in `docs/setup/windows-draft-lane-beta-install.md`.
+  An isolated clean-Windows installation and smoke are still required before tester handoff. Because no fresh
+  physical machine is available, a Windows Sandbox run is accepted as Sprint 4 surrogate evidence when it is
+  labeled honestly. Independent physical-machine compatibility remains a residual risk. Record the result in
+  `docs/testing/target-clean-machine-smoke-result-log.md`. The clean-export harness is implemented in
+  `scripts/windows-sandbox/`. The `e829507` package is prepared, but Sandbox app `0.8.107.0` crashes before the
+  bootstrap because `WinRT.Runtime 2.2.0.0` is missing. A post-restart retry reproduced the crash; Windows Settings
+  Repair and Reset also failed to change it. The persistent external blocker now requires an owner accept/reinstall
+  decision.
 
 ### WR4-005 - Finalize beta tester handoff
 
@@ -93,7 +101,8 @@ Sprint 4 scope decision:
 - Outcome: tester-facing limitations and feedback prompts are ready and aligned with the chosen beta scope
 - Progress: complete. Tester-facing handoff is owner-reviewed in
   `docs/testing/draft-lane-beta-tester-handoff.md`, backed by
-  `docs/testing/beta-tester-limitations-handoff.md`. Tester invite remains gated by target clean-machine smoke.
+  `docs/testing/beta-tester-limitations-handoff.md`. Session operation is defined in
+  `docs/testing/draft-lane-beta-session-runbook.md`. Tester invite remains gated by target clean-machine smoke.
 
 ### WR4-006 - Decide WR3-007 pending fixture handling
 
@@ -113,7 +122,8 @@ Sprint 4 scope decision:
 
 ## 6. Recommended Execution Order
 
-1. Run or schedule target clean-machine release smoke before any tester handoff
+1. Owner decides whether to accept the persistent Sandbox blocker for Sprint 4 closure or approve optional-feature
+   reinstallation and restarts; tester handoff remains blocked until that decision is recorded
 2. Owner-review the draft-lane tester handoff copy
 3. Run or record off-box Qwen acceptance only if Qwen-acceptance beta becomes required
 
@@ -123,7 +133,7 @@ Sprint 4 is complete when:
 
 - the beta scope is explicit
 - Qwen acceptance is either recorded off-box or excluded from the beta scope in writing
-- clean-machine setup/run checks pass or have owner-assigned blockers
+- isolated clean-Windows setup/run checks pass or have owner-assigned blockers
 - tester limitations are ready for use
 - release checklist and risk register are reviewable
 - no Sprint 4 work depends on a new engine or new editing surface
