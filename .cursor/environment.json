@@ -1,0 +1,14 @@
+{
+  "name": "AI Image Edit",
+  "install": "bash scripts/cloud_agent_install.sh",
+  "terminals": [
+    {
+      "name": "backend",
+      "command": "bash scripts/cloud_agent_backend.sh"
+    },
+    {
+      "name": "frontend",
+      "command": "cd frontend && npm run dev"
+    }
+  ]
+}
