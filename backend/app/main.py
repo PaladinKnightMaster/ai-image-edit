@@ -18,6 +18,7 @@ from pydantic import BaseModel, ValidationError
 from PIL import Image
 
 from app import config, images as image_store, jobs, ready, logging_utils, model_registry, storage
+from app import hardware as hardware_advisor
 from app.errors import APIError, register_error_handlers
 from inference.base import EditParams, GenerationParams
 from inference.manager import get_manager
@@ -185,6 +186,30 @@ class SystemResponse(BaseModel):
     storage: dict | None = None
 
 
+class HardwareRecommendation(BaseModel):
+    id: str
+    label: str
+    engine: str
+    capabilities: list[str]
+    approx_disk_gb: float
+    verdict: str
+    verdict_label: str
+    reason: str
+    downloadable: bool
+    present: bool
+    setup: str
+    docs: str
+    notes: str
+
+
+class HardwareResponse(BaseModel):
+    hardware: dict
+    models: list[HardwareRecommendation]
+    best_choice: str | None = None
+    best_choice_setup: str | None = None
+    summary: str
+
+
 class ReadyResponse(BaseModel):
     ready: bool
     status: str
@@ -263,6 +288,11 @@ def get_system() -> SystemResponse:
     system = dict(config.SYSTEM_INFO)
     system["storage"] = storage.get_storage_info()
     return system
+
+
+@app.get("/api/hardware", response_model=HardwareResponse)
+def get_hardware() -> HardwareResponse:
+    return hardware_advisor.recommend()
 
 
 @app.post("/api/jobs/t2i", response_model=JobSubmitResponse)
