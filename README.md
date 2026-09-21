@@ -200,12 +200,22 @@ Notes:
 
 ## Offline model mirroring
 
-Mirror the required Qwen models to local disk so the backend can run with the network disabled.
+Mirror models to local disk so the backend can run with the network disabled.
 
-1) `python scripts/mirror_models.py`
-2) Optional revision pinning: `python scripts/mirror_models.py --revision main`
+First, check which models fit your machine (Ollama-style scan + recommendation):
+
+1) `python scripts/scan_machine.py` (or `GET /api/hardware` from the running backend)
+
+Then download a specific model (nothing is auto-downloaded; large Qwen weights are
+preflighted and refused on unsuitable machines unless `--force` is passed):
+
+1) `python scripts/mirror_models.py --list` to see recommendations
+2) `python scripts/mirror_models.py --model qwen-image-2512` to mirror one model
+3) Optional revision pinning: add `--revision main`
+4) Remove later to reclaim disk: `python scripts/remove_model.py --model qwen-image-2512`
 
 This writes to `models/hf/<org>/<name>/<revision>/...` and the backend reads from `MODEL_ROOT`.
+Full command blocks and per-model requirements: `docs/models/download-and-setup.md`.
 
 Smoke-check offline config + model presence (requires `diffusers` installed):
 - `python scripts/smoke_offline_load.py`

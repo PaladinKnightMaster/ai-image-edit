@@ -21,13 +21,23 @@ This document separates three concepts that were previously mixed together:
 
 ## Current mirrored assets
 
-The canonical mirror script only covers Qwen today:
+The mirror script covers the Qwen family and preflights the machine before downloading:
 
 - `scripts/mirror_models.py`
   - `qwen-image-2512`
   - `qwen-image-edit-2511`
 
 FLUX and SDXL OpenVINO use separate provisioning paths and env-driven asset locations.
+
+## Download, hardware fit, and removal
+
+- Full command blocks and per-model requirements: `docs/models/download-and-setup.md`
+- Hardware scan + recommendation (Ollama-style): `python scripts/scan_machine.py`,
+  or `GET /api/hardware` from the running backend (source: `backend/app/hardware.py`)
+- Safe removal to reclaim disk: `python scripts/remove_model.py --model <id>`
+
+Nothing is auto-downloaded. Qwen (~45 GB, ~20B params) is treated as GPU-only / off-box:
+the mirror script refuses to pull it onto an unsuitable machine unless `--force` is given.
 
 ## Lane definitions
 
