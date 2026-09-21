@@ -11,6 +11,7 @@ __pycache__/
 # Models/cache
 models/hf/
 models/cache/
+models/openvino/
 models/flux2_klein_9b_gguf/
 models/flux2_klein_9b_gguf/.downloads/
 
