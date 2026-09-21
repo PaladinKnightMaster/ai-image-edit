@@ -161,7 +161,13 @@ class Runner(abc.ABC):
         signature = inspect.signature(pipe.__call__)
         parameters = signature.parameters
 
-        if "callback_on_step_end" in parameters:
+        # Wrapped pipelines (e.g. Optimum Intel's `__call__(self, *args, **kwargs)`)
+        # hide their real parameters, so assume the modern diffusers callback API.
+        accepts_any_kwarg = any(
+            param.kind is inspect.Parameter.VAR_KEYWORD for param in parameters.values()
+        )
+
+        if "callback_on_step_end" in parameters or accepts_any_kwarg:
             def _callback_on_step_end(
                 _pipe: Any, step: int, _timestep: Any, callback_kwargs: dict[str, Any]
             ) -> dict[str, Any]:
@@ -182,9 +188,26 @@ class Runner(abc.ABC):
         return kwargs
 
     def _apply_memory_optimizations(self, pipe: Any) -> None:
-        if config.ENABLE_ATTENTION_SLICING and hasattr(pipe, "enable_attention_slicing"):
-            pipe.enable_attention_slicing()
-        if config.ENABLE_VAE_SLICING and hasattr(pipe, "enable_vae_slicing"):
-            pipe.enable_vae_slicing()
-        if config.ENABLE_VAE_TILING and hasattr(pipe, "enable_vae_tiling"):
-            pipe.enable_vae_tiling()
+        # Best-effort tuning knobs. Some backends expose the pipeline-level method but
+        # cannot apply it (e.g. OpenVINO's OVModelVae has no enable_slicing), so a
+        # failure here must never block model load.
+        optimizations = (
+            (config.ENABLE_ATTENTION_SLICING, "enable_attention_slicing"),
+            (config.ENABLE_VAE_SLICING, "enable_vae_slicing"),
+            (config.ENABLE_VAE_TILING, "enable_vae_tiling"),
+        )
+        for enabled, method_name in optimizations:
+            if not enabled:
+                continue
+            method = getattr(pipe, method_name, None)
+            if method is None:
+                continue
+            try:
+                method()
+            except (AttributeError, NotImplementedError, ValueError) as exc:
+                logger.info(
+                    "Runner %s: skipping %s (unsupported by backend): %s",
+                    self.id,
+                    method_name,
+                    exc,
+                )

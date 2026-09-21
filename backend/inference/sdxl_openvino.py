@@ -22,7 +22,13 @@ def _filter_kwargs(callable_obj: Any, kwargs: dict[str, Any]) -> dict[str, Any]:
         signature = inspect.signature(callable_obj)
     except (TypeError, ValueError):
         return kwargs
-    valid = set(signature.parameters.keys())
+    parameters = signature.parameters.values()
+    # Optimum Intel wraps its pipelines as `__call__(self, *args, **kwargs)`, so the
+    # real parameters are not introspectable. Filtering against that signature would
+    # drop everything (including `prompt`), so forward kwargs untouched instead.
+    if any(param.kind is inspect.Parameter.VAR_KEYWORD for param in parameters):
+        return kwargs
+    valid = {param.name for param in parameters}
     return {key: value for key, value in kwargs.items() if key in valid}
 
 
