@@ -55,6 +55,7 @@ export function HardwareAdvisorPanel({
   const [download, setDownload] = useState<DownloadStatus | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [showOthers, setShowOthers] = useState(false);
+  const [folderOpen, setFolderOpen] = useState(false);
   const [location, setLocation] = useState<ModelLocation | null>(null);
   const [folderDraft, setFolderDraft] = useState("");
   const [folderError, setFolderError] = useState<string | null>(null);
@@ -243,7 +244,17 @@ export function HardwareAdvisorPanel({
                   : ""}
               </p>
               {location && best.in_app_download ? (
-                <div className="mt-3" data-testid="model-folder-picker">
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    className="text-xs text-slate-500 underline underline-offset-4"
+                    data-testid="toggle-model-folder"
+                    onClick={() => setFolderOpen((open) => !open)}
+                  >
+                    {folderOpen ? "Hide folder" : "Change folder"}
+                  </button>
+                  {folderOpen ? (
+                    <div className="mt-3" data-testid="model-folder-picker">
                   <label className="text-xs font-semibold text-slate-700" htmlFor="model-folder-ready">
                     Model folder
                   </label>
@@ -272,6 +283,8 @@ export function HardwareAdvisorPanel({
                     </button>
                   ) : null}
                   {folderError ? <p className="mt-2 text-xs text-rose-600">{folderError}</p> : null}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               {best.id !== selectedModelId ? (

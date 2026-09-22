@@ -93,6 +93,19 @@ const getAttachmentSlot = (item: AttachmentItem, fallbackIndex = 0): AttachmentR
 const getAttachmentBySlot = (attachments: AttachmentItem[], slot: AttachmentRole) =>
   attachments.find((item, index) => getAttachmentSlot(item, index) === slot);
 
+const presetSwatch = (id: string) => {
+  const swatches = [
+    "bg-rose-200",
+    "bg-amber-200",
+    "bg-sky-200",
+    "bg-emerald-200",
+    "bg-violet-200",
+    "bg-slate-300"
+  ];
+  const index = Math.abs(id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % swatches.length;
+  return swatches[index];
+};
+
 export function ComposerPanel({
   activeDefaults,
   activeModel,
@@ -167,36 +180,29 @@ export function ComposerPanel({
               </span>
             ) : null}
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="flex gap-3 overflow-x-auto pb-2" id="studio-presets">
             {editPresets.map((preset) => {
               const isActive = preset.id === activeEditPresetId;
               return (
                 <button
                   key={preset.id}
                   type="button"
+                  aria-label={`Edit preset ${preset.name}`}
                   onClick={() => onApplyEditPreset(preset)}
-                  className={`rounded-3xl border p-4 text-left transition ${
+                  className={`w-40 shrink-0 rounded-2xl border p-3 text-left transition ${
                     isActive
-                      ? "border-slate-900 bg-slate-900 text-white shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)]"
+                      ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
                   }`}
                 >
-                  <p
-                    className={`text-[10px] uppercase tracking-[0.2em] ${
-                      isActive ? "text-slate-300" : "text-slate-400"
-                    }`}
-                  >
-                    Edit preset
-                  </p>
-                  <h3 className="mt-2 text-sm font-semibold">{preset.name}</h3>
-                  <p className={`mt-2 text-xs leading-relaxed ${isActive ? "text-slate-100" : "text-slate-600"}`}>
-                    {preset.description}
-                  </p>
-                  {preset.note ? (
-                    <p className={`mt-3 text-[11px] leading-relaxed ${isActive ? "text-slate-300" : "text-slate-500"}`}>
-                      {preset.note}
-                    </p>
-                  ) : null}
+                  <span
+                    className={`block h-16 rounded-xl ${presetSwatch(preset.id)}`}
+                    aria-hidden="true"
+                  />
+                  <span className="mt-2 block text-sm font-semibold">{preset.name}</span>
+                  <span className={`mt-1 block text-[10px] uppercase tracking-[0.16em] ${isActive ? "text-slate-300" : "text-slate-500"}`}>
+                    Use
+                  </span>
                 </button>
               );
             })}
@@ -220,7 +226,10 @@ export function ComposerPanel({
           ))}
         </div>
       ) : null}
-      <div className="flex items-start justify-between gap-4">
+      <div
+        id="studio-prompt"
+        className="sticky top-0 z-20 -mx-2 mb-4 flex items-start gap-4 rounded-3xl bg-white/95 px-2 py-3 backdrop-blur"
+      >
         <textarea
           value={prompt}
           onChange={(event) => onPromptChange(event.target.value)}

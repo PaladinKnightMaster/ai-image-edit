@@ -29,6 +29,7 @@ test.describe("chat edit flow (mocked backend)", () => {
     await openChat(page);
 
     await expect(page.getByRole("heading", { name: "Edit Photo" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Setup" }).click();
     await expect(page.getByTestId("hardware-advisor-panel")).toBeVisible();
     await expect(page.getByText(/Best local pick for this machine/i)).toBeVisible();
     await expect(page.getByTestId("hardware-ready")).toBeVisible();
@@ -73,6 +74,7 @@ test.describe("chat edit flow (mocked backend)", () => {
       });
     });
     await page.goto("/chat");
+    await page.getByRole("button", { name: "Setup" }).click();
 
     await expect(page.getByTestId("hardware-setup")).toBeVisible();
     await expect(page.getByTestId("model-folder-picker")).toBeVisible();
