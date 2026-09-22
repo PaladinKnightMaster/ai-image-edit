@@ -14,12 +14,14 @@ considering model replacement.
 
 - Sprint 3: closed
 - Sprint 4: residual accepted — Windows Sandbox host blocker is not a Sprint 5 gate; no clean-machine pass claimed
-- Sprint 5: **active** — P0s closed; Temporal deferred (ADR 0007); Next.js 15 landed; WR5-010 remains off-box
+- Sprint 5 reliability: **closed** for P0s; Temporal deferred (ADR 0007); Next.js 15 landed (PR #14)
+- Studio UX: **active** — pinned prompt, preset row, Library gallery, collapsible rail (PR #17)
 
 ## Locked Decisions
 
 - no local GPU or hosted-GPU dependency is planned
 - **local mainline model: `sdxl-openvino`** (t2i + edit)
+- the product surface is a private studio, not a model dashboard: prompt and gallery stay visible; Setup and Utilities open from the rail
 - FLUX GGUF remains optional slow advanced draft (historical draft evidence; not the daily default)
 - Qwen 2512 / Edit 2511 remain GPU / off-box frontier (not daily driver)
 - **Qwen-Image-2.1** is a catalogued frontier *candidate* only — no download/runner until gated evaluation
@@ -48,15 +50,14 @@ Decision sources:
   (`WinRT.Runtime 2.2.0.0`; restarted / Repair / Reset retries failed identically)
 - clean isolated Windows result is not recorded
 - local Qwen Edit remains blocked / off-box
-- Sprint 5 landed: WR5-003–008 (Playwright flows, SSE reconcile, attempts, cancel/retry, restart recovery,
-  CPU/UI baseline). WR5-002 verified: pinned Diffusers SHA, `backend/constraints.txt`, two matching resolves,
-  Docker non-model `/health` + startup unittest.
+- Sprint 5 reliability landed: WR5-002–008. WR5-009 deferred in ADR 0007. Next.js 15.5.25 + React 19 landed in PR #14.
+- Guided local setup landed in PR #16: confirm `models/openvino/sdxl_base` once; `SDXL_OV_BASE_DIR` locks the folder.
+- Studio layout landed in PR #17: pinned prompt, preset row, Library gallery, collapsible Setup / Utilities rail.
 
 ## Immediate Next Action
 
-1. WR5-010 gated Qwen-Image-2.1 eval off-box only, when a GPU or off-box machine is available
-2. Or Next.js 16 as a later increment when ready
-3. Do not treat Windows Sandbox as a gate, do not download Qwen-Image-2.1 as the CPU default, and do not install Temporal
+1. Replace color preset tiles with a real result thumbnail per portrait preset
+2. WR5-010 stays off-box. Next.js 16 stays later. Do not treat Windows Sandbox as a gate, do not download Qwen-Image-2.1 as the CPU default, and do not install Temporal
 
 ## Then
 

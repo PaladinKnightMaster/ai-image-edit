@@ -1,9 +1,9 @@
 # Sprint 5 Outline
 
-Status: Planned; starts after Sprint 4 isolated clean-environment evidence is recorded
+Status: Reliability track closed or deferred (2026-09-22). Follow-on work is the private studio, tracked in `docs/planning/strategy-checkpoint.md`.
 Sprint name: Sprint 5 - CPU Reliability, Reproducibility, And Durable Workflows
 Duration: 2 to 3 weeks
-Last updated: 2026-07-16
+Last updated: 2026-09-22
 Parent strategy: `docs/planning/strategy-checkpoint.md`
 Decision inputs:
 

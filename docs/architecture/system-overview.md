@@ -1,7 +1,7 @@
 # System Overview
 
 Status: Active
-Last updated: 2026-07-16
+Last updated: 2026-09-22
 Owner: Tech Lead
 
 ## Purpose
@@ -28,9 +28,12 @@ flowchart LR
 
 ## Current Product Surface
 
-- `/chat` is the primary product route
-- the UI exposes explicit `Edit Photo` and `Create from Scratch` modes
-- editing supports one base image and one optional reference image
+- `/chat` is the primary product route and the private studio
+- the prompt and Run edit stay pinned; portrait presets are a visual row; recent runs are the Library gallery
+- a collapsible rail opens Setup (Hardware fit, model folder) and Utilities (runtime, models, cleanup)
+- the UI exposes explicit `Edit Photo` and `Create from Scratch` modes in the studio header
+- editing supports one base image and one optional reference image when the selected model allows it
+- SDXL OpenVINO currently edits one base image only
 - successful outputs support compare, download, history, and reuse
 - manual-review lanes stop at `pending_review` until explicit reveal
 - `/arena` remains a secondary diagnostics surface

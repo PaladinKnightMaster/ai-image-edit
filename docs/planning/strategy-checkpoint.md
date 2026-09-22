@@ -1,12 +1,13 @@
 # Project Strategy Checkpoint
 
-Status: Locked
+Status: Locked, with a 2026-09-22 studio amendment
 Date: 2026-07-16
 Owners: War Room Center / Commander + Tech Lead
 Decision ADRs:
 
 - `docs/adr/0005-cpu-first-product-and-validation-strategy.md`
 - `docs/adr/0006-durable-job-orchestration.md`
+- `docs/adr/0007-defer-temporal.md`
 
 ## Final Decision
 
@@ -36,8 +37,7 @@ The project will improve quality in this order:
 
 ## Backend + UI Improvement Status (2026-09-22)
 
-The quality order above is **not complete**. Completed adjacent product work (OpenVINO lane + hardware UI)
-does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/context/current-state.md`.
+Sprint 5 reliability work is closed or deferred. The active roadmap is the private studio, not another runtime.
 
 | Strategy step | Status |
 | --- | --- |
@@ -47,7 +47,18 @@ does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/co
 | 4. Durable attempts / cancel / retry / restart | Done (WR5-005–007, PRs #8, #9, #11) |
 | 5. CPU + UI performance baseline | Done (WR5-008); report in `docs/planning/cpu-ui-performance-baseline.md` |
 | 6. Optional Temporal spike | Deferred — ADR 0007; no Temporal install |
-| 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1) |
+| 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1); off-box only |
+| 8. Private studio surface | Active — PR #16 folder confirmation, PR #17 rail + gallery. Next: real preset thumbnails |
+
+## Studio Amendment (2026-09-22)
+
+The daily screen follows online create pages and prompt galleries, adapted for one local user.
+
+- pin the prompt and Run edit
+- show portrait presets as a visual library
+- show recent runs as the private gallery
+- keep Hardware fit, model folder, runtime stats, and the model list inside a collapsible rail
+- do not add a public Explore feed, a top mode menu, or a second models column
 
 ## Validation Decision
 
@@ -59,8 +70,8 @@ does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/co
 
 ## Scope Decision
 
-The next implementation sprint improves the existing product. It does not add masking, batch editing, mobile,
-hosted GPU, new engine families, or a broad model zoo.
+The next implementation work improves the studio on the existing CPU runtime. It does not add masking, batch
+editing, a mobile app, hosted GPU, new engine families, or a broad model zoo.
 
 ## Definition Of Success
 
