@@ -89,10 +89,10 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
 | WR5-003 | Playwright frontend flow-test foundation | Done (mocked flows: roles, progress, reveal, compare, retry, reconnect) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
-| WR5-005 | Durable attempt schema / orchestration boundary | In progress |
+| WR5-005 | Durable attempt schema / orchestration boundary | Done (PR #8) |
 | WR5-006 | Cancellation and bounded retry | Done (PR #9) |
-| WR5-007 | Restart recovery | In progress |
-| WR5-008 | CPU and UI performance baseline | Not started (small OpenVINO progress polish in this PR) |
+| WR5-007 | Restart recovery | Done (PR #11) |
+| WR5-008 | CPU and UI performance baseline | Done — see `docs/planning/cpu-ui-performance-baseline.md` |
 | WR5-009 | Optional Temporal spike | Not started |
 | WR5-010 | Model candidate review (incl. Qwen-Image-2.1) | Candidate noted only |
 
@@ -115,7 +115,7 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. After restart recovery (WR5-007) merges, record the CPU and UI performance baseline (WR5-008).
+1. Next open reliability item is WR5-002, the reproducible dependency baseline. Temporal remains optional.
 2. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule
