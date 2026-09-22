@@ -133,53 +133,130 @@ def init_jobs() -> None:
     if _WORKERS_STARTED:
         return
     db.init_db()
-    recover_interrupted_jobs()
+    recovered = recover_interrupted_jobs()
     if config.INFERENCE_MODE == "local":
         _start_workers()
+        for job_id in recovered["requeue_ids"]:
+            _JOB_QUEUE.put(job_id)
+    else:
+        for job_id in recovered["requeue_ids"]:
+            try:
+                _dispatch_to_worker(job_id)
+            except Exception as exc:
+                _mark_job_failed(job_id, str(exc))
     _WORKERS_STARTED = True
 
 
-def recover_interrupted_jobs() -> dict[str, int]:
-    now = _now_ms()
-    with db.get_connection() as conn:
-        running_rows = conn.execute(
-            "SELECT id FROM jobs WHERE status = ?",
-            ("running",),
-        ).fetchall()
-        queued_rows = conn.execute(
-            "SELECT id FROM jobs WHERE status = ?",
-            ("queued",),
-        ).fetchall()
-        conn.execute(
-            """
-            UPDATE jobs
-            SET status = ?, finished_at = ?, error = ?, stage = ?, last_activity_at = ?
-            WHERE status IN (?, ?)
-            """,
-            ("failed", now, "server restarted", "failed", now, "running", "queued"),
-        )
-        conn.commit()
+def recover_interrupted_jobs() -> dict[str, Any]:
+    """Requeue durable work after process start. Terminal jobs stay terminal.
 
-    recovered = {
-        "queued": len(queued_rows),
-        "running": len(running_rows),
-        "marked_failed": len(running_rows) + len(queued_rows),
-    }
+    Queued and retry-wait jobs are put back on the queue. A running attempt is
+    closed as interrupted and retried once. A second restart of that job fails it.
+    """
     from app import orchestration
 
-    for row in list(running_rows) + list(queued_rows):
-        orchestration.finish_open_attempts(
-            row["id"],
-            status="failed",
+    now = _now_ms()
+    requeue_ids: list[str] = []
+    interrupted = 0
+    marked_failed = 0
+    with db.get_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, status, cancel_requested
+            FROM jobs
+            WHERE status IN ('queued', 'retry_wait', 'running', 'cancel_requested')
+            """
+        ).fetchall()
+
+    for row in rows:
+        job_id = row["id"]
+        status = row["status"]
+        if status == "cancel_requested" or row["cancel_requested"]:
+            with db.get_connection() as conn:
+                conn.execute(
+                    """
+                    UPDATE jobs
+                    SET status = ?, cancel_requested = 1, finished_at = ?, error = ?,
+                        stage = ?, last_activity_at = ?
+                    WHERE id = ?
+                    """,
+                    ("cancelled", now, "cancelled", "cancelled", now, job_id),
+                )
+                conn.commit()
+            orchestration.finish_open_attempts(
+                job_id,
+                status="cancelled",
+                failure_type="user_cancel",
+                retryable=False,
+            )
+            continue
+        if status in {"queued", "retry_wait"}:
+            with db.get_connection() as conn:
+                conn.execute(
+                    """
+                    UPDATE jobs
+                    SET status = ?, stage = ?, error = NULL, finished_at = NULL,
+                        last_activity_at = ?
+                    WHERE id = ?
+                    """,
+                    ("queued", "queued", now, job_id),
+                )
+                conn.commit()
+            requeue_ids.append(job_id)
+            continue
+
+        can_retry = orchestration.auto_retry_budget_used(job_id) < orchestration.MAX_AUTO_RETRIES
+        closed = orchestration.finish_open_attempts(
+            job_id,
+            status="interrupted",
             failure_type="process_restart",
-            retryable=False,
-            message="server restarted",
+            retryable=can_retry,
         )
-    if running_rows or queued_rows:
+        if closed == 0:
+            attempt = orchestration.begin_attempt(job_id)
+            orchestration.finish_attempt(
+                attempt["id"],
+                status="interrupted",
+                failure_type="process_restart",
+                retryable=can_retry,
+                exit_code=1,
+            )
+        interrupted += 1
+        with db.get_connection() as conn:
+            if can_retry:
+                conn.execute(
+                    """
+                    UPDATE jobs
+                    SET status = ?, stage = ?, error = NULL, finished_at = NULL,
+                        last_activity_at = ?
+                    WHERE id = ?
+                    """,
+                    ("queued", "queued", now, job_id),
+                )
+                requeue_ids.append(job_id)
+            else:
+                conn.execute(
+                    """
+                    UPDATE jobs
+                    SET status = ?, finished_at = ?, error = ?, stage = ?, last_activity_at = ?
+                    WHERE id = ?
+                    """,
+                    ("failed", now, "server restarted", "failed", now, job_id),
+                )
+                marked_failed += 1
+            conn.commit()
+
+    recovered = {
+        "requeued": len(requeue_ids),
+        "interrupted": interrupted,
+        "marked_failed": marked_failed,
+        "requeue_ids": requeue_ids,
+    }
+    if rows:
         logging_utils.log_event(
             "job_recovery",
-            recovered_queued=recovered["queued"],
-            recovered_running=recovered["running"],
+            requeued=recovered["requeued"],
+            interrupted=recovered["interrupted"],
             marked_failed=recovered["marked_failed"],
         )
     return recovered

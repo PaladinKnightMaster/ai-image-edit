@@ -90,8 +90,8 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | WR5-003 | Playwright frontend flow-test foundation | Done (mocked flows: roles, progress, reveal, compare, retry, reconnect) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
 | WR5-005 | Durable attempt schema / orchestration boundary | In progress |
-| WR5-006 | Cancellation and bounded retry | In progress (persisted cancel, one auto-retry, manual retry) |
-| WR5-007 | Restart recovery | Not started |
+| WR5-006 | Cancellation and bounded retry | Done (PR #9) |
+| WR5-007 | Restart recovery | In progress |
 | WR5-008 | CPU and UI performance baseline | Not started (small OpenVINO progress polish in this PR) |
 | WR5-009 | Optional Temporal spike | Not started |
 | WR5-010 | Model candidate review (incl. Qwen-Image-2.1) | Candidate noted only |
@@ -108,7 +108,7 @@ they do not close Sprint 5 reliability tickets.
 | Local Qwen Edit native crash / GPU requirement | Open, off-box | Do not force local acceptance; keep packet ready; 2.1 is candidate only. |
 | Frontend flow coverage is partial | Closed for primary mocked flows | Extend only if a new product path lands. |
 | EventSource transport loss confused with job failure | Mitigated (PR #6) | Keep covered by Playwright reconnect cases in WR5-003. |
-| Queued/running work is failed on restart | Known limitation | WR5-005–007 attempts, leases, cancel, retry, recovery. |
+| Queued/running work is failed on restart | Mitigated | Queued work is requeued. A running attempt retries once, then fails. |
 | Python dependencies are not reproducibly pinned | Open | WR5-002 constraints/lock + Diffusers revision pin. |
 | Next.js 14 is outside current support | Open | Protect flows first (WR5-003), then upgrade incrementally. |
 | No independent physical tester machine | Accepted residual risk | Retain honest environment labels. |
