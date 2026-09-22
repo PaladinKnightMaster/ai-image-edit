@@ -44,7 +44,7 @@ does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/co
 | 1. Clean-environment validation | Accepted residual — Sandbox host blocker; not a Sprint 5 gate |
 | 2. Automated product-flow coverage | Done for primary mocked flows (WR5-003) |
 | 3. Job transport / SSE reconciliation | Done (WR5-004 / PR #6) |
-| 4. Durable attempts / cancel / retry / restart | WR5-005 done (PR #8); WR5-006 in progress; WR5-007 not started |
+| 4. Durable attempts / cancel / retry / restart | WR5-005–006 done; WR5-007 in progress |
 | 5. CPU + UI performance baseline | Not started (WR5-008); small OpenVINO progress polish in WR5-004 PR |
 | 6. Optional Temporal spike | Not started |
 | 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1) |

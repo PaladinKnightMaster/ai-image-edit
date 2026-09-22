@@ -59,7 +59,7 @@ def auto_retry_budget_used(job_id: str) -> int:
     return sum(
         1
         for attempt in list_attempts(job_id)
-        if attempt["status"] == "failed" and attempt["retryable"]
+        if attempt["retryable"] and attempt["status"] in {"failed", "interrupted"}
     )
 
 
