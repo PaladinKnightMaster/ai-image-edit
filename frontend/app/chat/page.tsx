@@ -946,6 +946,9 @@ export default function ChatPage() {
       }
       const data = await response.json();
       const terminal = TERMINAL_JOB_STATUSES.has(data.status);
+      if (terminal) {
+        dropPendingProgress(jobId);
+      }
       updateMessageByJob(jobId, {
         status: data.status,
         run: data.run,
@@ -980,7 +983,7 @@ export default function ChatPage() {
     } catch {
       return null;
     }
-  }, [backendUrl, loadRuns, updateMessageByJob]);
+  }, [backendUrl, dropPendingProgress, loadRuns, updateMessageByJob]);
 
   const clearStreamReconnect = useCallback((jobId: string) => {
     streamReconnectAttempts.current.delete(jobId);
@@ -1057,6 +1060,9 @@ export default function ChatPage() {
         }
         clearStreamReconnect(jobId);
         streamReconnectAttempts.current.delete(jobId);
+        if (TERMINAL_JOB_STATUSES.has(payload.status)) {
+          dropPendingProgress(jobId);
+        }
         updateMessageByJob(jobId, patch);
       });
       source.addEventListener("stage", (event) => {
@@ -1130,6 +1136,7 @@ export default function ChatPage() {
           try {
             const payload = JSON.parse(messageEvent.data);
             clearStreamReconnect(jobId);
+            dropPendingProgress(jobId);
             updateMessageByJob(jobId, {
               status: "failed",
               error: payload.message,
