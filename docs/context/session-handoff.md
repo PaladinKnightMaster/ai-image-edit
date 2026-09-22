@@ -52,8 +52,8 @@ Decision sources:
 
 ## Immediate Next Action
 
-1. Finish and merge WR5-004 (SSE reconciliation) — transport disconnect must not mark jobs failed
-2. Continue Sprint 5 P0 order: WR5-003 Playwright → WR5-005 durable attempts → WR5-006 cancel/retry → WR5-007 restart
+1. **WR5-003** — Playwright flow-test foundation (edit, progress, reveal, compare, reconnect)
+2. then WR5-005 → WR5-006 → WR5-007 durable attempts, cancel/retry, restart recovery
 3. Parallel: owner disposition for WR5-001 Sandbox blocker (accept residual vs reinstall) — do not claim smoke pass
 
 ## Then

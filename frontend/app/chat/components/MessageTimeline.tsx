@@ -122,6 +122,9 @@ export function MessageTimeline({
                     ? "border-slate-900 bg-slate-900 text-white"
                     : "border-slate-200/70 bg-white text-slate-800"
                 }`}
+                data-testid={
+                  !isUser && message.jobId ? `assistant-job-${message.jobId}` : undefined
+                }
               >
                 {isUser ? (
                   <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-slate-300">
@@ -162,7 +165,13 @@ export function MessageTimeline({
                 {!isUser ? (
                   <div className="mt-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                      <span>Status: {statusLabel}</span>
+                      <span
+                        data-testid={
+                          message.jobId ? `assistant-job-status-${message.jobId}` : undefined
+                        }
+                      >
+                        Status: {statusLabel}
+                      </span>
                       {stageLabel ? <span>Stage: {stageLabel}</span> : null}
                       {typeof message.stageElapsedMs === "number" ? (
                         <span>Elapsed: {formatDuration(message.stageElapsedMs)}</span>

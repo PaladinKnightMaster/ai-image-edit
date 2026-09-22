@@ -77,6 +77,8 @@ No model run is needed for the entry gate.
 - Work: add Playwright coverage using a deterministic non-model backend fixture or API interception
 - Required flows: edit mode, base/reference roles, job progress, pending review, reveal, compare, download/reuse,
   retry command, and transport disconnect recovery
+- Progress (2026-09-22): Playwright + Chromium installed; `npm run test:e2e` runs mocked `/chat` smoke
+  (hardware panel, base-required, library base → edit success). Remaining flows still to add.
 - Done when: primary flows pass from one documented command and failure traces are retained
 
 ### WR5-004 - Job stream reconciliation
@@ -85,8 +87,8 @@ No model run is needed for the entry gate.
 - Owner: Frontend + Backend
 - Work: separate server job-error events from EventSource transport errors; on disconnect, query persisted job
   state and reconnect with bounded backoff
-- Progress (2026-09-22): `/chat` no longer marks jobs failed on transport disconnect; reconciles via
-  `GET /api/jobs/{id}` and reconnects with exponential backoff (max 8 attempts)
+- Progress (2026-09-22): Done in PR #6 — `/chat` reconciles via `GET /api/jobs/{id}` and reconnects with
+  exponential backoff; messages effect cannot bypass reconnect ownership
 - Done when: a transient stream disconnect cannot mark an active or completed job failed without backend evidence
 
 ### WR5-005 - Durable attempt schema and orchestration boundary

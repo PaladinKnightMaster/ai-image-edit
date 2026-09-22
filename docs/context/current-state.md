@@ -87,8 +87,8 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | --- | --- | --- |
 | WR5-001 | Isolated Windows smoke / owner blocker disposition | Open residual |
 | WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
-| WR5-003 | Playwright frontend flow-test foundation | Not started |
-| WR5-004 | EventSource / job-stream reconciliation | In progress (this PR) |
+| WR5-003 | Playwright frontend flow-test foundation | In progress (mocked smoke suite) |
+| WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
 | WR5-005 | Durable attempt schema / orchestration boundary | Not started |
 | WR5-006 | Cancellation and bounded retry | Not started |
 | WR5-007 | Restart recovery | Not started |
@@ -107,7 +107,7 @@ they do not close Sprint 5 reliability tickets.
 | Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Reproduced after restart, Repair, Reset | Keep claiming no clean-machine pass; tester handoff stays blocked until disposition. |
 | Local Qwen Edit native crash / GPU requirement | Open, off-box | Do not force local acceptance; keep packet ready; 2.1 is candidate only. |
 | Frontend has no automated flow suite | Open | WR5-003 Playwright after stream reconciliation lands. |
-| EventSource transport loss confused with job failure | In progress | WR5-004: reconcile via `GET /api/jobs` + bounded reconnect (this PR). |
+| EventSource transport loss confused with job failure | Mitigated (PR #6) | Keep covered by Playwright reconnect cases in WR5-003. |
 | Queued/running work is failed on restart | Known limitation | WR5-005–007 attempts, leases, cancel, retry, recovery. |
 | Python dependencies are not reproducibly pinned | Open | WR5-002 constraints/lock + Diffusers revision pin. |
 | Next.js 14 is outside current support | Open | Protect flows first (WR5-003), then upgrade incrementally. |
@@ -115,9 +115,10 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. Land WR5-004 (SSE reconciliation) via current PR, then continue Sprint 5 P0s: WR5-003 → WR5-005 → WR5-006 → WR5-007.
-2. Keep WR5-001 Sandbox disposition as a parallel owner decision — do not claim clean-machine compatibility.
-3. Do not download or register Qwen-Image-2.1 on this CPU box as a product default.
+1. Start WR5-003 Playwright frontend flow-test foundation (edit mode, progress, reveal, compare, reconnect).
+2. Then WR5-005 → WR5-006 → WR5-007 durable attempts, cancel/retry, restart recovery.
+3. Keep WR5-001 Sandbox disposition as a parallel owner decision — do not claim clean-machine compatibility.
+4. Do not download or register Qwen-Image-2.1 on this CPU box as a product default.
 
 ## Heavy-Run Rule
 
