@@ -14,7 +14,7 @@ considering model replacement.
 
 - Sprint 3: closed
 - Sprint 4: residual accepted — Windows Sandbox host blocker is not a Sprint 5 gate; no clean-machine pass claimed
-- Sprint 5: **active** — P0s closed; Next.js 15.5.25 + React 19 landed (PR #14); Next 16 deferred
+- Sprint 5: **active** — P0s closed; Temporal deferred (ADR 0007); Next.js 15 landed; WR5-010 remains off-box
 
 ## Locked Decisions
 
@@ -26,7 +26,7 @@ considering model replacement.
 - Windows Sandbox remains the preferred clean-Windows surrogate when the host feature works
 - Docker/WSL2 is for repeatable non-model validation, not Windows acceptance
 - local SQLite orchestration remains the default
-- Temporal is optional and must start as a non-model learning spike
+- Temporal is deferred by ADR 0007; do not install it for this product
 - Saga compensation is limited to partial side effects
 - browser Service Workers do not own inference or durable jobs
 - all heavy model runs require explicit approval
@@ -54,13 +54,12 @@ Decision sources:
 
 ## Immediate Next Action
 
-1. Optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 eval off-box only
+1. WR5-010 gated Qwen-Image-2.1 eval off-box only, when a GPU or off-box machine is available
 2. Or Next.js 16 as a later increment when ready
-3. Do not treat Windows Sandbox as a gate and do not download Qwen-Image-2.1 as the CPU default
+3. Do not treat Windows Sandbox as a gate, do not download Qwen-Image-2.1 as the CPU default, and do not install Temporal
 
 ## Then
 
-- optional WR5-009 Temporal spike
 - WR5-010 evaluate Qwen-Image-2.1 only off-box/GPU with fixtures — never as CPU mainline replacement
 
 ## Key Risks

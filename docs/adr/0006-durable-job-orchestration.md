@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-07-16
 - Owners: Backend Architect + Tech Lead
+- Temporal follow-up: deferred by `docs/adr/0007-defer-temporal.md` (2026-09-22)
 
 ## Context
 
@@ -105,6 +106,8 @@ manual-review signal, and idempotent output commit.
 
 Temporal must not become the default runtime until it demonstrates enough value to justify an additional local
 service and packaging dependency.
+
+ADR 0007 defers that spike. The local contract already covers the proofs, so Temporal is not installed.
 
 ## Frontend And Service Worker Boundary
 

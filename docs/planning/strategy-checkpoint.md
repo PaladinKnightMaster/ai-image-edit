@@ -20,7 +20,7 @@ The project will improve quality in this order:
 3. trustworthy job transport and status reconciliation
 4. durable attempts, cancellation, bounded retry, and restart recovery
 5. CPU performance measurement and UI responsiveness
-6. optional Temporal learning spike
+6. Temporal deferred (ADR 0007)
 7. benchmark-driven model evaluation
 
 ## Runtime Decision
@@ -31,7 +31,7 @@ The project will improve quality in this order:
 - intended frontier edit acceptance: `qwen-image-edit-2511` (and eventually Qwen-Image-2.1 if evidence
   supports replacement), off-box / GPU only
 - Qwen-Image-2.1 is a catalogued candidate only — not downloaded, not registered, not a release dependency
-- experimental orchestration: Temporal, non-model first and optional
+- experimental orchestration: Temporal deferred by ADR 0007
 - selective pattern: Saga compensation for partial side effects only
 
 ## Backend + UI Improvement Status (2026-09-22)
@@ -46,7 +46,7 @@ does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/co
 | 3. Job transport / SSE reconciliation | Done (WR5-004 / PR #6) |
 | 4. Durable attempts / cancel / retry / restart | Done (WR5-005–007, PRs #8, #9, #11) |
 | 5. CPU + UI performance baseline | Done (WR5-008); report in `docs/planning/cpu-ui-performance-baseline.md` |
-| 6. Optional Temporal spike | Not started |
+| 6. Optional Temporal spike | Deferred — ADR 0007; no Temporal install |
 | 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1) |
 
 ## Validation Decision

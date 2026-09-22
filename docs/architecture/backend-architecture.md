@@ -81,7 +81,7 @@ Publishes presentation-independent state changes. Transport loss must not mutate
 - default: SQLite-backed local orchestrator
 - experimental: Temporal adapter using the same orchestration contract
 
-Temporal begins with fake activities and must not become a release dependency without an ADR follow-up.
+Temporal is deferred by ADR 0007. Do not add it as a release dependency.
 
 ## Safety Rules
 

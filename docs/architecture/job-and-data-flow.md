@@ -90,6 +90,9 @@ partial metadata write. It must not delete user uploads or previously committed 
 
 ## Temporal Learning Flow
 
+Deferred by `docs/adr/0007-defer-temporal.md`. Do not add a Temporal server or SDK. The optional adapter described
+below is historical target text only.
+
 The optional Temporal adapter first models a fake attempt Activity. It uses heartbeat, cancellation, retry,
 worker/service restart, a review signal, and idempotent result commit. Image bytes remain in the filesystem; only
 small identifiers and metadata belong in workflow history.

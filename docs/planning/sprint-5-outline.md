@@ -36,7 +36,7 @@ No model run is needed for the entry gate.
 - SSE disconnect and job-status reconciliation
 - durable job attempts, leases, cancellation, retry, and restart recovery
 - CPU performance and UI responsiveness measurements
-- optional non-model Temporal learning spike
+- Temporal deferred by ADR 0007; no Temporal install
 - documentation and architecture consistency
 
 ## 4. Out Of Scope
@@ -145,7 +145,10 @@ No model run is needed for the entry gate.
 - Work: optional local Temporal dev-server experiment using fake long-running activities only
 - Required proofs: heartbeat, cancel, retry, worker restart, service restart, pending-review signal, idempotent output
   commit, and comparison with `LocalSqliteOrchestrator`
+- Progress (2026-09-22): deferred without a spike. ADR 0007 records that the SQLite contract already covers
+  those proofs for this single-machine product.
 - Done when: an ADR follow-up records adopt, defer, or reject; Temporal remains optional until then
+  (**met**: defer, `docs/adr/0007-defer-temporal.md`)
 
 ### WR5-010 - Model candidate review
 
@@ -192,6 +195,7 @@ Every implementation slice should prefer:
 - attempts and failure classes are durable and inspectable
 - CPU performance fields and baseline are documented
 - Temporal has an evidence-based adopt/defer/reject result if the optional spike is run
+  (**met**: deferred in ADR 0007)
 - no local GPU dependency was introduced
 
 ## 9. Risks
