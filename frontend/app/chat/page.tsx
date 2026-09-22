@@ -1963,9 +1963,11 @@ export default function ChatPage() {
           <HardwareAdvisorPanel
             advice={hardwareAdvice}
             selectedModelId={selectedModelId}
+            backendUrl={backendUrl}
             onSelectModel={setSelectedModelId}
             onRefresh={() => {
               void loadHardware();
+              void loadModels();
             }}
           />
 

@@ -10,7 +10,7 @@ Owner: Tech Lead
 - base and optional reference-image roles are explicit
 - portrait presets, generated-image-to-edit handoff, before/after compare, history, download, and reuse exist
 - pending-review outputs require explicit reveal before normal reuse
-- `/chat` sidebar includes a **Hardware fit** panel backed by `GET /api/hardware`
+- `/chat` sidebar **Hardware fit** suggests `models/openvino/sdxl_base`, asks once to confirm or change that folder, and saves the choice. `SDXL_OV_BASE_DIR` overrides the setting. Only that recommended model can be downloaded in-app.
 - the frontend is componentized but `frontend/app/chat/page.tsx` still owns substantial API, persistence, and
   EventSource orchestration (stream disconnect reconciles via the job API)
 - backend jobs, runs, and images persist in SQLite plus filesystem storage

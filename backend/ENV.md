@@ -117,7 +117,7 @@ Windows default:
 
 These expect pre-exported OpenVINO IR folders for SDXL base/refiner.
 
-- `SDXL_OV_BASE_DIR` path to SDXL base OpenVINO IR (default `models/openvino/sdxl_base`).
+- `SDXL_OV_BASE_DIR` path to SDXL base OpenVINO IR. When this variable is set, it wins over the in-app model folder. When it is unset, the app suggests `models/openvino/sdxl_base` and stores a confirmed folder in `data/model_location.json`.
 - `SDXL_OV_REFINER_DIR` path to SDXL refiner OpenVINO IR (default `models/openvino/sdxl_refiner`).
 - `SDXL_OV_DEVICE` OpenVINO device name (default `CPU`).
 - `SDXL_OV_COMPILE` set `0` to skip OpenVINO compile step (default `1`).

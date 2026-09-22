@@ -28,6 +28,7 @@ export type HardwareModelAdvice = {
   verdict_label: string;
   reason: string;
   downloadable: boolean;
+  in_app_download?: boolean;
   present: boolean;
   setup: string;
   docs: string;
