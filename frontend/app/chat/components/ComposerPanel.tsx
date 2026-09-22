@@ -288,6 +288,7 @@ export function ComposerPanel({
               return (
                 <div
                   key={slotCard.slot}
+                  data-testid={`input-slot-${slotCard.slot}`}
                   className={`rounded-2xl border p-4 ${
                     slotCard.slot === "reference" && !referenceEnabled
                       ? "border-slate-200/70 bg-slate-50/70"
