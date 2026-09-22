@@ -98,6 +98,11 @@ Frontier quality, but ~20B parameters. The current diffusers runtime loads fp32 
 so these are **GPU-only / off-box** in practice. The mirror script preflights your machine
 and refuses to download them on a CPU-only box unless you pass `--force`.
 
+**Candidate (not downloadable via scripts yet):** [Qwen-Image-2.1](https://huggingface.co/Qwen/Qwen-Image-2.1)
+(~7B visual, unified gen+edit). Catalogued as a possible successor to 2512/Edit 2511 for the
+off-box lane only — see `docs/models/model-catalog.md`. Do **not** replace the local OpenVINO
+mainline with 2.1 or its community GGUF on this CPU box without a gated evaluation.
+
 ```bash
 # See what fits before downloading
 python scripts/mirror_models.py --list

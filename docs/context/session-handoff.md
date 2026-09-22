@@ -1,7 +1,7 @@
 # Session Handoff
 
 Status: Active
-Last updated: 2026-07-16
+Last updated: 2026-09-22
 Owner: War Room Center / Commander
 
 ## Recovered Objective
@@ -13,19 +13,21 @@ considering model replacement.
 ## Current Phase
 
 - Sprint 3: closed
-- Sprint 4: active until isolated clean-Windows smoke evidence or an owner-accepted blocker is recorded
-- Sprint 5: planned as CPU reliability, reproducibility, and durable-workflow hardening
+- Sprint 4: open residual — Windows Sandbox host blocker (`WinRT.Runtime`) still unresolved; product work
+  continued without claiming clean-machine smoke pass
+- OpenVINO mainline: shipped (PRs #3–#5) — SDXL OpenVINO is primary local t2i + edit; hardware advisor in UI
+- Sprint 5: **active focus** — Backend + UI reliability (stream reconciliation → durable jobs → cancel/retry)
 
 ## Locked Decisions
 
 - no local GPU or hosted-GPU dependency is planned
-- Windows Sandbox is the clean-Windows surrogate because no fresh machine is available
-- Docker/WSL2 is for repeatable non-model validation, not Windows acceptance
+- **local mainline model: `sdxl-openvino`** (t2i + edit)
+- FLUX GGUF remains optional slow advanced draft
+- Qwen 2512 / Edit 2511 remain GPU / off-box frontier (not daily driver)
+- **Qwen-Image-2.1** is a catalogued frontier *candidate* only — no download/runner until gated evaluation
+- Windows Sandbox remains the preferred clean-Windows surrogate when the host feature works
 - local SQLite orchestration remains the default
 - Temporal is optional and must start as a non-model learning spike
-- Saga compensation is limited to partial side effects
-- browser Service Workers do not own inference or durable jobs
-- FLUX 9B remains local draft evidence; Qwen Edit acceptance remains off-box
 - all heavy model runs require explicit approval
 
 Decision sources:
@@ -33,54 +35,39 @@ Decision sources:
 - `docs/planning/strategy-checkpoint.md`
 - `docs/adr/0005-cpu-first-product-and-validation-strategy.md`
 - `docs/adr/0006-durable-job-orchestration.md`
+- `docs/models/model-catalog.md`
 
 ## Current Evidence
 
-- one approved FLUX CPU edit reached `pending_review` in 2387 seconds
-- non-model reveal/reuse and restart-classification tests exist
-- current-workstation backend smoke, frontend lint, typecheck, and build passed
-- Windows Sandbox clean-export/install/evidence harness and immutable `e829507` package are prepared
-- Sandbox app 0.8.107.0 crashes before bootstrap because `WinRT.Runtime 2.2.0.0` is missing; no mapped result exists
-- the 2026-07-17 retry after host restart reproduced the identical crash
-- the 2026-07-17 retry after Windows Settings Repair also reproduced the identical crash
-- the 2026-07-17 retry after Windows Settings Reset also reproduced the identical crash
-- current frontend lint, typecheck, and build pass; the fallback host Python correctly blocks backend smoke because
-  Pillow is absent
-- clean isolated Windows result is not yet recorded
-- local Qwen Edit remains blocked by a reproducible native crash
+- SDXL OpenVINO edit verified in-app (~37s Natural Skin Retouch from library base on i7-14700 CPU)
+- Hardware fit panel live via `GET /api/hardware` (PR #5)
+- one approved FLUX CPU edit reached `pending_review` in 2387 seconds (historical)
+- Windows Sandbox app still crashes before bootstrap (`WinRT.Runtime 2.2.0.0`); no clean-machine pass recorded
+- local Qwen Edit remains blocked / off-box
 
 ## Immediate Next Action
 
-Complete WR5-001 as the final Sprint 4 evidence slice:
+Execute Sprint 5 Backend + UI reliability in strategy order, starting with:
 
-1. obtain the owner decision to accept the persistent blocker or approve optional-feature reinstallation
-2. if accepted, record Sprint 4 entry-gate acceptance and proceed without claiming a smoke pass
-3. if reinstallation is approved, disable/re-enable Windows Sandbox with administrator rights and required restarts
-4. retry `.artifacts/windows-sandbox-smoke/20260716T234119Z-e829507/ai-image-edit-smoke.wsb`
-5. collect evidence only if the bootstrap starts
-6. do not run a model
-
-Record the result in:
-
-- `docs/testing/target-clean-machine-smoke-result-log.md`
-- `docs/testing/clean-machine-release-smoke.md`
-- `docs/planning/sprint-4-release-checklist-and-risk-register.md`
+1. **WR5-004** — SSE / job-stream reconciliation (do not treat transport disconnect as job failure)
+2. then WR5-003 Playwright flow foundation (may overlap)
+3. then WR5-005 → WR5-006 → WR5-007 durable attempts, cancel/retry, restart recovery
+4. WR5-002 dependency pinning and WR5-001 Sandbox disposition remain open parallel tracks
 
 ## Then
 
-Start `docs/planning/sprint-5-outline.md` in order: reproducible dependencies, frontend flow tests, stream
-reconciliation, durable attempts, cancellation/retry, restart recovery, performance baseline, and optional Temporal
-spike.
+- WR5-008 performance / UI responsiveness (includes OpenVINO img2img progress denominator polish)
+- WR5-010 evaluate Qwen-Image-2.1 only on GPU/off-box with fixtures — never as CPU mainline replacement
 
 ## Key Risks
 
 - do not claim independent-machine compatibility from Sandbox or Docker
 - do not confuse EventSource disconnection with backend job failure
 - do not promise mid-step diffusion resume
+- do not download Qwen-Image-2.1 onto the CPU box as a product default
 - do not automatically retry deterministic native crashes or out-of-memory failures
-- preserve the live WR3-007 pending fixture unless its decision changes explicitly
 
 ## Bootstrap Order
 
 Read `AGENTS.md`, core/war-room docs, this handoff, `docs/context/current-state.md`,
-`docs/planning/strategy-checkpoint.md`, the active Sprint 4 outline, and the planned Sprint 5 outline.
+`docs/planning/strategy-checkpoint.md`, and `docs/planning/sprint-5-outline.md`.
