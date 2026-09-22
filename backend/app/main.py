@@ -19,6 +19,8 @@ from PIL import Image
 
 from app import config, images as image_store, jobs, ready, logging_utils, model_registry, storage
 from app import hardware as hardware_advisor
+from app import model_download
+from app import model_location
 from app.errors import APIError, register_error_handlers
 from inference.base import EditParams, GenerationParams
 from inference.manager import get_manager
@@ -38,6 +40,7 @@ def parse_origins(value: str) -> List[str]:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     jobs.init_jobs()
+    model_location.apply_effective_dir()
     ready.set_state(False, "starting", {"message": "server starting"})
     if config.INFERENCE_MODE == "worker":
         ready.set_state(True, "worker", {"message": "inference handled by worker"})
@@ -216,6 +219,7 @@ class HardwareRecommendation(BaseModel):
     verdict_label: str
     reason: str
     downloadable: bool
+    in_app_download: bool = False
     present: bool
     setup: str
     docs: str
@@ -313,6 +317,60 @@ def get_system() -> SystemResponse:
 @app.get("/api/hardware", response_model=HardwareResponse)
 def get_hardware() -> HardwareResponse:
     return hardware_advisor.recommend()
+
+
+class ModelLocationBody(BaseModel):
+    path: str
+
+
+class ModelLocationResponse(BaseModel):
+    model_id: str
+    path: str
+    default_path: str
+    confirmed: bool
+    locked_by_env: bool
+    source: str
+    exists: bool
+
+
+@app.get("/api/settings/model-location", response_model=ModelLocationResponse)
+def get_model_location() -> ModelLocationResponse:
+    return ModelLocationResponse(**model_location.describe())
+
+
+@app.post("/api/settings/model-location", response_model=ModelLocationResponse)
+def confirm_model_location(body: ModelLocationBody) -> ModelLocationResponse:
+    try:
+        payload = model_location.confirm(body.path)
+    except ValueError as exc:
+        raise APIError("invalid_request", str(exc), status_code=400) from exc
+    return ModelLocationResponse(**payload)
+
+
+class ModelDownloadStatus(BaseModel):
+    model_id: str | None = None
+    status: str
+    bytes_downloaded: int = 0
+    bytes_total: int | None = None
+    message: str = ""
+    error: str | None = None
+
+
+@app.get("/api/models/{model_id}/download", response_model=ModelDownloadStatus)
+def get_model_download(model_id: str) -> ModelDownloadStatus:
+    current = model_download.status()
+    if current["model_id"] not in {None, model_id}:
+        return ModelDownloadStatus(model_id=model_id, status="idle")
+    return ModelDownloadStatus(**current)
+
+
+@app.post("/api/models/{model_id}/download", response_model=ModelDownloadStatus)
+def start_model_download(model_id: str) -> ModelDownloadStatus:
+    try:
+        payload = model_download.start_download(model_id)
+    except ValueError as exc:
+        raise APIError("invalid_request", str(exc), status_code=400) from exc
+    return ModelDownloadStatus(**payload)
 
 
 @app.post("/api/jobs/t2i", response_model=JobSubmitResponse)

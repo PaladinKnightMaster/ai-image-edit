@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app import config
+from app.model_download import in_app_model_ids
 
 # --- Verdicts ---------------------------------------------------------------
 
@@ -285,6 +286,7 @@ def recommend(hw: dict[str, Any] | None = None) -> dict[str, Any]:
                 "verdict_label": VERDICT_LABEL.get(verdict, verdict),
                 "reason": reason,
                 "downloadable": verdict in {"recommended", "usable", "usable_slow"},
+                "in_app_download": req.id in in_app_model_ids(),
                 "present": present.get(req.id, False),
                 "setup": req.setup,
                 "docs": req.docs,

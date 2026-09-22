@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { installChatApiMocks, type EditScenario } from "./fixtures/mock-api";
+import { installChatApiMocks, MOCK_HARDWARE, type EditScenario } from "./fixtures/mock-api";
 
 async function openChat(page: Page, scenario: EditScenario = "success") {
   await installChatApiMocks(page, scenario);
@@ -31,8 +31,59 @@ test.describe("chat edit flow (mocked backend)", () => {
     await expect(page.getByRole("heading", { name: "Edit Photo" }).first()).toBeVisible();
     await expect(page.getByTestId("hardware-advisor-panel")).toBeVisible();
     await expect(page.getByText(/Best local pick for this machine/i)).toBeVisible();
-    await expect(page.getByTestId("hardware-advisor-panel").getByText("Best pick")).toBeVisible();
+    await expect(page.getByTestId("hardware-ready")).toBeVisible();
+    await expect(page.getByTestId("hardware-ready").getByText("Ready", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Run edit" })).toBeVisible();
+  });
+
+  test("offers one download when the recommended model is missing", async ({ page }) => {
+    await installChatApiMocks(page);
+    await page.route("http://127.0.0.1:8000/api/hardware", async (route) => {
+      const missing = structuredClone(MOCK_HARDWARE);
+      const best = missing.models.find((model) => model.id === "sdxl-openvino");
+      if (best) {
+        best.present = false;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(missing)
+      });
+    });
+    let confirmed = false;
+    await page.route("http://127.0.0.1:8000/api/settings/model-location", async (route) => {
+      let postedPath = "";
+      if (route.request().method() === "POST") {
+        confirmed = true;
+        const body = route.request().postDataJSON() as { path?: string } | null;
+        postedPath = body?.path || "";
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          model_id: "sdxl-openvino",
+          path: postedPath || "D:/models/openvino/sdxl_base",
+          default_path: "D:/models/openvino/sdxl_base",
+          confirmed,
+          locked_by_env: false,
+          source: confirmed ? "settings" : "default",
+          exists: true
+        })
+      });
+    });
+    await page.goto("/chat");
+
+    await expect(page.getByTestId("hardware-setup")).toBeVisible();
+    await expect(page.getByTestId("model-folder-picker")).toBeVisible();
+    await expect(page.getByTestId("confirm-model-folder")).toBeVisible();
+    await expect(page.getByTestId("download-recommended-model")).toHaveCount(0);
+    await page.getByTestId("confirm-model-folder").click();
+    await expect(page.getByTestId("download-recommended-model")).toBeVisible();
+    await expect(page.getByTestId("other-models")).toHaveCount(0);
+    await page.getByTestId("other-models-toggle").click();
+    await expect(page.getByTestId("other-models")).toBeVisible();
+    await expect(page.getByTestId("other-models").getByRole("button", { name: /Download/i })).toHaveCount(0);
   });
 
   test("requires a base image before edit can run", async ({ page }) => {
