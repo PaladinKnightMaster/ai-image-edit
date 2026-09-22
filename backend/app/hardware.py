@@ -65,18 +65,22 @@ MODEL_REQUIREMENTS: tuple[ModelReq, ...] = (
         id="sdxl-openvino",
         label="SDXL 1.0 (OpenVINO, Intel-optimized)",
         engine="openvino",
-        capabilities=("t2i",),
+        capabilities=("t2i", "edit"),
         approx_disk_gb=7.0,
         min_ram_gb=8.0,
         needs_cuda=False,
         min_vram_gb=None,
         cpu_capable=True,
         cpu_speed="fast",
-        setup="pip install -r backend/requirements-openvino.txt  # then convert (see docs)",
+        setup=(
+            "hf download OpenVINO/stable-diffusion-xl-base-1.0-int8-ov "
+            "--local-dir models/openvino/sdxl_base"
+        ),
         docs="docs/models/download-and-setup.md#sdxl-openvino",
         notes=(
-            "Best local choice for Intel CPUs/iGPUs. Pair with a few-step (LCM/Turbo) "
-            "checkpoint for seconds-per-image generation."
+            "Best local choice for Intel CPUs/iGPUs: text-to-image and prompt-guided "
+            "img2img edit from one OpenVINO INT8 export. Prefer the pre-converted Hub "
+            "repo over local export."
         ),
     ),
     ModelReq(

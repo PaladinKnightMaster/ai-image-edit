@@ -14,10 +14,10 @@ This document separates three concepts that were previously mixed together:
 
 | Model id | Capability | Runtime | Current status | MVP role |
 | --- | --- | --- | --- | --- |
-| `qwen-image-2512` | T2I | Diffusers | implemented | supporting lane |
-| `qwen-image-edit-2511` | edit | Diffusers | implemented | primary edit lane |
-| `flux2-klein-9b-gguf` | T2I + edit | stable-diffusion.cpp | implemented | optional advanced lane |
-| `sdxl-openvino` | T2I | OpenVINO | implemented, edit not supported | research lane |
+| `qwen-image-2512` | T2I | Diffusers | implemented | supporting lane (GPU / off-box) |
+| `qwen-image-edit-2511` | edit | Diffusers | implemented | frontier edit lane (GPU / off-box) |
+| `flux2-klein-9b-gguf` | T2I + edit | stable-diffusion.cpp | implemented | optional advanced / slow CPU draft |
+| `sdxl-openvino` | T2I + edit | OpenVINO | implemented (txt2img + img2img) | primary local CPU lane |
 
 ## Current mirrored assets
 
@@ -67,20 +67,24 @@ the mirror script refuses to pull it onto an unsuitable machine unless `--force`
 
 ### `sdxl-openvino`
 
-- role: CPU acceleration research lane
-- capability: text-to-image only
-- loader: Optimum Intel OpenVINO pipelines
-- note: optional refiner exists, but edit is not implemented
+- role: primary local CPU lane (Intel OpenVINO)
+- capability: text-to-image and prompt-guided img2img edit (one input image)
+- loaders:
+  - `OVStableDiffusionXLPipeline` (t2i)
+  - `OVStableDiffusionXLImg2ImgPipeline` (edit; lazy-loaded from the same base export)
+- asset source: local OpenVINO IR under `models/openvino/sdxl_base` (prefer the
+  pre-converted Hub repo `OpenVINO/stable-diffusion-xl-base-1.0-int8-ov`)
+- note: optional refiner remains separate and optional
 
 ## Product policy
 
-- MVP core:
+- Local CPU default:
+  - `sdxl-openvino` (t2i + edit)
+- optional advanced / slow CPU draft:
+  - `flux2-klein-9b-gguf`
+- GPU / off-box frontier:
   - `qwen-image-edit-2511`
   - `qwen-image-2512`
-- optional advanced lane:
-  - `flux2-klein-9b-gguf`
-- research lane:
-  - `sdxl-openvino`
 
 ## Current Selection Policy
 

@@ -165,8 +165,8 @@ type ChatMessage = {
 
 const STORAGE_KEY = "ai-image-chat-thread-v1";
 const MODEL_PREF_KEY = "ai-image-chat-model-v1";
-const MODEL_T2I = "qwen-image-2512";
-const MODEL_EDIT_LOCAL_DRAFT = "flux2-klein-9b-gguf";
+const MODEL_T2I = "sdxl-openvino";
+const MODEL_EDIT_LOCAL_DRAFT = "sdxl-openvino";
 const PROMPT_TEMPLATES = [
   {
     id: "portrait",
