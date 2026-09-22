@@ -64,7 +64,7 @@ terms remain documented for any future sharing, distribution, or commercializati
 - keep FastAPI, Next.js, SQLite, filesystem images, and runner abstractions
 - use SQLite-backed durable orchestration as the default local path
 - add attempts, leases, cancellation, bounded retry, and restart recovery incrementally
-- keep Temporal as an optional non-model learning lane until it proves enough value
+- keep Temporal deferred; SQLite remains the orchestrator until a new ADR adopts a workflow service
 - use Saga compensation only for partial side effects
 - keep browser Service Workers outside inference and job-lifecycle ownership
 

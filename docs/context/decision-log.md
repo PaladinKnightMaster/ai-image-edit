@@ -1,7 +1,16 @@
 # Decision Log
 
 Status: Active index
-Last updated: 2026-07-16
+Last updated: 2026-09-22
+
+## 2026-09-22
+
+### Temporal is deferred
+
+- SQLite attempt, cancel, one-retry, and restart recovery stay the product path
+- no Temporal server, worker, or SDK
+- saga remains local cleanup of partial side effects only
+- source: `docs/adr/0007-defer-temporal.md`
 
 ## 2026-07-16
 
@@ -25,8 +34,8 @@ Last updated: 2026-07-16
 
 ### Temporal is an optional learning lane
 
-- the first spike uses fake activities and no model
-- Temporal must justify its local service and packaging overhead before adoption
+- superseded for this product by the 2026-09-22 deferral in `docs/adr/0007-defer-temporal.md`
+- the first spike was not run; the local contract already covers the intended proofs
 
 ### Saga compensation is selective
 

@@ -54,7 +54,7 @@ Locked constraints (see `docs/planning/strategy-checkpoint.md` and ADRs 0005/000
 - Windows Sandbox is the preferred clean-Windows surrogate when the host feature works
 - Docker/WSL2 is a reproducibility lane, not native Windows acceptance evidence
 - local SQLite orchestration remains the default product path
-- Temporal is an optional non-model learning path after the local orchestration contract exists
+- Temporal is deferred (ADR 0007); do not add a Temporal service
 - Saga compensation applies only to partial side effects
 - model changes require benchmark evidence; Qwen-Image-2.1 is candidate-only until then
 
@@ -93,7 +93,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | WR5-006 | Cancellation and bounded retry | Done (PR #9) |
 | WR5-007 | Restart recovery | Done (PR #11) |
 | WR5-008 | CPU and UI performance baseline | Done — see `docs/planning/cpu-ui-performance-baseline.md` |
-| WR5-009 | Optional Temporal spike | Not started |
+| WR5-009 | Optional Temporal spike | Deferred — ADR 0007; SQLite orchestration stays the runtime |
 | WR5-010 | Model candidate review (incl. Qwen-Image-2.1) | Candidate noted only |
 
 **Backend + UI improvement strategy is not complete.** OpenVINO + hardware UI closed a product/runtime gap;
@@ -115,8 +115,8 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. Optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 evaluation off-box only.
-2. Next.js 16 remains a later increment. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
+1. WR5-010 gated Qwen-Image-2.1 evaluation off-box only, when a GPU or off-box machine is available.
+2. Next.js 16 remains a later increment. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default. Do not install Temporal.
 
 ## Heavy-Run Rule
 
