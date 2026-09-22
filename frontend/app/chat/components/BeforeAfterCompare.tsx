@@ -25,7 +25,10 @@ export function BeforeAfterCompare({
   const [splitPosition, setSplitPosition] = useState(50);
 
   return (
-    <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3">
+    <div
+      className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3"
+      data-testid="before-after-compare"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Compare</p>

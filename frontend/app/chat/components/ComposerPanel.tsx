@@ -390,7 +390,11 @@ export function ComposerPanel({
         ) : (
           <span>Create from Scratch stays text-led. Move a keeper into Edit Photo when you are ready.</span>
         )}
-        {error ? <span className="text-rose-600">{error}</span> : null}
+        {error ? (
+          <span className="text-rose-600" data-testid="composer-error" role="alert">
+            {error}
+          </span>
+        ) : null}
       </div>
 
       <div className="mt-4 rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4">

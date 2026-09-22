@@ -35,7 +35,9 @@ test.describe("chat edit flow (mocked backend)", () => {
     );
 
     await page.getByRole("button", { name: "Run edit" }).click();
-    await expect(page.getByText(/base image/i).first()).toBeVisible();
+    await expect(page.getByTestId("composer-error")).toHaveText(
+      "Add a base image before running the edit."
+    );
   });
 
   test("library base + run edit reaches a terminal success state", async ({ page }) => {
@@ -43,7 +45,7 @@ test.describe("chat edit flow (mocked backend)", () => {
 
     await page.getByRole("button", { name: "Pick from library" }).first().click();
     await expect(page.getByTestId("history-picker-modal")).toBeVisible();
-    await page.getByRole("button", { name: "Use as base image" }).click();
+    await page.getByTestId("history-output-use-run-hist-1").click();
 
     await page
       .getByRole("button", {
@@ -52,8 +54,11 @@ test.describe("chat edit flow (mocked backend)", () => {
       .click();
     await page.getByRole("button", { name: "Run edit" }).click();
 
-    await expect(page.getByText(/Complete|succeeded|Compare/i).first()).toBeVisible({
-      timeout: 20_000
-    });
+    const jobCard = page.getByTestId("assistant-job-job-edit-1");
+    await expect(jobCard).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("assistant-job-status-job-edit-1")).toHaveText(
+      /Status:\s*Complete/i
+    );
+    await expect(page.getByTestId("before-after-compare")).toBeVisible();
   });
 });
