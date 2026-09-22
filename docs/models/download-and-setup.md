@@ -31,38 +31,48 @@ The running backend exposes the same data at `GET /api/hardware` (used by the UI
 
 | Model id | Capability | Engine | Approx disk | Runs on CPU? | Best on |
 | --- | --- | --- | --- | --- | --- |
-| `sdxl-openvino` | t2i | OpenVINO | ~7 GB | Yes (fast) | Intel CPU/iGPU |
+| `sdxl-openvino` | t2i + edit | OpenVINO | ~7 GB | Yes (fast) | Intel CPU/iGPU |
 | `flux2-klein-9b-gguf` | t2i + edit | stable-diffusion.cpp | ~12 GB | Yes (very slow) | GPU (Vulkan/CUDA) |
 | `qwen-image-2512` | t2i | diffusers | ~45 GB | No | CUDA GPU >=24 GB |
 | `qwen-image-edit-2511` | edit | diffusers | ~45 GB | No | CUDA GPU >=24 GB |
 
-Rule of thumb: on a **CPU-only Intel machine**, use `sdxl-openvino` for generation; treat
-the Qwen family as an off-box / GPU-only lane.
+Rule of thumb: on a **CPU-only Intel machine**, use `sdxl-openvino` for both generation
+and prompt-guided edit; treat the Qwen family as GPU-only / off-box.
 
 ## 3. Download
 
 ### sdxl-openvino
 
-Best local pick for Intel CPUs/iGPUs. Requires the optional OpenVINO extras plus a
-one-time conversion of an SDXL checkpoint to OpenVINO IR.
+Best local pick for Intel CPUs/iGPUs. Supports **text-to-image and img2img edit** from
+one OpenVINO export (edit is lazy-loaded from the same base directory).
+
+**Preferred path (pre-converted INT8, ~3.3 GB, no local quantization):**
 
 ```bash
-# 1) Install OpenVINO runtime + Optimum Intel
 pip install -r backend/requirements-openvino.txt
+hf download OpenVINO/stable-diffusion-xl-base-1.0-int8-ov \
+  --local-dir models/openvino/sdxl_base \
+  --exclude "*.ipynb_checkpoints*"
 
-# 2) Convert an SDXL checkpoint to OpenVINO IR (downloads the base model once)
-optimum-cli export openvino \
-  --model stabilityai/stable-diffusion-xl-base-1.0 \
-  --weight-format int8 \
-  models/openvino/sdxl_base
-
-# 3) Point the backend at it (backend/.env)
-#    SDXL_OV_BASE_DIR=./models/openvino/sdxl_base
-#    ENABLED_MODELS=sdxl-openvino
+# backend/.env
+# SDXL_OV_BASE_DIR=./models/openvino/sdxl_base
+# ENABLED_MODELS=sdxl-openvino
 ```
 
-Tip: for seconds-per-image on CPU, export a few-step checkpoint (SDXL-Turbo / LCM /
+**Alternative (local export from a PyTorch checkpoint):**
+
+```bash
+pip install -r backend/requirements-openvino.txt
+optimum-cli export openvino \
+  --model stabilityai/stable-diffusion-xl-base-1.0 \
+  --variant fp16 \
+  --weight-format int8 \
+  models/openvino/sdxl_base
+```
+
+Tip: for seconds-per-image on CPU, use a few-step checkpoint (SDXL-Turbo / LCM /
 SDXL-Lightning) instead of the 30-step base, and lower `DEFAULT_STEPS`.
+Edit uses prompt-guided img2img with default strength `0.65` (overridable per job).
 
 ### flux2-klein-9b-gguf
 
@@ -130,8 +140,8 @@ python scripts/remove_model.py --model qwen-image-edit-2511 --yes
 ```bash
 python scripts/scan_machine.py                                  # -> best pick: sdxl-openvino
 pip install -r backend/requirements-openvino.txt
-optimum-cli export openvino \
-  --model stabilityai/stable-diffusion-xl-base-1.0 \
-  --weight-format int8 models/openvino/sdxl_base
+hf download OpenVINO/stable-diffusion-xl-base-1.0-int8-ov \
+  --local-dir models/openvino/sdxl_base \
+  --exclude "*.ipynb_checkpoints*"
 # set SDXL_OV_BASE_DIR + ENABLED_MODELS=sdxl-openvino in backend/.env, then start the backend
 ```

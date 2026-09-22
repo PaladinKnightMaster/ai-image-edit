@@ -37,6 +37,8 @@ class EvaluateModelTest(unittest.TestCase):
         req = hardware.REQ_BY_ID["sdxl-openvino"]
         verdict, _ = hardware.evaluate_model(req, _cpu_box())
         self.assertEqual(verdict, "recommended")
+        self.assertIn("edit", req.capabilities)
+        self.assertIn("t2i", req.capabilities)
 
     def test_flux_usable_slow_on_cpu_box(self) -> None:
         req = hardware.REQ_BY_ID["flux2-klein-9b-gguf"]
