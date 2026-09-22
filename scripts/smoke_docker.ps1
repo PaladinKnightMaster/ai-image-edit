@@ -43,7 +43,7 @@ try {
     "--name", $containerName,
     "-p", "18000:8000",
     "-e", "WARMUP_MODELS=0",
-    "-e", "DOTENV_PATH=/app/backend/.env.fast-check",
+    "-e", "DOTENV_PATH=/app/backend/docker-smoke.env",
     $ImageTag
   ) -Label "Docker run API container"
 

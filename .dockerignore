@@ -14,10 +14,9 @@ frontend/.next
 frontend/test-results
 frontend/playwright-report
 
-# Local runtime data and secrets
+# Local runtime data and secrets (committed docker-smoke.env is not matched)
 backend/.env
 backend/.env.*
-!backend/.env.fast-check
 backend/data
 backend/models
 models

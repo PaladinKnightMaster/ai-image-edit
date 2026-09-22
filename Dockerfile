@@ -5,7 +5,7 @@ FROM python:3.12-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    DOTENV_PATH=/app/backend/.env.fast-check \
+    DOTENV_PATH=/app/backend/docker-smoke.env \
     WARMUP_MODELS=0
 
 RUN apt-get update \
@@ -29,7 +29,7 @@ COPY backend/app ./backend/app
 COPY backend/worker ./backend/worker
 COPY backend/inference ./backend/inference
 COPY backend/tests ./backend/tests
-COPY backend/.env.fast-check ./backend/.env.fast-check
+COPY backend/docker-smoke.env ./backend/docker-smoke.env
 
 WORKDIR /app/backend
 EXPOSE 8000
