@@ -1,13 +1,11 @@
 type ModeSwitchHeroProps = {
   attachmentsCount: number;
-  backendUrl: string;
   isEditMode: boolean;
   onModeChange: (mode: "edit" | "create") => void;
 };
 
 export function ModeSwitchHero({
   attachmentsCount,
-  backendUrl,
   isEditMode,
   onModeChange
 }: ModeSwitchHeroProps) {
@@ -23,9 +21,6 @@ export function ModeSwitchHero({
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Studio session</p>
           <h1 className="mt-2 font-display text-3xl text-slate-900">{modeHeading}</h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-600">{modeDescription}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200/70 bg-white/90 px-4 py-3 text-xs text-slate-600">
-          Backend: <span className="font-mono text-slate-800">{backendUrl}</span>
         </div>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-2">

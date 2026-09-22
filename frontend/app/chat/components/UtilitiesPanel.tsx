@@ -1,4 +1,4 @@
-import type { ChangeEvent, RefObject } from "react";
+import type { ChangeEvent, ReactNode, RefObject } from "react";
 
 import type { RunRecord } from "../types";
 import { getFailureDetail, getJobStatusLabel } from "../status-copy";
@@ -20,6 +20,7 @@ type UtilitiesPanelProps = {
   onSubmitReplay: (run: RunRecord) => void;
   onToggleMaintenance: () => void;
   onTriggerImport: () => void;
+  runtimeDetails?: ReactNode;
 };
 
 export function UtilitiesPanel({
@@ -38,7 +39,8 @@ export function UtilitiesPanel({
   onLoadFailedRuns,
   onSubmitReplay,
   onToggleMaintenance,
-  onTriggerImport
+  onTriggerImport,
+  runtimeDetails
 }: UtilitiesPanelProps) {
   return (
     <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
@@ -48,7 +50,7 @@ export function UtilitiesPanel({
             Utilities
           </h3>
           <p className="mt-2 text-xs text-slate-500">
-            Recovery, cleanup, and session transfer stay available here without crowding the main flow.
+            Runtime details, recovery, and cleanup stay here so the studio can stay on the portrait.
           </p>
         </div>
         <button
@@ -62,6 +64,7 @@ export function UtilitiesPanel({
 
       {maintenanceOpen ? (
         <div className="mt-5 space-y-5">
+          {runtimeDetails}
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-3">
               <button

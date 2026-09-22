@@ -11,8 +11,9 @@ import { HardwareAdvisorPanel } from "./components/HardwareAdvisorPanel";
 import { HistoryPickerModal } from "./components/HistoryPickerModal";
 import { MessageTimeline } from "./components/MessageTimeline";
 import { ModeSwitchHero } from "./components/ModeSwitchHero";
+import { StudioGallery } from "./components/StudioGallery";
+import { StudioRail } from "./components/StudioRail";
 import { UtilitiesPanel } from "./components/UtilitiesPanel";
-import { getJobStatusHelp, getJobStatusLabel, getJobStatusTone } from "./status-copy";
 import type { HardwareAdvice } from "./types";
 
 type SystemInfo = {
@@ -414,7 +415,7 @@ export default function ChatPage() {
   const [historyRuns, setHistoryRuns] = useState<RunRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [maintenanceOpen, setMaintenanceOpen] = useState(false);
+  const [maintenanceOpen, setMaintenanceOpen] = useState(true);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [editInputNotice, setEditInputNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -709,7 +710,7 @@ export default function ChatPage() {
   const maxAttachments = getEditInputLimitForModel(editModeModel);
   const editModelConstraintNote =
     isEditMode && !modelSupportsReferenceImage(editModeModel)
-      ? "Local draft lane. This model runs against one base image only. Reference-guided signoff stays on the Qwen edit lane."
+      ? "This model edits one base image. A reference image is not used on this lane."
       : null;
   const promptPlaceholder = isEditMode
     ? "Describe the portrait edit you want..."
@@ -1898,68 +1899,10 @@ export default function ChatPage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-6 pb-24 pt-10 lg:px-10">
-      <div className="grid gap-10 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
-        <aside className="flex flex-col gap-7 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
-          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.5)] backdrop-blur">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">System profile</p>
-            <h2 className="mt-3 font-display text-xl text-slate-900">Local studio runtime</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              {systemInfo
-                ? `${systemInfo.profile} (${systemInfo.profile_reason})`
-                : "Loading device profile..."}
-            </p>
-            {readyState ? (
-              <div className="mt-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em]">
-                <span
-                  className={`rounded-full px-2 py-1 ${
-                    readyState.ready ? "bg-emerald-500 text-white" : "bg-amber-400 text-slate-900"
-                  }`}
-                >
-                  {readyState.ready ? "Ready" : readyState.status}
-                </span>
-                <span className="text-slate-500">
-                  {(readyState.details?.message as string) ??
-                    (readyState.details?.error as string) ??
-                    ""}
-                </span>
-              </div>
-            ) : null}
-            {systemInfo ? (
-              <div className="mt-4 space-y-2 text-xs text-slate-500">
-                <div>RAM: {systemInfo.hardware.ram_gb ?? "n/a"} GB</div>
-                <div>CUDA: {systemInfo.hardware.has_cuda ? "yes" : "no"}</div>
-                <div>VRAM: {systemInfo.hardware.vram_gb ?? "n/a"} GB</div>
-              </div>
-            ) : null}
-            {systemInfo?.storage ? (
-              <div className="mt-4 rounded-2xl border border-slate-200/70 bg-white/90 px-3 py-2 text-xs text-slate-600">
-                <div className="flex items-center justify-between">
-                  <span>Data total</span>
-                  <span className="font-semibold text-slate-800">
-                    {formatBytes(systemInfo.storage.total_bytes)}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span>Images</span>
-                  <span>{formatBytes(systemInfo.storage.images_bytes)}</span>
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span>Flux outputs</span>
-                  <span>{formatBytes(systemInfo.storage.flux_outputs_bytes)}</span>
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span>DB</span>
-                  <span>{formatBytes(systemInfo.storage.db_bytes)}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-slate-500">
-                  <span>Disk free</span>
-                  <span>{formatBytes(systemInfo.storage.disk_free_bytes)}</span>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
+    <main className="min-h-screen">
+      <div className="flex min-h-screen">
+        <StudioRail
+          setup={
           <HardwareAdvisorPanel
             advice={hardwareAdvice}
             selectedModelId={selectedModelId}
@@ -1970,169 +1913,8 @@ export default function ChatPage() {
               void loadModels();
             }}
           />
-
-          <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Models
-            </h3>
-            <div className="mt-4 space-y-3 text-sm text-slate-700">
-              {models.length ? (
-                models.map((model) => (
-                  <div key={model.id} className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-slate-800">
-                        {model.label ?? model.id}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {model.capabilities.join(", ")}
-                        {model.review_mode === "manual" ? " · manual review" : ""}
-                      </p>
-                      {!model.present && model.detail ? (
-                        <p className="mt-1 text-xs text-rose-600">{model.detail}</p>
-                      ) : null}
-                    </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] ${
-                        model.present ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
-                      }`}
-                    >
-                      {model.present ? "ready" : "missing"}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-500">Loading models...</p>
-              )}
-            </div>
-          </div>
-
-          <div
-            className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur"
-            data-testid="recent-runs-panel"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Recent runs
-              </h3>
-              <div className="flex items-center gap-3 text-xs">
-                <button
-                  type="button"
-                  className="text-slate-500 underline underline-offset-4"
-                  onClick={loadRuns}
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
-            <div className="mt-4 space-y-4">
-              {recentRuns.length ? (
-                recentRuns.map((run) => {
-                  const isPendingReview =
-                    run.status === "pending_review" && Boolean(run.pending_output_image_id);
-                  const isRevealing = revealingJobIds.has(run.job_id);
-                  const statusLabel = getJobStatusLabel(run.status);
-                  const statusHelp = getJobStatusHelp(run.status);
-                  return (
-                    <div
-                      key={run.id}
-                      className="group flex gap-3 rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
-                      data-testid={`recent-run-${run.id}`}
-                    >
-                      <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                        {run.output_image_id ? (
-                          <img
-                            src={`${backendUrl}/api/images/${run.output_image_id}`}
-                            alt="recent output"
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                            data-testid={`recent-run-image-${run.id}`}
-                          />
-                        ) : (
-                          <div
-                            className={`flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] ${
-                              isPendingReview ? "bg-amber-50 text-amber-700" : "text-slate-400"
-                            }`}
-                            data-testid={`recent-run-placeholder-${run.id}`}
-                          >
-                            {isPendingReview ? "Review" : "n/a"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                            {run.model_id}
-                          </p>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${getJobStatusTone(run.status)}`}
-                            data-testid={`recent-run-status-${run.id}`}
-                            title={statusHelp}
-                          >
-                            {statusLabel}
-                          </span>
-                        </div>
-                        <p className="mt-1 max-h-10 overflow-hidden text-sm text-slate-700">
-                          {run.prompt}
-                        </p>
-                        {isPendingReview ? (
-                          <p className="mt-1 text-[11px] text-amber-700">
-                            {statusHelp}
-                          </p>
-                        ) : null}
-                        <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                          <span>{run.created_at ? formatTime(run.created_at) : ""}</span>
-                          <span>{formatLatency(run.latency_ms)}</span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 text-[11px]">
-                          {run.output_image_id ? (
-                            <button
-                              type="button"
-                              className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                              onClick={() => startEditFromOutput(run.output_image_id!)}
-                              data-testid={`recent-run-edit-${run.id}`}
-                            >
-                              Edit this
-                            </button>
-                          ) : null}
-                          {run.output_image_id ? (
-                            <a
-                              className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                              href={`${backendUrl}/api/images/${run.output_image_id}`}
-                              download
-                              data-testid={`recent-run-download-${run.id}`}
-                            >
-                              Download
-                            </a>
-                          ) : null}
-                          {isPendingReview ? (
-                            <button
-                              type="button"
-                              className="rounded-full border border-amber-400 px-2 py-0.5 font-semibold text-amber-700 transition hover:border-amber-600 hover:text-amber-900 disabled:cursor-wait disabled:opacity-70"
-                              onClick={() => handleRevealRun(run)}
-                              disabled={isRevealing}
-                              data-testid={`recent-run-reveal-${run.id}`}
-                            >
-                              {isRevealing ? "Revealing..." : "Reveal"}
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="rounded-full border border-slate-300 px-2 py-0.5 font-semibold text-slate-600 transition hover:border-slate-500 hover:text-slate-900"
-                            onClick={() => deleteRun(run.id)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-sm text-slate-500">No runs yet.</p>
-              )}
-            </div>
-          </div>
-
+          }
+          utilities={
           <UtilitiesPanel
             deleteImagesOnCleanup={deleteImagesOnCleanup}
             failedRuns={failedRuns}
@@ -2150,17 +1932,94 @@ export default function ChatPage() {
             onSubmitReplay={submitReplay}
             onToggleMaintenance={() => setMaintenanceOpen((current) => !current)}
             onTriggerImport={triggerImport}
+            runtimeDetails={
+              <div className="space-y-4 text-sm text-slate-700" data-testid="studio-runtime-details">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Runtime</p>
+                  <p className="mt-2 text-sm text-slate-700">
+                    {systemInfo
+                      ? `${systemInfo.profile} (${systemInfo.profile_reason})`
+                      : "Loading device profile..."}
+                  </p>
+                  <p className="mt-1 font-mono text-xs text-slate-500">{backendUrl}</p>
+                  {readyState ? (
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
+                      {readyState.ready ? "Backend ready" : readyState.status}
+                      {readyState.details?.error
+                        ? ` · ${String(readyState.details.error)}`
+                        : readyState.details?.message
+                          ? ` · ${String(readyState.details.message)}`
+                          : ""}
+                    </p>
+                  ) : null}
+                  {systemInfo ? (
+                    <p className="mt-2 text-xs text-slate-500">
+                      RAM {systemInfo.hardware.ram_gb ?? "n/a"} GB · CUDA{" "}
+                      {systemInfo.hardware.has_cuda ? "yes" : "no"} · VRAM{" "}
+                      {systemInfo.hardware.vram_gb ?? "n/a"} GB
+                    </p>
+                  ) : null}
+                  {systemInfo?.storage ? (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Images {formatBytes(systemInfo.storage.images_bytes)} · Disk free{" "}
+                      {formatBytes(systemInfo.storage.disk_free_bytes)}
+                    </p>
+                  ) : null}
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Installed models</p>
+                  <div className="mt-2 space-y-2">
+                    {models.length ? (
+                      models.map((model) => (
+                        <div key={model.id} className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-slate-800">{model.label ?? model.id}</p>
+                            <p className="text-xs text-slate-500">
+                              {model.capabilities.join(", ")}
+                              {model.review_mode === "manual" ? " · manual review" : ""}
+                            </p>
+                          </div>
+                          <span className="text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                            {model.present ? "ready" : "missing"}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500">Loading models...</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            }
           />
-        </aside>
+          }
+        />
 
-        <section className="flex min-h-[80vh] flex-col gap-6">
+        <section className="min-w-0 flex-1 px-4 pb-24 pt-6 lg:px-8">
+          <div className="mx-auto flex max-w-5xl flex-col gap-6">
+          <div className="order-1">
           <ModeSwitchHero
             attachmentsCount={attachments.length}
-            backendUrl={backendUrl}
             isEditMode={isEditMode}
             onModeChange={handleModeChange}
           />
+          </div>
 
+          <div className="order-3">
+          <StudioGallery
+            backendUrl={backendUrl}
+            formatLatency={formatLatency}
+            formatTime={formatTime}
+            recentRuns={recentRuns}
+            revealingJobIds={revealingJobIds}
+            onDeleteRun={deleteRun}
+            onRefresh={loadRuns}
+            onRevealRun={handleRevealRun}
+            onStartEditFromOutput={startEditFromOutput}
+          />
+          </div>
+
+          <div className="order-4">
           <MessageTimeline
             attachmentsCount={attachments.length}
             backendUrl={backendUrl}
@@ -2183,7 +2042,9 @@ export default function ChatPage() {
             onCancel={handleCancel}
             timelineRef={timelineRef}
           />
+          </div>
 
+          <div className="order-2">
           <ComposerPanel
             activeDefaults={activeDefaults}
             activeModel={activeModel}
@@ -2236,6 +2097,8 @@ export default function ChatPage() {
             trueCfgScale={trueCfgScale}
             width={width}
           />
+          </div>
+          </div>
         </section>
       </div>
       <HistoryPickerModal
