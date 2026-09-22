@@ -115,8 +115,8 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. Land Next.js 15 upgrade PR (`nextjs-15-upgrade`), then optional WR5-009 Temporal or WR5-010 Qwen-Image-2.1 off-box.
-2. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
+1. Optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 evaluation off-box only.
+2. Next.js 16 remains a later increment. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule
 
