@@ -14,7 +14,7 @@ considering model replacement.
 
 - Sprint 3: closed
 - Sprint 4: residual accepted — Windows Sandbox host blocker is not a Sprint 5 gate; no clean-machine pass claimed
-- Sprint 5: **active** — P0 reliability track landed (WR5-002 through WR5-008); optional Temporal / Qwen 2.1 remain
+- Sprint 5: **active** — P0s closed; Next.js 15 upgrade ready on `nextjs-15-upgrade`
 
 ## Locked Decisions
 
@@ -54,8 +54,8 @@ Decision sources:
 
 ## Immediate Next Action
 
-1. Optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 eval off-box only
-2. Or incremental Next.js 14 support upgrade when ready
+1. Review and merge Next.js 15 upgrade (`nextjs-15-upgrade`: Next 15.5.25 + React 19)
+2. Then optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 eval off-box only
 3. Do not treat Windows Sandbox as a gate and do not download Qwen-Image-2.1 as the CPU default
 
 ## Then
