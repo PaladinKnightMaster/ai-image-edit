@@ -12,7 +12,7 @@ Owner: Tech Lead
 - pending-review outputs require explicit reveal before normal reuse
 - `/chat` sidebar includes a **Hardware fit** panel backed by `GET /api/hardware`
 - the frontend is componentized but `frontend/app/chat/page.tsx` still owns substantial API, persistence, and
-  EventSource orchestration
+  EventSource orchestration (stream reconciliation in progress on this branch)
 - backend jobs, runs, and images persist in SQLite plus filesystem storage
 - runner abstractions cover Qwen T2I, Qwen Edit, FLUX GGUF, and SDXL OpenVINO lanes
 
@@ -23,34 +23,103 @@ Owner: Tech Lead
 | `sdxl-openvino` | **Primary local** t2i + img2img edit | CPU / Intel OpenVINO |
 | `flux2-klein-9b-gguf` | Optional slow advanced draft | CPU (very slow) / GPU faster |
 | `qwen-image-2512` / `qwen-image-edit-2511` | Frontier off-box | CUDA GPU |
-| Qwen-Image-2.1 | Catalogued candidate only | Evaluate off-box later |
+| Qwen-Image-2.1 | Catalogued candidate only | Evaluate off-box later; not a CPU mainline replacement |
 
 ## Verified Reliability Baseline
 
 - OpenVINO SDXL edit smoke on this workstation (~37s library-base Natural Skin Retouch)
-- OpenVINO txt2img and edit unit tests exist
-- backend startup and fast-check API smoke pass on the current workstation
+- OpenVINO txt2img and edit unit tests exist; hardware advisor endpoint tests exist
+- backend startup and fast-check API smoke pass on the current workstation (project `.venv`)
 - frontend lint, typecheck, and production build have passed in the current workspace
 - non-model backend tests cover pending-review reveal, API reveal responses, pending-output cleanup, model
   registration, seed behavior, startup, and queued/running restart classification
+- scratch-copy validation proved reveal promotes a pending output to `output_image_id`, clears
+  `pending_output_image_id`, changes the job to `succeeded`, and makes the run reusable
+- the live WR3-007 pending-review fixture remains intentionally unrevealed unless an owner changes that decision
 - one approved FLUX CPU draft edit completed historically in 2387 seconds and reached `pending_review`
-- Windows Sandbox clean-machine smoke is **not** recorded (host `WinRT.Runtime` crash)
+- Windows Sandbox clean-machine smoke is **not** recorded (host `WinRT.Runtime 2.2.0.0` crash; reproduced after
+  restart, Repair, and Reset)
 
-## Active Strategy Progress
+Historical Sprint 2 and Sprint 3 evidence lives in:
 
-Sprint 5 Backend + UI reliability is the active improvement track. See
-`docs/planning/strategy-checkpoint.md` status table and `docs/planning/sprint-5-outline.md`.
+- `docs/planning/sprint-2-closeout-audit.md`
+- `docs/planning/sprint-3-closeout-audit.md`
 
-**Not completed yet:** clean-env gate, Playwright flows, SSE reconciliation, durable attempts, cancel/retry,
-restart recovery, performance baseline.
+## Active Strategy
+
+Locked constraints (see `docs/planning/strategy-checkpoint.md` and ADRs 0005/0006):
+
+- CPU-only operation is a hard roadmap constraint; no GPU purchase or hosted-GPU plan
+- **local mainline:** `sdxl-openvino` (t2i + edit) — 2026-09 amendment over the older FLUX-as-draft default
+- Windows Sandbox is the preferred clean-Windows surrogate when the host feature works
+- Docker/WSL2 is a reproducibility lane, not native Windows acceptance evidence
+- local SQLite orchestration remains the default product path
+- Temporal is an optional non-model learning path after the local orchestration contract exists
+- Saga compensation applies only to partial side effects
+- model changes require benchmark evidence; Qwen-Image-2.1 is candidate-only until then
+
+## Sprint Status
+
+### Sprint 4 — residual open (beta / clean-env evidence)
+
+Complete or prepared (still true):
+
+- draft-lane beta scope is locked; off-box Qwen acceptance packet is prepared
+- installation guide, operator packet, result log, tester handoff, session runbook, and risk register exist
+- Windows Sandbox clean-export, dependency-install, smoke, and evidence harness is implemented
+- immutable `e829507` Sandbox package and signed installer manifest are prepared
+- tester copy is owner-reviewed
+
+Still pending:
+
+- isolated clean-Windows installation and non-model smoke result
+- owner disposition on the persistent Sandbox host blocker (accept residual risk vs optional-feature reinstall)
+- first controlled tester session, if still desired after the isolated smoke
+
+Product work (OpenVINO mainline, hardware UI) continued without claiming a clean-machine smoke pass.
+Independent physical-machine evidence remains an accepted residual risk.
+
+### Sprint 5 — active Backend + UI reliability track
+
+Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged):
+
+| ID | Work | Status |
+| --- | --- | --- |
+| WR5-001 | Isolated Windows smoke / owner blocker disposition | Open residual |
+| WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
+| WR5-003 | Playwright frontend flow-test foundation | Not started |
+| WR5-004 | EventSource / job-stream reconciliation | In progress (this PR) |
+| WR5-005 | Durable attempt schema / orchestration boundary | Not started |
+| WR5-006 | Cancellation and bounded retry | Not started |
+| WR5-007 | Restart recovery | Not started |
+| WR5-008 | CPU and UI performance baseline | Not started (small OpenVINO progress polish in this PR) |
+| WR5-009 | Optional Temporal spike | Not started |
+| WR5-010 | Model candidate review (incl. Qwen-Image-2.1) | Candidate noted only |
+
+**Backend + UI improvement strategy is not complete.** OpenVINO + hardware UI closed a product/runtime gap;
+they do not close Sprint 5 reliability tickets.
+
+## Current Blockers And Risks
+
+| Risk | State | Next action |
+| --- | --- | --- |
+| No isolated clean-Windows result | Persistent external host blocker | Owner accepts residual risk or approves Sandbox optional-feature reinstall + restarts. |
+| Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Reproduced after restart, Repair, Reset | Keep claiming no clean-machine pass; tester handoff stays blocked until disposition. |
+| Local Qwen Edit native crash / GPU requirement | Open, off-box | Do not force local acceptance; keep packet ready; 2.1 is candidate only. |
+| Frontend has no automated flow suite | Open | WR5-003 Playwright after stream reconciliation lands. |
+| EventSource transport loss confused with job failure | In progress | WR5-004: reconcile via `GET /api/jobs` + bounded reconnect (this PR). |
+| Queued/running work is failed on restart | Known limitation | WR5-005–007 attempts, leases, cancel, retry, recovery. |
+| Python dependencies are not reproducibly pinned | Open | WR5-002 constraints/lock + Diffusers revision pin. |
+| Next.js 14 is outside current support | Open | Protect flows first (WR5-003), then upgrade incrementally. |
+| No independent physical tester machine | Accepted residual risk | Retain honest environment labels. |
 
 ## Immediate Next Action
 
-Implement WR5-004 job-stream reconciliation so EventSource disconnect cannot mark a still-running job failed
-without backend evidence. Then continue Sprint 5 P0 tickets in outline order.
+1. Land WR5-004 (SSE reconciliation) via current PR, then continue Sprint 5 P0s: WR5-003 → WR5-005 → WR5-006 → WR5-007.
+2. Keep WR5-001 Sandbox disposition as a parallel owner decision — do not claim clean-machine compatibility.
+3. Do not download or register Qwen-Image-2.1 on this CPU box as a product default.
 
 ## Heavy-Run Rule
 
 Do not submit an edit job or run Qwen, FLUX, conversion, or other heavy model work without explicit user approval
-after stating expected CPU, memory, and time cost. Do not download Qwen-Image-2.1 onto this CPU box as a product
-default.
+after stating expected CPU, memory, and time cost.

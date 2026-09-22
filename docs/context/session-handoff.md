@@ -13,21 +13,23 @@ considering model replacement.
 ## Current Phase
 
 - Sprint 3: closed
-- Sprint 4: open residual — Windows Sandbox host blocker (`WinRT.Runtime`) still unresolved; product work
-  continued without claiming clean-machine smoke pass
-- OpenVINO mainline: shipped (PRs #3–#5) — SDXL OpenVINO is primary local t2i + edit; hardware advisor in UI
-- Sprint 5: **active focus** — Backend + UI reliability (stream reconciliation → durable jobs → cancel/retry)
+- Sprint 4: residual open — Windows Sandbox host blocker (`WinRT.Runtime`) unresolved; no clean-machine smoke pass
+- OpenVINO mainline: shipped (PRs #3–#5) — `sdxl-openvino` is primary local t2i + edit; hardware advisor in UI
+- Sprint 5: **active** Backend + UI reliability (stream reconciliation → flows → durable jobs → cancel/retry)
 
 ## Locked Decisions
 
 - no local GPU or hosted-GPU dependency is planned
 - **local mainline model: `sdxl-openvino`** (t2i + edit)
-- FLUX GGUF remains optional slow advanced draft
+- FLUX GGUF remains optional slow advanced draft (historical draft evidence; not the daily default)
 - Qwen 2512 / Edit 2511 remain GPU / off-box frontier (not daily driver)
 - **Qwen-Image-2.1** is a catalogued frontier *candidate* only — no download/runner until gated evaluation
 - Windows Sandbox remains the preferred clean-Windows surrogate when the host feature works
+- Docker/WSL2 is for repeatable non-model validation, not Windows acceptance
 - local SQLite orchestration remains the default
 - Temporal is optional and must start as a non-model learning spike
+- Saga compensation is limited to partial side effects
+- browser Service Workers do not own inference or durable jobs
 - all heavy model runs require explicit approval
 
 Decision sources:
@@ -41,23 +43,25 @@ Decision sources:
 
 - SDXL OpenVINO edit verified in-app (~37s Natural Skin Retouch from library base on i7-14700 CPU)
 - Hardware fit panel live via `GET /api/hardware` (PR #5)
+- non-model reveal/reuse and restart-classification tests exist; WR3-007 pending fixture remains unrevealed
 - one approved FLUX CPU edit reached `pending_review` in 2387 seconds (historical)
-- Windows Sandbox app still crashes before bootstrap (`WinRT.Runtime 2.2.0.0`); no clean-machine pass recorded
+- Windows Sandbox clean-export / `e829507` package prepared; app still crashes before bootstrap
+  (`WinRT.Runtime 2.2.0.0`; restarted / Repair / Reset retries failed identically)
+- clean isolated Windows result is not recorded
 - local Qwen Edit remains blocked / off-box
 
 ## Immediate Next Action
 
-Execute Sprint 5 Backend + UI reliability in strategy order, starting with:
-
-1. **WR5-004** — SSE / job-stream reconciliation (do not treat transport disconnect as job failure)
-2. then WR5-003 Playwright flow foundation (may overlap)
-3. then WR5-005 → WR5-006 → WR5-007 durable attempts, cancel/retry, restart recovery
-4. WR5-002 dependency pinning and WR5-001 Sandbox disposition remain open parallel tracks
+1. Finish and merge WR5-004 (SSE reconciliation) — transport disconnect must not mark jobs failed
+2. Continue Sprint 5 P0 order: WR5-003 Playwright → WR5-005 durable attempts → WR5-006 cancel/retry → WR5-007 restart
+3. Parallel: owner disposition for WR5-001 Sandbox blocker (accept residual vs reinstall) — do not claim smoke pass
 
 ## Then
 
-- WR5-008 performance / UI responsiveness (includes OpenVINO img2img progress denominator polish)
-- WR5-010 evaluate Qwen-Image-2.1 only on GPU/off-box with fixtures — never as CPU mainline replacement
+- WR5-002 dependency pinning
+- WR5-008 performance / UI responsiveness baseline
+- WR5-010 evaluate Qwen-Image-2.1 only off-box/GPU with fixtures — never as CPU mainline replacement
+- optional WR5-009 Temporal spike
 
 ## Key Risks
 
@@ -66,8 +70,10 @@ Execute Sprint 5 Backend + UI reliability in strategy order, starting with:
 - do not promise mid-step diffusion resume
 - do not download Qwen-Image-2.1 onto the CPU box as a product default
 - do not automatically retry deterministic native crashes or out-of-memory failures
+- preserve the live WR3-007 pending fixture unless its decision changes explicitly
 
 ## Bootstrap Order
 
 Read `AGENTS.md`, core/war-room docs, this handoff, `docs/context/current-state.md`,
-`docs/planning/strategy-checkpoint.md`, and `docs/planning/sprint-5-outline.md`.
+`docs/planning/strategy-checkpoint.md`, Sprint 4 residual notes in current-state, and
+`docs/planning/sprint-5-outline.md`.
