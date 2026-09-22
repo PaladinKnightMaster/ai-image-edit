@@ -156,6 +156,24 @@ class RunResponse(BaseModel):
     finished_at: int | None = None
 
 
+class JobAttemptResponse(BaseModel):
+    id: str
+    job_id: str
+    attempt_number: int
+    worker_id: str | None = None
+    execution_mode: str | None = None
+    status: str
+    lease_expires_at: int | None = None
+    last_heartbeat_at: int | None = None
+    started_at: int
+    finished_at: int | None = None
+    exit_code: int | None = None
+    failure_type: str | None = None
+    retryable: bool = False
+    temp_output_image_id: str | None = None
+    output_image_id: str | None = None
+
+
 class JobResponse(BaseModel):
     id: str
     type: str
@@ -174,6 +192,7 @@ class JobResponse(BaseModel):
     progress_total: int | None = None
     last_activity_at: int | None = None
     run: RunResponse | None = None
+    attempts: list[JobAttemptResponse] = []
 
 
 class SystemResponse(BaseModel):

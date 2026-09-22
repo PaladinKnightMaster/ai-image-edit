@@ -165,6 +165,16 @@ def recover_interrupted_jobs() -> dict[str, int]:
         "running": len(running_rows),
         "marked_failed": len(running_rows) + len(queued_rows),
     }
+    from app import orchestration
+
+    for row in list(running_rows) + list(queued_rows):
+        orchestration.finish_open_attempts(
+            row["id"],
+            status="failed",
+            failure_type="process_restart",
+            retryable=False,
+            message="server restarted",
+        )
     if running_rows or queued_rows:
         logging_utils.log_event(
             "job_recovery",
@@ -357,6 +367,10 @@ def run_job(
         progress_step=0,
         started_at=started_at,
     )
+    from app import orchestration
+
+    attempt = orchestration.begin_attempt(job_id, execution_mode=config.INFERENCE_MODE)
+    attempt_id = attempt["id"]
     publish_fn(
         job_id,
         "status",
@@ -402,6 +416,7 @@ def run_job(
             progress_step=step,
             progress_total=total_steps,
         )
+        orchestration.heartbeat(attempt_id)
         publish_fn(
             job_id,
             "progress",
@@ -496,6 +511,21 @@ def run_job(
             )
         conn.commit()
 
+    from app import orchestration
+
+    if review_required:
+        orchestration.finish_open_attempts(
+            job_id,
+            status="succeeded",
+            temp_output_image_id=image_id,
+        )
+    else:
+        orchestration.finish_open_attempts(
+            job_id,
+            status="succeeded",
+            output_image_id=image_id,
+        )
+
     if review_required:
         publish_fn(
             job_id,
@@ -554,6 +584,16 @@ def _mark_job_failed(
             ("failed", finished_at, message, "failed", finished_at, job_id),
         )
         conn.commit()
+    from app import orchestration
+
+    failure_type, retryable = orchestration.classify_failure(message)
+    orchestration.finish_open_attempts(
+        job_id,
+        status="failed",
+        failure_type=failure_type,
+        retryable=retryable,
+        message=message,
+    )
     with _CURRENT_JOB_LOCK:
         global _CURRENT_JOB_ID
         if _CURRENT_JOB_ID == job_id:
@@ -640,7 +680,10 @@ def get_job(job_id: str) -> dict[str, Any] | None:
         run["status"] = job["status"]
         run["error"] = job.get("error")
         run = with_status_copy(run)
-    return with_status_copy({**job, "run": run})
+    from app import orchestration
+
+    attempts = orchestration.list_attempts(job_id)
+    return with_status_copy({**job, "run": run, "attempts": attempts})
 
 
 def list_runs(limit: int = 50, status: str | None = None) -> list[dict[str, Any]]:
