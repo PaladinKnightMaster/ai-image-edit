@@ -979,20 +979,20 @@ export default function ChatPage() {
 
   const handleTransportDisconnect = useCallback(
     async (jobId: string) => {
-      updateMessageByJob(jobId, {
-        error: "Stream interrupted — reconciling job status…"
-      });
-      const data = await fetchJob(jobId);
-      if (!data?.status) {
-        scheduleStreamReconnect(jobId);
-        return;
+      // Claim reconnect ownership before any setState so the messages effect cannot
+      // immediately re-attach and bypass bounded backoff.
+      if (!streamReconnectAttempts.current.has(jobId)) {
+        streamReconnectAttempts.current.set(jobId, 0);
       }
-      if (TERMINAL_JOB_STATUSES.has(data.status)) {
+      const data = await fetchJob(jobId);
+      if (data?.status && TERMINAL_JOB_STATUSES.has(data.status)) {
         clearStreamReconnect(jobId);
         return;
       }
       updateMessageByJob(jobId, {
-        error: "Live progress reconnecting…"
+        error: data?.status
+          ? "Live progress reconnecting…"
+          : "Stream interrupted — reconciling job status…"
       });
       scheduleStreamReconnect(jobId);
     },
@@ -1146,6 +1146,14 @@ export default function ChatPage() {
           return;
         }
         if (eventSources.current.has(message.jobId)) {
+          return;
+        }
+        // Reconnect path owns attach while a backoff timer is pending or after a
+        // transport disconnect claimed the job (including max-attempt exhaustion).
+        if (
+          streamReconnectTimers.current.has(message.jobId) ||
+          streamReconnectAttempts.current.has(message.jobId)
+        ) {
           return;
         }
         void fetchJob(message.jobId);
@@ -1798,6 +1806,9 @@ export default function ChatPage() {
     localStorage.removeItem(STORAGE_KEY);
     eventSources.current.forEach((source) => source.close());
     eventSources.current.clear();
+    streamReconnectTimers.current.forEach((timer) => clearTimeout(timer));
+    streamReconnectTimers.current.clear();
+    streamReconnectAttempts.current.clear();
     setMessages([]);
     setImportWarnings([]);
   };
