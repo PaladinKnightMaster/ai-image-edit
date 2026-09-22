@@ -52,13 +52,13 @@ export const getJobStatusHelp = (status?: string | null) => {
     case "queued":
       return "Waiting for the local backend to start the job.";
     case "running":
-      return "Local inference is active. CPU runs can take a long time; progress updates when the backend reports activity.";
+      return "Local inference is active. CPU runs can take a long time; progress updates when the backend reports activity. A brief stream interrupt does not mean the job failed — the UI reconciles from the server.";
     case "pending_review":
       return "The output is ready but hidden until you reveal it. Reveal before download or reuse.";
     case "succeeded":
       return "The output is available for compare, download, or reuse.";
     case "failed":
-      return "The job stopped before producing a usable output. Retry if the setup issue is resolved, or copy debug info for investigation.";
+      return "The backend reported a job failure (not a mere stream disconnect). Retry if the setup issue is resolved, or copy debug info for investigation.";
     default:
       return "Waiting for a backend status update.";
   }

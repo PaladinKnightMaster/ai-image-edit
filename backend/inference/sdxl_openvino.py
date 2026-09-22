@@ -286,8 +286,9 @@ class SDXLOpenVINORunner(Runner):
         if params.true_cfg_scale is not None:
             kwargs["true_cfg_scale"] = params.true_cfg_scale
         if progress_callback:
+            effective_steps = max(1, int(float(params.steps) * float(strength)))
             kwargs = self._inject_progress_callback(
-                img2img, kwargs, params.steps, progress_callback
+                img2img, kwargs, effective_steps, progress_callback
             )
         kwargs = _filter_kwargs(img2img.__call__, kwargs)
         result = img2img(**kwargs)

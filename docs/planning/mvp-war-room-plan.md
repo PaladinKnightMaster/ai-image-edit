@@ -1,7 +1,7 @@
 # MVP War Room Plan And Roadmap
 
 Status: Active living roadmap
-Last updated: 2026-07-16
+Last updated: 2026-09-22
 Owner: Tech Lead
 Strategy source: `docs/planning/strategy-checkpoint.md`
 
@@ -96,23 +96,26 @@ See `docs/planning/sprint-3-closeout-audit.md`.
 
 ### Sprint 4 - Beta Scope And Acceptance Preparation
 
-Active. Scope, packets, handoff, runbooks, and current-workstation smoke are prepared. Isolated clean-Windows
-evidence remains pending.
+Residual open. Scope, packets, handoff, runbooks, Sandbox harness, and `e829507` package are prepared. Isolated
+clean-Windows smoke is **not** recorded (host `WinRT.Runtime` blocker). Product mainline work continued without
+claiming that pass.
 
 ### Sprint 5 - CPU Reliability And Durable Workflows
 
-Planned. Reproducibility, automated frontend flows, stream reconciliation, attempts, cancellation, retry, restart
-recovery, performance measurement, and optional Temporal learning are sequenced in
-`docs/planning/sprint-5-outline.md`.
+**Active.** Reproducibility, automated frontend flows, stream reconciliation, attempts, cancellation, retry,
+restart recovery, performance measurement, and optional Temporal learning are sequenced in
+`docs/planning/sprint-5-outline.md`. OpenVINO is the local CPU mainline; Qwen-Image-2.1 is a catalogued
+frontier candidate only.
 
 ## 8. Current Phase Gate
 
-Before Sprint 5 runtime changes:
+Sprint 4 clean-env gate remains open as residual risk. Sprint 5 reliability work proceeds in parallel:
 
-- implement a Windows Sandbox clean-source bootstrap
-- run non-model `scripts/release_smoke.ps1` inside Sandbox
-- record pass or owner-accepted blocker
-- keep independent physical-machine coverage as a residual risk
+- do not claim independent-machine compatibility from Sandbox or Docker
+- record owner disposition on the Sandbox host blocker when available
+- keep WR5-001 visible until pass or accepted blocker is written into the result log
+
+Runtime lane amendment (2026-09): local default model is `sdxl-openvino` (t2i + edit), not FLUX or Qwen.
 
 ## 9. Success Measures
 

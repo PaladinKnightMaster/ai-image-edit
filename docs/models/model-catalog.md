@@ -1,7 +1,7 @@
 # Model Catalog
 
 Status: Active
-Last updated: 2026-07-16
+Last updated: 2026-09-22
 Owner: AI/ML Reviewer
 
 This document separates three concepts that were previously mixed together:
@@ -78,13 +78,26 @@ the mirror script refuses to pull it onto an unsuitable machine unless `--force`
 
 ## Product policy
 
-- Local CPU default:
+- Local CPU default (mainline):
   - `sdxl-openvino` (t2i + edit)
 - optional advanced / slow CPU draft:
   - `flux2-klein-9b-gguf`
-- GPU / off-box frontier:
+- GPU / off-box frontier (current registered):
   - `qwen-image-edit-2511`
   - `qwen-image-2512`
+
+## Candidate: Qwen-Image-2.1 (not registered yet)
+
+- Upstream: [Qwen/Qwen-Image-2.1](https://huggingface.co/Qwen/Qwen-Image-2.1)
+  (~7B visual DiT, unified text-to-image + edit, native RGBA, multi-reference)
+- Community GGUF: [abenzerps/Qwen-Image-2.1-GGUF](https://huggingface.co/abenzerps/Qwen-Image-2.1-GGUF)
+  (ComfyUI-oriented; not a drop-in for current Diffusers runners)
+- Role if adopted: **successor candidate** for the off-box Qwen frontier lane
+  (eventually one unified model instead of 2512 + Edit 2511)
+- Not a candidate to replace `sdxl-openvino` as the local CPU mainline
+- Do not download or wire runners until WR5-010 / off-box GPU evaluation produces
+  fixture evidence (quality, latency, peak RAM, stability, API fit)
+- License: Qwen Research License — record provenance before any commercial-sharing review
 
 ## Current Selection Policy
 
@@ -93,6 +106,7 @@ the mirror script refuses to pull it onto an unsuitable machine unless `--force`
 - private non-commercial use means a commercial-use restriction is not a current selection blocker
 - provenance and license terms remain recorded for future sharing or commercialization review
 - `flux2-klein-9b-gguf` remains draft evidence; it does not replace Qwen acceptance claims
+- `Qwen-Image-2.1` is catalogued as a frontier candidate only; it is not a release dependency
 - no model candidate becomes a release dependency before non-model reliability work is complete
 
 ## Documentation rule

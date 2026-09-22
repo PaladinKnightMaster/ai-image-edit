@@ -26,10 +26,28 @@ The project will improve quality in this order:
 ## Runtime Decision
 
 - local default: SQLite-backed orchestration plus existing runner interfaces
-- local draft model: `flux2-klein-9b-gguf`
-- intended edit acceptance model: `qwen-image-edit-2511`, off-box while locally blocked
+- **local mainline (2026-09 amendment):** `sdxl-openvino` for both t2i and prompt-guided edit on CPU
+- local optional slow draft: `flux2-klein-9b-gguf`
+- intended frontier edit acceptance: `qwen-image-edit-2511` (and eventually Qwen-Image-2.1 if evidence
+  supports replacement), off-box / GPU only
+- Qwen-Image-2.1 is a catalogued candidate only — not downloaded, not registered, not a release dependency
 - experimental orchestration: Temporal, non-model first and optional
 - selective pattern: Saga compensation for partial side effects only
+
+## Backend + UI Improvement Status (2026-09-22)
+
+The quality order above is **not complete**. Completed adjacent product work (OpenVINO lane + hardware UI)
+does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/context/current-state.md`.
+
+| Strategy step | Status |
+| --- | --- |
+| 1. Clean-environment validation | Open — Sandbox host blocker; no pass recorded (Sprint 4 residual) |
+| 2. Automated product-flow coverage | Not started (WR5-003) |
+| 3. Job transport / SSE reconciliation | In progress (WR5-004) |
+| 4. Durable attempts / cancel / retry / restart | Not started (WR5-005–007) |
+| 5. CPU + UI performance baseline | Not started (WR5-008); small OpenVINO progress polish in WR5-004 PR |
+| 6. Optional Temporal spike | Not started |
+| 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1) |
 
 ## Validation Decision
 

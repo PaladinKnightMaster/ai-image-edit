@@ -169,6 +169,15 @@ const STORAGE_KEY = "ai-image-chat-thread-v1";
 const MODEL_PREF_KEY = "ai-image-chat-model-v1";
 const MODEL_T2I = "sdxl-openvino";
 const MODEL_EDIT_LOCAL_DRAFT = "sdxl-openvino";
+const TERMINAL_JOB_STATUSES = new Set([
+  "succeeded",
+  "failed",
+  "pending_review",
+  "cancelled"
+]);
+const STREAM_RECONNECT_BASE_MS = 1000;
+const STREAM_RECONNECT_MAX_MS = 15000;
+const STREAM_RECONNECT_MAX_ATTEMPTS = 8;
 const PROMPT_TEMPLATES = [
   {
     id: "portrait",
@@ -413,6 +422,9 @@ export default function ChatPage() {
   const [deleteImagesOnCleanup, setDeleteImagesOnCleanup] = useState(false);
   const [revealingJobIds, setRevealingJobIds] = useState<Set<string>>(() => new Set());
   const eventSources = useRef<Map<string, EventSource>>(new Map());
+  const streamReconnectAttempts = useRef<Map<string, number>>(new Map());
+  const streamReconnectTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const attachEventSourceRef = useRef<(jobId: string) => void>(() => undefined);
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const lastDefaultsRef = useRef({ steps: "", width: "", height: "" });
@@ -438,9 +450,12 @@ export default function ChatPage() {
 
   useEffect(() => {
     const activeEventSources = eventSources.current;
+    const activeTimers = streamReconnectTimers.current;
     return () => {
       activeEventSources.forEach((source) => source.close());
       activeEventSources.clear();
+      activeTimers.forEach((timer) => clearTimeout(timer));
+      activeTimers.clear();
     };
   }, []);
 
@@ -889,9 +904,10 @@ export default function ChatPage() {
     try {
       const response = await fetch(`${backendUrl}/api/jobs/${jobId}`, { cache: "no-store" });
       if (!response.ok) {
-        return;
+        return null;
       }
       const data = await response.json();
+      const terminal = TERMINAL_JOB_STATUSES.has(data.status);
       updateMessageByJob(jobId, {
         status: data.status,
         run: data.run,
@@ -906,111 +922,215 @@ export default function ChatPage() {
           typeof data.last_activity_at === "number" ? data.last_activity_at : undefined,
         outputImageId: data.run?.output_image_id ?? undefined,
         requiresReview: data.status === "pending_review",
-        reviewNote: data.status === "pending_review" ? "Manual review required." : undefined
+        reviewNote: data.status === "pending_review" ? "Manual review required." : undefined,
+        ...(data.status === "succeeded" || data.status === "pending_review"
+          ? { error: undefined }
+          : {})
       });
-      if (data.status === "succeeded" || data.status === "failed" || data.status === "pending_review") {
+      if (terminal) {
         eventSources.current.get(jobId)?.close();
         eventSources.current.delete(jobId);
+        streamReconnectAttempts.current.delete(jobId);
+        const timer = streamReconnectTimers.current.get(jobId);
+        if (timer) {
+          clearTimeout(timer);
+          streamReconnectTimers.current.delete(jobId);
+        }
         loadRuns();
       }
+      return data as { status?: string };
     } catch {
-      // ignore
+      return null;
     }
   }, [backendUrl, loadRuns, updateMessageByJob]);
 
-  const attachEventSource = useCallback((jobId: string) => {
-    if (eventSources.current.has(jobId)) {
+  const clearStreamReconnect = useCallback((jobId: string) => {
+    streamReconnectAttempts.current.delete(jobId);
+    const timer = streamReconnectTimers.current.get(jobId);
+    if (timer) {
+      clearTimeout(timer);
+      streamReconnectTimers.current.delete(jobId);
+    }
+  }, []);
+
+  const scheduleStreamReconnect = useCallback((jobId: string) => {
+    if (streamReconnectTimers.current.has(jobId)) {
       return;
     }
-    const source = new EventSource(`${backendUrl}/api/jobs/${jobId}/events`);
-    source.addEventListener("status", (event) => {
-      const payload = JSON.parse((event as MessageEvent).data);
-      const patch: Partial<ChatMessage> = {
-        status: payload.status,
-        stage: payload.stage,
-        lastActivityAt:
-          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
-      };
-      if (payload.status === "running") {
-        patch.startedAt = Date.now();
+    const attempt = streamReconnectAttempts.current.get(jobId) ?? 0;
+    if (attempt >= STREAM_RECONNECT_MAX_ATTEMPTS) {
+      updateMessageByJob(jobId, {
+        error:
+          "Live progress disconnected. The job may still be running — check Recent runs or refresh."
+      });
+      return;
+    }
+    const delay = Math.min(
+      STREAM_RECONNECT_MAX_MS,
+      STREAM_RECONNECT_BASE_MS * 2 ** attempt
+    );
+    streamReconnectAttempts.current.set(jobId, attempt + 1);
+    const timer = setTimeout(() => {
+      streamReconnectTimers.current.delete(jobId);
+      attachEventSourceRef.current(jobId);
+    }, delay);
+    streamReconnectTimers.current.set(jobId, timer);
+  }, [updateMessageByJob]);
+
+  const handleTransportDisconnect = useCallback(
+    async (jobId: string) => {
+      // Claim reconnect ownership before any setState so the messages effect cannot
+      // immediately re-attach and bypass bounded backoff.
+      if (!streamReconnectAttempts.current.has(jobId)) {
+        streamReconnectAttempts.current.set(jobId, 0);
       }
-      updateMessageByJob(jobId, patch);
-    });
-    source.addEventListener("stage", (event) => {
-      const payload = JSON.parse((event as MessageEvent).data);
+      const data = await fetchJob(jobId);
+      if (data?.status && TERMINAL_JOB_STATUSES.has(data.status)) {
+        clearStreamReconnect(jobId);
+        return;
+      }
       updateMessageByJob(jobId, {
-        stage: payload.stage,
-        stageElapsedMs:
-          typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined,
-        lastActivityAt:
-          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+        error: data?.status
+          ? "Live progress reconnecting…"
+          : "Stream interrupted — reconciling job status…"
       });
-    });
-    source.addEventListener("progress", (event) => {
-      const payload = JSON.parse((event as MessageEvent).data);
-      const elapsedMs =
-        typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined;
-      const etaMs =
-        elapsedMs && payload.percent > 0
-          ? Math.max(0, (elapsedMs / payload.percent) * (100 - payload.percent))
-          : undefined;
-      updateMessageByJob(jobId, {
-        progress: payload.percent,
-        progressStep: typeof payload.step === "number" ? payload.step : undefined,
-        progressTotal:
-          typeof payload.total_steps === "number" ? payload.total_steps : undefined,
-        etaMs,
-        stageElapsedMs: elapsedMs,
-        lastActivityAt:
-          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+      scheduleStreamReconnect(jobId);
+    },
+    [clearStreamReconnect, fetchJob, scheduleStreamReconnect, updateMessageByJob]
+  );
+
+  const attachEventSource = useCallback(
+    (jobId: string) => {
+      if (eventSources.current.has(jobId)) {
+        return;
+      }
+      const source = new EventSource(`${backendUrl}/api/jobs/${jobId}/events`);
+      source.addEventListener("status", (event) => {
+        const payload = JSON.parse((event as MessageEvent).data);
+        const patch: Partial<ChatMessage> = {
+          status: payload.status,
+          stage: payload.stage,
+          error: undefined,
+          lastActivityAt:
+            typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+        };
+        if (payload.status === "running") {
+          patch.startedAt = Date.now();
+        }
+        clearStreamReconnect(jobId);
+        streamReconnectAttempts.current.delete(jobId);
+        updateMessageByJob(jobId, patch);
       });
-    });
-    source.addEventListener("result", (event) => {
-      const payload = JSON.parse((event as MessageEvent).data);
-      updateMessageByJob(jobId, {
-        status: "succeeded",
-        outputImageId: payload.output_image_id,
-        stage: "complete",
-        progress: 100,
-        lastActivityAt:
-          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
-      });
-      fetchJob(jobId);
-    });
-    source.addEventListener("review_required", (event) => {
-      const payload = JSON.parse((event as MessageEvent).data);
-      updateMessageByJob(jobId, {
-        status: "pending_review",
-        requiresReview: true,
-        reviewNote: payload.message,
-        stage: "review",
-        lastActivityAt:
-          typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
-      });
-      source.close();
-      eventSources.current.delete(jobId);
-      loadRuns();
-    });
-    source.addEventListener("error", (event) => {
-      try {
+      source.addEventListener("stage", (event) => {
         const payload = JSON.parse((event as MessageEvent).data);
         updateMessageByJob(jobId, {
-          status: "failed",
-          error: payload.message,
+          stage: payload.stage,
+          stageElapsedMs:
+            typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined,
           lastActivityAt:
             typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
         });
-      } catch {
-        updateMessageByJob(jobId, { status: "failed", error: "Stream disconnected." });
-      }
-      source.close();
-      eventSources.current.delete(jobId);
-    });
-    source.onerror = () => {
-      updateMessageByJob(jobId, { error: "Stream disconnected." });
-    };
-    eventSources.current.set(jobId, source);
-  }, [backendUrl, fetchJob, loadRuns, updateMessageByJob]);
+      });
+      source.addEventListener("progress", (event) => {
+        const payload = JSON.parse((event as MessageEvent).data);
+        const elapsedMs =
+          typeof payload.elapsed_ms === "number" ? payload.elapsed_ms : undefined;
+        const etaMs =
+          elapsedMs && payload.percent > 0
+            ? Math.max(0, (elapsedMs / payload.percent) * (100 - payload.percent))
+            : undefined;
+        updateMessageByJob(jobId, {
+          progress: payload.percent,
+          progressStep: typeof payload.step === "number" ? payload.step : undefined,
+          progressTotal:
+            typeof payload.total_steps === "number" ? payload.total_steps : undefined,
+          etaMs,
+          stageElapsedMs: elapsedMs,
+          error: undefined,
+          lastActivityAt:
+            typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+        });
+      });
+      source.addEventListener("result", (event) => {
+        const payload = JSON.parse((event as MessageEvent).data);
+        clearStreamReconnect(jobId);
+        updateMessageByJob(jobId, {
+          status: "succeeded",
+          outputImageId: payload.output_image_id,
+          stage: "complete",
+          progress: 100,
+          error: undefined,
+          lastActivityAt:
+            typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+        });
+        void fetchJob(jobId);
+      });
+      source.addEventListener("review_required", (event) => {
+        const payload = JSON.parse((event as MessageEvent).data);
+        clearStreamReconnect(jobId);
+        updateMessageByJob(jobId, {
+          status: "pending_review",
+          requiresReview: true,
+          reviewNote: payload.message,
+          stage: "review",
+          error: undefined,
+          lastActivityAt:
+            typeof payload.last_activity_at === "number" ? payload.last_activity_at : undefined
+        });
+        source.close();
+        eventSources.current.delete(jobId);
+        loadRuns();
+      });
+      // Named SSE "error" events carry a JSON body from the backend.
+      // Native EventSource transport failures also surface as "error" without data —
+      // those must reconcile via GET /api/jobs, not mark the job failed.
+      source.addEventListener("error", (event) => {
+        const messageEvent = event as MessageEvent;
+        if (typeof messageEvent.data === "string" && messageEvent.data.length > 0) {
+          try {
+            const payload = JSON.parse(messageEvent.data);
+            clearStreamReconnect(jobId);
+            updateMessageByJob(jobId, {
+              status: "failed",
+              error: payload.message,
+              lastActivityAt:
+                typeof payload.last_activity_at === "number"
+                  ? payload.last_activity_at
+                  : undefined
+            });
+            source.close();
+            eventSources.current.delete(jobId);
+            loadRuns();
+            return;
+          } catch {
+            // Fall through to transport handling.
+          }
+        }
+        source.close();
+        eventSources.current.delete(jobId);
+        void handleTransportDisconnect(jobId);
+      });
+      source.onerror = () => {
+        if (!eventSources.current.has(jobId)) {
+          return;
+        }
+        source.close();
+        eventSources.current.delete(jobId);
+        void handleTransportDisconnect(jobId);
+      };
+      eventSources.current.set(jobId, source);
+    },
+    [
+      backendUrl,
+      clearStreamReconnect,
+      fetchJob,
+      handleTransportDisconnect,
+      loadRuns,
+      updateMessageByJob
+    ]
+  );
+
+  attachEventSourceRef.current = attachEventSource;
 
   useEffect(() => {
     if (!hydrated) {
@@ -1022,10 +1142,21 @@ export default function ChatPage() {
         if (!message.jobId) {
           return;
         }
-        if (message.status === "succeeded" || message.status === "failed") {
+        if (TERMINAL_JOB_STATUSES.has(message.status ?? "")) {
           return;
         }
-        fetchJob(message.jobId);
+        if (eventSources.current.has(message.jobId)) {
+          return;
+        }
+        // Reconnect path owns attach while a backoff timer is pending or after a
+        // transport disconnect claimed the job (including max-attempt exhaustion).
+        if (
+          streamReconnectTimers.current.has(message.jobId) ||
+          streamReconnectAttempts.current.has(message.jobId)
+        ) {
+          return;
+        }
+        void fetchJob(message.jobId);
         attachEventSource(message.jobId);
       });
   }, [attachEventSource, fetchJob, hydrated, messages]);
@@ -1675,6 +1806,9 @@ export default function ChatPage() {
     localStorage.removeItem(STORAGE_KEY);
     eventSources.current.forEach((source) => source.close());
     eventSources.current.clear();
+    streamReconnectTimers.current.forEach((timer) => clearTimeout(timer));
+    streamReconnectTimers.current.clear();
+    streamReconnectAttempts.current.clear();
     setMessages([]);
     setImportWarnings([]);
   };

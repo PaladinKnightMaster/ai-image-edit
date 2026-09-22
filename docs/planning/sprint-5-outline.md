@@ -85,6 +85,8 @@ No model run is needed for the entry gate.
 - Owner: Frontend + Backend
 - Work: separate server job-error events from EventSource transport errors; on disconnect, query persisted job
   state and reconnect with bounded backoff
+- Progress (2026-09-22): `/chat` no longer marks jobs failed on transport disconnect; reconciles via
+  `GET /api/jobs/{id}` and reconnects with exponential backoff (max 8 attempts)
 - Done when: a transient stream disconnect cannot mark an active or completed job failed without backend evidence
 
 ### WR5-005 - Durable attempt schema and orchestration boundary
@@ -133,6 +135,8 @@ No model run is needed for the entry gate.
 - Priority: P2
 - Owner: AI/ML + Product
 - Work: define benchmark thresholds before considering a FLUX variant, quantized Qwen path, or another candidate
+- Progress (2026-09-22): `Qwen-Image-2.1` (+ community GGUF) catalogued as frontier successor *candidate*
+  in `docs/models/model-catalog.md`; not registered; not a CPU-mainline replacement for OpenVINO
 - Done when: a decision packet exists; any actual model execution remains separately approval-gated
 
 ## 6. Execution Order
