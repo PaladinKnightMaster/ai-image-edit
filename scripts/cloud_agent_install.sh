@@ -29,8 +29,8 @@ python -m pip install --upgrade pip
 echo "==> Backend: CPU torch/torchvision"
 pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.3.0" "torchvision>=0.18.0"
 
-echo "==> Backend: requirements.txt"
-pip install -r backend/requirements.txt
+echo "==> Backend: requirements.txt (constrained)"
+pip install -c backend/constraints.txt -r backend/requirements.txt
 
 echo "==> Frontend: npm dependencies"
 (cd frontend && npm ci)

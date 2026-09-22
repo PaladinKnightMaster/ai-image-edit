@@ -14,7 +14,7 @@ considering model replacement.
 
 - Sprint 3: closed
 - Sprint 4: residual accepted — Windows Sandbox host blocker is not a Sprint 5 gate; no clean-machine pass claimed
-- Sprint 5: **active** — durable attempts (WR5-005), then cancel/retry and restart recovery
+- Sprint 5: **active** — P0 reliability track largely landed; WR5-002 verified (baseline + Docker smoke), awaiting merge
 
 ## Locked Decisions
 
@@ -48,20 +48,20 @@ Decision sources:
   (`WinRT.Runtime 2.2.0.0`; restarted / Repair / Reset retries failed identically)
 - clean isolated Windows result is not recorded
 - local Qwen Edit remains blocked / off-box
+- Sprint 5 landed: WR5-003–008 (Playwright flows, SSE reconcile, attempts, cancel/retry, restart recovery,
+  CPU/UI baseline). WR5-002 verified: pinned Diffusers SHA, `backend/constraints.txt`, two matching resolves,
+  Docker non-model `/health` + startup unittest.
 
 ## Immediate Next Action
 
-1. Land WR5-005 attempt history
-2. Then WR5-006 cancellation and bounded retry, then WR5-007 restart recovery
-3. Expand Playwright for reveal and stream reconnect
-4. Do not treat Windows Sandbox as a gate and do not download Qwen-Image-2.1 as the CPU default
+1. Review and merge branch `wr5-002-reproducible-deps`
+2. Then optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 eval off-box only
+3. Do not treat Windows Sandbox as a gate and do not download Qwen-Image-2.1 as the CPU default
 
 ## Then
 
-- WR5-002 dependency pinning
-- WR5-008 performance / UI responsiveness baseline
-- WR5-010 evaluate Qwen-Image-2.1 only off-box/GPU with fixtures — never as CPU mainline replacement
 - optional WR5-009 Temporal spike
+- WR5-010 evaluate Qwen-Image-2.1 only off-box/GPU with fixtures — never as CPU mainline replacement
 
 ## Key Risks
 

@@ -1,6 +1,7 @@
 param(
   [switch]$SkipBackend,
-  [switch]$SkipFrontend
+  [switch]$SkipFrontend,
+  [switch]$IncludeDocker
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,6 +43,11 @@ if (-not $SkipFrontend) {
   finally {
     Pop-Location
   }
+}
+
+if ($IncludeDocker) {
+  Write-Host "== Docker non-model smoke =="
+  & (Join-Path $PSScriptRoot "smoke_docker.ps1")
 }
 
 Write-Host "Release smoke checks completed."

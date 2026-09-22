@@ -86,7 +86,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | ID | Work | Status |
 | --- | --- | --- |
 | WR5-001 | Isolated Windows smoke / owner blocker disposition | Accepted residual (2026-09-22): Sandbox host stays broken; not a Sprint 5 gate |
-| WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
+| WR5-002 | Reproducible Python / Docker dependency baseline | Done — constraints + Diffusers SHA + Docker non-model smoke |
 | WR5-003 | Playwright frontend flow-test foundation | Done (mocked flows: roles, progress, reveal, compare, retry, reconnect) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
 | WR5-005 | Durable attempt schema / orchestration boundary | Done (PR #8) |
@@ -109,13 +109,13 @@ they do not close Sprint 5 reliability tickets.
 | Frontend flow coverage is partial | Closed for primary mocked flows | Extend only if a new product path lands. |
 | EventSource transport loss confused with job failure | Mitigated (PR #6) | Keep covered by Playwright reconnect cases in WR5-003. |
 | Queued/running work is failed on restart | Mitigated | Queued work is requeued. A running attempt retries once, then fails. |
-| Python dependencies are not reproducibly pinned | Open | WR5-002 constraints/lock + Diffusers revision pin. |
+| Python dependencies are not reproducibly pinned | Mitigated | WR5-002: constraints + Diffusers SHA + Docker non-model smoke. |
 | Next.js 14 is outside current support | Open | Protect flows first (WR5-003), then upgrade incrementally. |
 | No independent physical tester machine | Accepted residual risk | Retain honest environment labels. |
 
 ## Immediate Next Action
 
-1. Next open reliability item is WR5-002, the reproducible dependency baseline. Temporal remains optional.
+1. Optional WR5-009 Temporal spike, or WR5-010 gated Qwen-Image-2.1 evaluation off-box only.
 2. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule

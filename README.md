@@ -53,8 +53,8 @@ Backend:
 2) Activate the venv
    - Windows PowerShell: `./.venv/Scripts/Activate.ps1`
    - macOS/Linux: `source .venv/bin/activate`
-3) `pip install -r backend/requirements.txt` (CPU, requires `git` on PATH)
-   - GPU: `pip install -r backend/requirements-gpu.txt` (edit CUDA version if needed)
+3) `pip install -c backend/constraints.txt -r backend/requirements.txt` (CPU, requires `git` on PATH)
+   - GPU: `pip install -c backend/constraints.txt -r backend/requirements-gpu.txt` (edit CUDA version if needed)
    - OpenVINO (optional): `pip install -r backend/requirements-openvino.txt`
 4) Copy env vars: `copy backend/.env.example backend/.env`
 5) Run: `.\scripts\start_backend.ps1 -Mode main`
@@ -76,6 +76,12 @@ Windows backend launcher commands:
 Windows backend smoke command:
 - `.\scripts\smoke_backend.ps1`
   - startup smoke for import, `/health`, `/ready`, and `/api/models`
+
+Python dependency baseline (no model assets):
+- `.\scripts\verify_python_baseline.ps1`
+  - two constrained resolves must match, including the pinned Diffusers git SHA
+- `.\scripts\smoke_docker.ps1`
+  - non-model Docker build + `/health` + in-container startup unittest
 
 Windows backend inference smoke command (requires mirrored Qwen assets and a running fast-check backend):
 - `.\scripts\smoke_qwen_t2i.ps1`
@@ -136,7 +142,7 @@ Windows (PowerShell):
 cd D:\1_PROJECT\PRIVATE_WORK\ai-image-edit
 python -m venv .venv
 ./.venv/Scripts/Activate.ps1
-pip install -r backend/requirements.txt
+pip install -c backend/constraints.txt -r backend/requirements.txt
 copy backend/.env.example backend/.env
 cd frontend
 npm install
@@ -149,7 +155,7 @@ Linux/macOS (bash):
 cd /path/to/ai-image-edit
 python -m venv .venv
 source .venv/bin/activate
-pip install -r backend/requirements.txt
+pip install -c backend/constraints.txt -r backend/requirements.txt
 cp backend/.env.example backend/.env
 cd frontend
 npm install
@@ -284,7 +290,8 @@ License note:
 
 ## Torch install (CPU vs GPU)
 
-By default, `backend/requirements.txt` pulls the CPU wheel of PyTorch.
+By default, `backend/requirements.txt` pins a CPU-compatible torch version.
+Install with `backend/constraints.txt` so transitive versions stay reviewed.
 For GPU acceleration, use `backend/requirements-gpu.txt` and update the CUDA tag if needed.
 
 Examples (replace `cu121` with your CUDA version):

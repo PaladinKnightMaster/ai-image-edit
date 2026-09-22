@@ -68,7 +68,13 @@ No model run is needed for the entry gate.
 - Owner: Backend + DevOps
 - Work: replace open-ended Python dependency resolution with a reviewed lock/constraints strategy; pin the
   Diffusers source revision; add `.dockerignore` and a non-model Docker smoke path
+- Progress (2026-09-22): `backend/requirements.txt` pins direct deps + Diffusers
+  `@d7a1c31f4f85bae5a9e01cdce49bd7346bd8ccd6`; `backend/constraints.txt` locks the transitive CPU tree;
+  install paths use `-c constraints.txt`; `Dockerfile` + `.dockerignore` + `scripts/smoke_docker.ps1` and
+  `scripts/verify_python_baseline.ps1` cover non-model reproducibility.
+  Verified: two clean pip resolves matched; Docker non-model smoke passed (`/health` + startup unittest).
 - Done when: two clean installs resolve the same direct dependency baseline and smoke passes without model assets
+  (**met** on 2026-09-22; awaiting merge)
 
 ### WR5-003 - Frontend flow-test foundation
 
@@ -152,8 +158,8 @@ No model run is needed for the entry gate.
 
 ## 6. Execution Order
 
-1. WR5-001 isolated Windows smoke
-2. WR5-002 reproducible dependencies
+1. WR5-001 isolated Windows smoke (accepted residual)
+2. WR5-002 reproducible dependencies (landed)
 3. WR5-003 frontend flow-test foundation
 4. WR5-004 stream reconciliation
 5. WR5-005 durable attempt boundary

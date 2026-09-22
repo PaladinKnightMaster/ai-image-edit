@@ -1,14 +1,23 @@
-fastapi>=0.110.0
-python-multipart>=0.0.9
-uvicorn[standard]>=0.29.0
-pydantic>=2.6.0
-ruff>=0.4.0
-huggingface_hub>=0.32.0
-python-dotenv>=1.0.1
-git+https://github.com/huggingface/diffusers.git
-pillow>=10.4.0
-torch>=2.3.0
-torchvision>=0.18.0
-transformers>=4.42.0
-accelerate>=0.33.0
-psutil>=6.0.0
+# Direct dependency baseline for the CPU API/worker path.
+# Install with constraints so two clean installs resolve the same tree:
+#   pip install -c backend/constraints.txt -r backend/requirements.txt
+#
+# On Cloud Agent / CPU-only hosts, install torch/torchvision from the PyTorch
+# CPU index first (see scripts/cloud_agent_install.sh), then run the command above.
+#
+# Diffusers is pinned to a reviewed git revision (not floating main).
+
+fastapi==0.128.0
+python-multipart==0.0.21
+uvicorn[standard]==0.40.0
+pydantic==2.12.5
+ruff==0.14.13
+huggingface_hub==0.36.0
+python-dotenv==1.2.1
+git+https://github.com/huggingface/diffusers.git@d7a1c31f4f85bae5a9e01cdce49bd7346bd8ccd6
+pillow==12.1.0
+torch==2.9.1
+torchvision==0.24.1
+transformers==4.57.6
+accelerate==1.12.0
+psutil==7.2.1
