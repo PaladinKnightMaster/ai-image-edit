@@ -122,6 +122,13 @@ def init_db() -> None:
             [
                 ("strength", "REAL"),
                 ("pending_output_image_id", "TEXT"),
+                ("queue_wait_ms", "INTEGER"),
+                ("model_load_ms", "INTEGER"),
+                ("execution_ms", "INTEGER"),
+                ("output_commit_ms", "INTEGER"),
+                ("progress_event_count", "INTEGER"),
+                ("progress_events_per_sec", "REAL"),
+                ("peak_ram_mb", "REAL"),
             ],
         )
         conn.commit()

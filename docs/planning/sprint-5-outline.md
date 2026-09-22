@@ -126,6 +126,9 @@ No model run is needed for the entry gate.
 - Work: record queue wait, model-load time, execution time, peak RAM, progress-event rate, and output-commit time;
   reduce synchronous timeline persistence and unnecessary progress rerenders
 - Done when: a report compares baseline and changed behavior using non-model fakes plus existing approved evidence
+- Progress (2026-09-22): run rows store queue wait, load, execution, commit, progress rate, and peak RAM.
+  The chat timeline coalesces progress paints to 250 ms and defers thread persistence by 400 ms.
+  Comparison: `docs/planning/cpu-ui-performance-baseline.md`.
 
 ### WR5-009 - Temporal durable-execution spike
 

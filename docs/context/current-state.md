@@ -92,7 +92,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | WR5-005 | Durable attempt schema / orchestration boundary | In progress |
 | WR5-006 | Cancellation and bounded retry | In progress (persisted cancel, one auto-retry, manual retry) |
 | WR5-007 | Restart recovery | Not started |
-| WR5-008 | CPU and UI performance baseline | Not started (small OpenVINO progress polish in this PR) |
+| WR5-008 | CPU and UI performance baseline | In progress — fields recorded; see `docs/planning/cpu-ui-performance-baseline.md` |
 | WR5-009 | Optional Temporal spike | Not started |
 | WR5-010 | Model candidate review (incl. Qwen-Image-2.1) | Candidate noted only |
 
@@ -115,7 +115,7 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. After the Playwright flow PR merges, implement WR5-007 restart recovery.
+1. Land this performance baseline, then merge restart recovery (WR5-007) if it is still open.
 2. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule

@@ -463,7 +463,10 @@ export default function ChatPage() {
     if (!hydrated) {
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    const handle = window.setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }, 400);
+    return () => window.clearTimeout(handle);
   }, [messages, hydrated]);
 
   useEffect(() => {
@@ -479,7 +482,7 @@ export default function ChatPage() {
       return;
     }
     container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages.length]);
 
   const loadSystem = useCallback(async () => {
     try {
@@ -894,6 +897,41 @@ export default function ChatPage() {
     );
   }, []);
 
+  const progressPending = useRef<Map<string, Partial<ChatMessage>>>(new Map());
+  const progressTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const PROGRESS_FLUSH_MS = 250;
+
+  const dropPendingProgress = useCallback((jobId: string) => {
+    const timer = progressTimers.current.get(jobId);
+    if (timer) {
+      clearTimeout(timer);
+    }
+    progressTimers.current.delete(jobId);
+    progressPending.current.delete(jobId);
+  }, []);
+
+  const queueProgress = useCallback(
+    (jobId: string, patch: Partial<ChatMessage>) => {
+      progressPending.current.set(jobId, {
+        ...progressPending.current.get(jobId),
+        ...patch
+      });
+      if (progressTimers.current.has(jobId)) {
+        return;
+      }
+      const timer = setTimeout(() => {
+        progressTimers.current.delete(jobId);
+        const pending = progressPending.current.get(jobId);
+        progressPending.current.delete(jobId);
+        if (pending) {
+          updateMessageByJob(jobId, pending);
+        }
+      }, PROGRESS_FLUSH_MS);
+      progressTimers.current.set(jobId, timer);
+    },
+    [updateMessageByJob]
+  );
+
   const updateMessageById = useCallback((id: string, patch: Partial<ChatMessage>) => {
     setMessages((current) =>
       current.map((message) => (message.id === id ? { ...message, ...patch } : message))
@@ -1039,7 +1077,7 @@ export default function ChatPage() {
           elapsedMs && payload.percent > 0
             ? Math.max(0, (elapsedMs / payload.percent) * (100 - payload.percent))
             : undefined;
-        updateMessageByJob(jobId, {
+        queueProgress(jobId, {
           progress: payload.percent,
           progressStep: typeof payload.step === "number" ? payload.step : undefined,
           progressTotal:
@@ -1054,6 +1092,7 @@ export default function ChatPage() {
       source.addEventListener("result", (event) => {
         const payload = JSON.parse((event as MessageEvent).data);
         clearStreamReconnect(jobId);
+        dropPendingProgress(jobId);
         updateMessageByJob(jobId, {
           status: "succeeded",
           outputImageId: payload.output_image_id,
@@ -1068,6 +1107,7 @@ export default function ChatPage() {
       source.addEventListener("review_required", (event) => {
         const payload = JSON.parse((event as MessageEvent).data);
         clearStreamReconnect(jobId);
+        dropPendingProgress(jobId);
         updateMessageByJob(jobId, {
           status: "pending_review",
           requiresReview: true,
@@ -1123,9 +1163,11 @@ export default function ChatPage() {
     [
       backendUrl,
       clearStreamReconnect,
+      dropPendingProgress,
       fetchJob,
       handleTransportDisconnect,
       loadRuns,
+      queueProgress,
       updateMessageByJob
     ]
   );

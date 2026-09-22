@@ -553,9 +553,17 @@ def run_job(
         log_payload["prompt"] = prompt_value
     logging_utils.log_event("job_start", **log_payload)
 
+    progress_event_count = 0
+    rss_samples: list[float | None] = []
+    from app.perf_metrics import current_rss_mb
+
+    rss_samples.append(current_rss_mb())
+
     def progress_callback(step: int, total_steps: int) -> None:
+        nonlocal progress_event_count
         if orchestration.is_cancel_requested(job_id):
             raise orchestration.JobCancelled("Job cancelled.")
+        progress_event_count += 1
         percent = int((step / total_steps) * 100) if total_steps else 0
         last_activity_at = _update_job_activity(
             job_id,
@@ -578,7 +586,10 @@ def run_job(
 
     _GPU_SEMAPHORE.acquire()
     try:
+        load_started = time.perf_counter()
         runner.load()
+        model_load_ms = int((time.perf_counter() - load_started) * 1000)
+        rss_samples.append(current_rss_mb())
         _publish_stage("running")
 
         start = time.perf_counter()
@@ -613,14 +624,18 @@ def run_job(
         except Exception as exc:
             raise RuntimeError(str(exc)) from exc
 
+        execution_ms = int((time.perf_counter() - start) * 1000)
+        rss_samples.append(current_rss_mb())
         _publish_stage("saving")
+        commit_started = time.perf_counter()
         image_id, _ = image_store.save_image(
             image,
             source="job",
             job_id=job_id,
             run_id=run["id"],
         )
-        latency_ms = int((time.perf_counter() - start) * 1000)
+        output_commit_ms = int((time.perf_counter() - commit_started) * 1000)
+        latency_ms = execution_ms + output_commit_ms
     finally:
         _GPU_SEMAPHORE.release()
         with _CURRENT_JOB_LOCK:
@@ -628,13 +643,42 @@ def run_job(
         orchestration.set_active_job(None)
 
     finished_at = _now_ms()
+    from app.perf_metrics import build_run_metrics
+
+    metrics = build_run_metrics(
+        queued_at_ms=int(job.get("created_at") or started_at),
+        started_at_ms=started_at,
+        model_load_ms=model_load_ms,
+        execution_ms=execution_ms,
+        output_commit_ms=output_commit_ms,
+        progress_event_count=progress_event_count,
+        rss_samples=rss_samples,
+    )
 
     review_required = runner.manual_review and config.SAFETY_REVIEW_MODE == "manual"
     with db.get_connection() as conn:
         if review_required:
             conn.execute(
-                "UPDATE runs SET pending_output_image_id = ?, latency_ms = ? WHERE job_id = ?",
-                (image_id, latency_ms, job_id),
+                """
+                UPDATE runs
+                SET pending_output_image_id = ?, latency_ms = ?,
+                    queue_wait_ms = ?, model_load_ms = ?, execution_ms = ?,
+                    output_commit_ms = ?, progress_event_count = ?,
+                    progress_events_per_sec = ?, peak_ram_mb = ?
+                WHERE job_id = ?
+                """,
+                (
+                    image_id,
+                    latency_ms,
+                    metrics["queue_wait_ms"],
+                    metrics["model_load_ms"],
+                    metrics["execution_ms"],
+                    metrics["output_commit_ms"],
+                    metrics["progress_event_count"],
+                    metrics["progress_events_per_sec"],
+                    metrics["peak_ram_mb"],
+                    job_id,
+                ),
             )
             conn.execute(
                 """
@@ -647,8 +691,26 @@ def run_job(
             )
         else:
             conn.execute(
-                "UPDATE runs SET output_image_id = ?, latency_ms = ? WHERE job_id = ?",
-                (image_id, latency_ms, job_id),
+                """
+                UPDATE runs
+                SET output_image_id = ?, latency_ms = ?,
+                    queue_wait_ms = ?, model_load_ms = ?, execution_ms = ?,
+                    output_commit_ms = ?, progress_event_count = ?,
+                    progress_events_per_sec = ?, peak_ram_mb = ?
+                WHERE job_id = ?
+                """,
+                (
+                    image_id,
+                    latency_ms,
+                    metrics["queue_wait_ms"],
+                    metrics["model_load_ms"],
+                    metrics["execution_ms"],
+                    metrics["output_commit_ms"],
+                    metrics["progress_event_count"],
+                    metrics["progress_events_per_sec"],
+                    metrics["peak_ram_mb"],
+                    job_id,
+                ),
             )
             conn.execute(
                 """
