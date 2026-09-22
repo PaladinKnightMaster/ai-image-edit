@@ -24,6 +24,7 @@ type MessageTimelineProps = {
   onOpenHistory: () => void;
   onReveal: (message: ChatMessage) => void;
   onRetry: (message: ChatMessage) => void;
+  onCancel: (message: ChatMessage) => void;
   timelineRef: RefObject<HTMLDivElement | null>;
 };
 
@@ -44,6 +45,7 @@ export function MessageTimeline({
   onOpenHistory,
   onReveal,
   onRetry,
+  onCancel,
   timelineRef
 }: MessageTimelineProps) {
   const timelineSizing =
@@ -105,7 +107,9 @@ export function MessageTimeline({
             (compareInputCount > 1 ? compareInputCount - 1 : 0);
           const showCompare = Boolean(outputImageUrl && compareInputUrl && compareInputCount);
           const isActiveJob =
-            !isUser && !message.outputImageId && ["queued", "running"].includes(message.status ?? "");
+            !isUser &&
+            !message.outputImageId &&
+            ["queued", "running", "cancel_requested"].includes(message.status ?? "");
           const isRevealing = message.jobId ? revealingJobIds.has(message.jobId) : false;
           const statusLabel = getJobStatusLabel(message.status);
           const stageLabel = getStageLabel(message.stage);
@@ -202,6 +206,15 @@ export function MessageTimeline({
                         {statusHelp}
                       </div>
                     ) : null}
+                    {isActiveJob && message.jobId ? (
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+                        onClick={() => onCancel(message)}
+                      >
+                        Cancel
+                      </button>
+                    ) : null}
                     {message.requiresReview ? (
                       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
                         {message.reviewNote ?? statusHelp}
@@ -263,7 +276,7 @@ export function MessageTimeline({
                     {message.error ? (
                       <p className="text-sm text-rose-600">{getFailureDetail(message.error)}</p>
                     ) : null}
-                    {message.status === "failed" && message.request ? (
+                    {message.status === "failed" || message.status === "cancelled" ? (
                       <button
                         type="button"
                         className="rounded-full border border-slate-900 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"

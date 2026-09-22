@@ -4,12 +4,16 @@ export const getJobStatusLabel = (status?: string | null) => {
       return "Queued";
     case "running":
       return "Running locally";
+    case "cancel_requested":
+      return "Cancelling";
     case "pending_review":
       return "Ready for review";
     case "succeeded":
       return "Complete";
     case "failed":
       return "Failed";
+    case "cancelled":
+      return "Cancelled";
     default:
       return "Waiting";
   }
@@ -38,6 +42,8 @@ export const getJobStatusTone = (status?: string | null) => {
       return "bg-emerald-100 text-emerald-800";
     case "failed":
       return "bg-rose-100 text-rose-700";
+    case "cancelled":
+      return "bg-slate-200 text-slate-700";
     case "running":
       return "bg-sky-100 text-sky-800";
     case "queued":
@@ -59,6 +65,10 @@ export const getJobStatusHelp = (status?: string | null) => {
       return "The output is available for compare, download, or reuse.";
     case "failed":
       return "The backend reported a job failure (not a mere stream disconnect). Retry if the setup issue is resolved, or copy debug info for investigation.";
+    case "cancelled":
+      return "This run was cancelled. Retry starts a new attempt on the same job.";
+    case "cancel_requested":
+      return "Cancel is saved. The current step stops at the next progress update.";
     default:
       return "Waiting for a backend status update.";
   }

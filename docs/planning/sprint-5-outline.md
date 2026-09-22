@@ -107,6 +107,8 @@ No model run is needed for the entry gate.
 - Owner: Backend + Frontend
 - Work: add persisted cancel request, cooperative Diffusers cancellation, child-process termination for `sd-cli`,
   manual retry, and one-retry transient policy
+- Progress (2026-09-22): persisted `cancel_requested`, cooperative step cancel, `sd-cli` child
+  termination, one automatic retry for worker-dispatch failures, and same-job manual retry.
 - Done when: non-model fakes prove graceful cancel, forced child termination, retryable failure, and no-retry failure
 
 ### WR5-007 - Restart recovery

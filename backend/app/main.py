@@ -191,6 +191,7 @@ class JobResponse(BaseModel):
     progress_step: int | None = None
     progress_total: int | None = None
     last_activity_at: int | None = None
+    cancel_requested: bool = False
     run: RunResponse | None = None
     attempts: list[JobAttemptResponse] = []
 
@@ -342,6 +343,28 @@ def submit_edit_job(request: EditRequest) -> JobSubmitResponse:
 @app.post("/api/images/edit", response_model=JobSubmitResponse)
 def edit_image(request: EditRequest) -> JobSubmitResponse:
     return submit_edit_job(request)
+
+
+@app.post("/api/jobs/{job_id}/cancel", response_model=JobResponse)
+def cancel_job(job_id: str) -> JobResponse:
+    try:
+        job = jobs.request_cancel(job_id)
+    except ValueError as exc:
+        message = str(exc)
+        status_code = 404 if message == "Job not found." else 409
+        raise APIError("invalid_request", message, status_code=status_code) from exc
+    return job
+
+
+@app.post("/api/jobs/{job_id}/retry", response_model=JobResponse)
+def retry_job(job_id: str) -> JobResponse:
+    try:
+        job = jobs.request_manual_retry(job_id)
+    except ValueError as exc:
+        message = str(exc)
+        status_code = 404 if message == "Job not found." else 409
+        raise APIError("invalid_request", message, status_code=status_code) from exc
+    return job
 
 
 @app.get("/api/jobs/{job_id}", response_model=JobResponse)
