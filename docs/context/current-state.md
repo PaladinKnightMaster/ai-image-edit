@@ -87,7 +87,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | --- | --- | --- |
 | WR5-001 | Isolated Windows smoke / owner blocker disposition | Accepted residual (2026-09-22): Sandbox host stays broken; not a Sprint 5 gate |
 | WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
-| WR5-003 | Playwright frontend flow-test foundation | In progress (mocked smoke merged, PR #7) |
+| WR5-003 | Playwright frontend flow-test foundation | Done (mocked flows: roles, progress, reveal, compare, retry, reconnect) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
 | WR5-005 | Durable attempt schema / orchestration boundary | In progress |
 | WR5-006 | Cancellation and bounded retry | In progress (persisted cancel, one auto-retry, manual retry) |
@@ -106,7 +106,7 @@ they do not close Sprint 5 reliability tickets.
 | No isolated clean-Windows result | Accepted residual | Sandbox host crash is not a gate. Do not claim clean-machine compatibility. |
 | Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Accepted residual | Harness stays in repo. Revisit only on another Windows machine. |
 | Local Qwen Edit native crash / GPU requirement | Open, off-box | Do not force local acceptance; keep packet ready; 2.1 is candidate only. |
-| Frontend flow coverage is partial | Open | WR5-003 mocked smoke exists; add reveal, compare, and reconnect cases. |
+| Frontend flow coverage is partial | Closed for primary mocked flows | Extend only if a new product path lands. |
 | EventSource transport loss confused with job failure | Mitigated (PR #6) | Keep covered by Playwright reconnect cases in WR5-003. |
 | Queued/running work is failed on restart | Known limitation | WR5-005–007 attempts, leases, cancel, retry, recovery. |
 | Python dependencies are not reproducibly pinned | Open | WR5-002 constraints/lock + Diffusers revision pin. |
@@ -115,9 +115,8 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. Land WR5-005 attempt history, then WR5-006 cancellation and bounded retry, then WR5-007 restart recovery that uses attempts instead of blindly failing queued work.
-2. Expand WR5-003 Playwright for reveal, compare, and stream reconnect.
-3. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
+1. After the Playwright flow PR merges, implement WR5-007 restart recovery.
+2. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule
 

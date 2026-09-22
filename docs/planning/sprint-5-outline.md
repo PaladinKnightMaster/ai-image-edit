@@ -77,8 +77,8 @@ No model run is needed for the entry gate.
 - Work: add Playwright coverage using a deterministic non-model backend fixture or API interception
 - Required flows: edit mode, base/reference roles, job progress, pending review, reveal, compare, download/reuse,
   retry command, and transport disconnect recovery
-- Progress (2026-09-22): Playwright + Chromium installed; `npm run test:e2e` runs mocked `/chat` smoke
-  (hardware panel, base-required, library base → edit success). Remaining flows still to add.
+- Progress (2026-09-22): `npm run test:e2e` covers edit mode, one-image vs two-image roles, progress,
+  pending review + reveal, compare/download/reuse, same-job retry, and stream-disconnect reconciliation.
 - Done when: primary flows pass from one documented command and failure traces are retained
 
 ### WR5-004 - Job stream reconciliation
