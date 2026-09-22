@@ -317,6 +317,9 @@ class _Flux2SdCliBackend:
             )
             assert process.stdout is not None
             while True:
+                from app import orchestration
+
+                orchestration.abort_child_if_cancelled(process, orchestration.active_job_id())
                 line = process.stdout.readline()
                 if not line and process.poll() is not None:
                     break

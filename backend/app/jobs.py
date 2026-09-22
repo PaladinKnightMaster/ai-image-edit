@@ -185,6 +185,141 @@ def recover_interrupted_jobs() -> dict[str, int]:
     return recovered
 
 
+def request_cancel(job_id: str) -> dict[str, Any]:
+    """Persist a cancel request. Queued work stops immediately; a running attempt stops at the next step."""
+    job = get_job(job_id)
+    if not job:
+        raise ValueError("Job not found.")
+    if job["status"] in {"succeeded", "failed", "cancelled", "pending_review"}:
+        raise ValueError(f"Job cannot be cancelled from status '{job['status']}'.")
+    now = _now_ms()
+    if job["status"] == "queued":
+        with db.get_connection() as conn:
+            conn.execute(
+                """
+                UPDATE jobs
+                SET status = ?, cancel_requested = 1, finished_at = ?, error = ?,
+                    stage = ?, last_activity_at = ?
+                WHERE id = ?
+                """,
+                ("cancelled", now, "cancelled", "cancelled", now, job_id),
+            )
+            conn.commit()
+        from app import orchestration
+
+        orchestration.finish_open_attempts(
+            job_id,
+            status="cancelled",
+            failure_type="user_cancel",
+            retryable=False,
+        )
+        _publish(job_id, "status", {"status": "cancelled", "stage": "cancelled", "last_activity_at": now})
+        return get_job(job_id) or {}
+
+    with db.get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE jobs
+            SET cancel_requested = 1, status = ?, stage = ?, last_activity_at = ?
+            WHERE id = ?
+            """,
+            ("cancel_requested", "cancel_requested", now, job_id),
+        )
+        conn.commit()
+    _publish(
+        job_id,
+        "status",
+        {"status": "cancel_requested", "stage": "cancel_requested", "last_activity_at": now},
+    )
+    return get_job(job_id) or {}
+
+
+def request_manual_retry(job_id: str) -> dict[str, Any]:
+    """Requeue the same job so the next run is a new attempt. History stays on this job."""
+    job = get_job(job_id)
+    if not job:
+        raise ValueError("Job not found.")
+    if job["status"] not in {"failed", "cancelled"}:
+        raise ValueError(f"Job cannot be retried from status '{job['status']}'.")
+    now = _now_ms()
+    with db.get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE jobs
+            SET status = ?, cancel_requested = 0, error = NULL, finished_at = NULL,
+                stage = ?, progress_percent = 0, last_activity_at = ?
+            WHERE id = ?
+            """,
+            ("queued", "queued", now, job_id),
+        )
+        conn.commit()
+    if config.INFERENCE_MODE == "worker":
+        _dispatch_to_worker(job_id)
+    else:
+        _JOB_QUEUE.put(job_id)
+    _publish(job_id, "status", {"status": "queued", "stage": "queued", "last_activity_at": now})
+    return get_job(job_id) or {}
+
+
+def _requeue_for_retry(job_id: str, message: str) -> None:
+    from app import orchestration
+
+    failure_type, retryable = orchestration.classify_failure(message)
+    orchestration.finish_open_attempts(
+        job_id,
+        status="failed",
+        failure_type=failure_type,
+        retryable=retryable,
+        message=message,
+    )
+    now = _now_ms()
+    with db.get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE jobs
+            SET status = ?, error = NULL, finished_at = NULL, stage = ?, last_activity_at = ?
+            WHERE id = ?
+            """,
+            ("queued", "queued", now, job_id),
+        )
+        conn.commit()
+    _JOB_QUEUE.put(job_id)
+    _publish(job_id, "status", {"status": "queued", "stage": "queued", "last_activity_at": now})
+
+
+def _mark_job_cancelled(job_id: str, message: str = "cancelled") -> None:
+    from app import orchestration
+
+    finished_at = _now_ms()
+    with db.get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE jobs
+            SET status = ?, cancel_requested = 1, finished_at = ?, error = ?,
+                stage = ?, last_activity_at = ?
+            WHERE id = ?
+            """,
+            ("cancelled", finished_at, message, "cancelled", finished_at, job_id),
+        )
+        conn.commit()
+    orchestration.finish_open_attempts(
+        job_id,
+        status="cancelled",
+        failure_type="user_cancel",
+        retryable=False,
+        message=message,
+    )
+    with _CURRENT_JOB_LOCK:
+        global _CURRENT_JOB_ID
+        if _CURRENT_JOB_ID == job_id:
+            _CURRENT_JOB_ID = None
+    _publish(
+        job_id,
+        "status",
+        {"status": "cancelled", "stage": "cancelled", "last_activity_at": finished_at},
+    )
+
+
 def _start_workers() -> None:
     worker_count = max(config.MAX_CONCURRENT_JOBS, 1)
     for idx in range(worker_count):
@@ -320,14 +455,21 @@ def submit_job(job_type: str, model_id: str, params: GenerationParams | EditPara
 
 
 def _worker_loop() -> None:
+    from app import orchestration
+
     while True:
         job_id = _JOB_QUEUE.get()
         if job_id is None:
             continue
         try:
             run_job(job_id)
+        except orchestration.JobCancelled:
+            _mark_job_cancelled(job_id)
         except Exception as exc:
-            _mark_job_failed(job_id, str(exc))
+            if orchestration.should_auto_retry(job_id, str(exc)):
+                _requeue_for_retry(job_id, str(exc))
+            else:
+                _mark_job_failed(job_id, str(exc))
         finally:
             _JOB_QUEUE.task_done()
 
@@ -346,6 +488,9 @@ def run_job(
     job_started = time.perf_counter()
     with _CURRENT_JOB_LOCK:
         _CURRENT_JOB_ID = job_id
+    from app import orchestration
+
+    orchestration.set_active_job(job_id)
 
     def _publish_stage(stage: str) -> None:
         last_activity_at = _update_job_activity(job_id, stage=stage)
@@ -409,6 +554,8 @@ def run_job(
     logging_utils.log_event("job_start", **log_payload)
 
     def progress_callback(step: int, total_steps: int) -> None:
+        if orchestration.is_cancel_requested(job_id):
+            raise orchestration.JobCancelled("Job cancelled.")
         percent = int((step / total_steps) * 100) if total_steps else 0
         last_activity_at = _update_job_activity(
             job_id,
@@ -461,6 +608,8 @@ def run_job(
                 image = runner.edit(params, progress_callback=progress_callback)
             else:
                 raise RuntimeError(f"Unknown job type '{job['type']}'.")
+        except orchestration.JobCancelled:
+            raise
         except Exception as exc:
             raise RuntimeError(str(exc)) from exc
 
@@ -476,6 +625,7 @@ def run_job(
         _GPU_SEMAPHORE.release()
         with _CURRENT_JOB_LOCK:
             _CURRENT_JOB_ID = None
+        orchestration.set_active_job(None)
 
     finished_at = _now_ms()
 
@@ -672,6 +822,7 @@ def get_job(job_id: str) -> dict[str, Any] | None:
         run_row = conn.execute("SELECT * FROM runs WHERE job_id = ?", (job_id,)).fetchone()
 
     job = dict(job_row)
+    job["cancel_requested"] = bool(job.get("cancel_requested"))
     run = dict(run_row) if run_row else None
     if run and run.get("input_image_ids"):
         run["input_image_ids"] = json.loads(run["input_image_ids"])

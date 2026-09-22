@@ -113,6 +113,7 @@ def init_db() -> None:
                 ("progress_step", "INTEGER"),
                 ("progress_total", "INTEGER"),
                 ("last_activity_at", "INTEGER"),
+                ("cancel_requested", "INTEGER"),
             ],
         )
         _ensure_columns(

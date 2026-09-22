@@ -1587,6 +1587,23 @@ export default function ChatPage() {
   };
 
   const handleRetry = async (message: ChatMessage) => {
+    if (message.jobId) {
+      setError(null);
+      try {
+        const response = await fetch(`${backendUrl}/api/jobs/${message.jobId}/retry`, {
+          method: "POST"
+        });
+        if (!response.ok) {
+          throw new Error(await parseErrorMessage(response));
+        }
+        updateMessageByJob(message.jobId, { status: "queued", stage: "queued", error: undefined });
+        attachEventSource(message.jobId);
+        void fetchJob(message.jobId);
+      } catch (retryError) {
+        setError(retryError instanceof Error ? retryError.message : "Retry failed.");
+      }
+      return;
+    }
     if (!message.request) {
       return;
     }
@@ -1596,6 +1613,24 @@ export default function ChatPage() {
       await submitJob(message.request);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = async (message: ChatMessage) => {
+    if (!message.jobId) {
+      return;
+    }
+    setError(null);
+    try {
+      const response = await fetch(`${backendUrl}/api/jobs/${message.jobId}/cancel`, {
+        method: "POST"
+      });
+      if (!response.ok) {
+        throw new Error(await parseErrorMessage(response));
+      }
+      void fetchJob(message.jobId);
+    } catch (cancelError) {
+      setError(cancelError instanceof Error ? cancelError.message : "Cancel failed.");
     }
   };
 
@@ -2094,6 +2129,7 @@ export default function ChatPage() {
             }}
             onReveal={handleReveal}
             onRetry={handleRetry}
+            onCancel={handleCancel}
             timelineRef={timelineRef}
           />
 

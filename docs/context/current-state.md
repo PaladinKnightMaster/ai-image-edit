@@ -90,7 +90,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | WR5-003 | Playwright frontend flow-test foundation | In progress (mocked smoke merged, PR #7) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
 | WR5-005 | Durable attempt schema / orchestration boundary | In progress |
-| WR5-006 | Cancellation and bounded retry | Not started |
+| WR5-006 | Cancellation and bounded retry | In progress (persisted cancel, one auto-retry, manual retry) |
 | WR5-007 | Restart recovery | Not started |
 | WR5-008 | CPU and UI performance baseline | Not started (small OpenVINO progress polish in this PR) |
 | WR5-009 | Optional Temporal spike | Not started |

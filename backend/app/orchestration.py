@@ -14,6 +14,16 @@ from app import config, db
 
 
 LEASE_MS = 120_000
+_ACTIVE_JOB_ID: str | None = None
+
+
+def set_active_job(job_id: str | None) -> None:
+    global _ACTIVE_JOB_ID
+    _ACTIVE_JOB_ID = job_id
+
+
+def active_job_id() -> str | None:
+    return _ACTIVE_JOB_ID
 
 
 def _clock() -> int:
@@ -23,15 +33,73 @@ def _clock() -> int:
 
 
 def classify_failure(message: str) -> tuple[str, bool]:
-    """Return (failure_type, retryable). Retry stays false until WR5-006."""
+    """Return (failure_type, retryable). At most one automatic retry, and only for transient dispatch errors."""
     lowered = (message or "").lower()
+    if "cancel" in lowered:
+        return "user_cancel", False
     if "server restarted" in lowered or "process restart" in lowered:
         return "process_restart", False
     if "not found" in lowered or "missing" in lowered or "does not support" in lowered:
         return "invalid_input", False
     if "out of memory" in lowered or "cuda out of memory" in lowered:
         return "out_of_memory", False
+    if "worker dispatch failed" in lowered or "transient" in lowered:
+        return "worker_dispatch", True
     return "execution_error", False
+
+
+MAX_AUTO_RETRIES = 1
+
+
+class JobCancelled(RuntimeError):
+    """Raised when a persisted cancel request stops the current attempt."""
+
+
+def auto_retry_budget_used(job_id: str) -> int:
+    return sum(
+        1
+        for attempt in list_attempts(job_id)
+        if attempt["status"] == "failed" and attempt["retryable"]
+    )
+
+
+def should_auto_retry(job_id: str, message: str) -> bool:
+    _failure_type, retryable = classify_failure(message)
+    if not retryable:
+        return False
+    return auto_retry_budget_used(job_id) < MAX_AUTO_RETRIES
+
+
+def is_cancel_requested(job_id: str | None) -> bool:
+    if not job_id:
+        return False
+    with db.get_connection() as conn:
+        row = conn.execute(
+            "SELECT cancel_requested, status FROM jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+    if not row:
+        return False
+    return bool(row["cancel_requested"]) or row["status"] in {"cancel_requested", "cancelled"}
+
+
+def terminate_child_process(process: Any, timeout: float = 2.0) -> None:
+    """Stop a non-cooperative child. Terminate first, then kill if it ignores the signal."""
+    import subprocess
+
+    process.terminate()
+    try:
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=timeout)
+
+
+def abort_child_if_cancelled(process: Any, job_id: str | None) -> None:
+    if not is_cancel_requested(job_id):
+        return
+    terminate_child_process(process)
+    raise JobCancelled("Job cancelled.")
 
 
 def worker_id() -> str:
