@@ -45,3 +45,6 @@ Thumbs.db
 
 # Local validation artifacts
 .artifacts/
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/

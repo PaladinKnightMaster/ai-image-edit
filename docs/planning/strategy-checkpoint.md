@@ -42,7 +42,7 @@ does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/co
 | Strategy step | Status |
 | --- | --- |
 | 1. Clean-environment validation | Open — Sandbox host blocker; no pass recorded (Sprint 4 residual) |
-| 2. Automated product-flow coverage | Not started (WR5-003) |
+| 2. Automated product-flow coverage | In progress (WR5-003 mocked smoke) |
 | 3. Job transport / SSE reconciliation | Done (WR5-004 / PR #6) |
 | 4. Durable attempts / cancel / retry / restart | Not started (WR5-005–007) |
 | 5. CPU + UI performance baseline | Not started (WR5-008); small OpenVINO progress polish in WR5-004 PR |

@@ -87,7 +87,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | --- | --- | --- |
 | WR5-001 | Isolated Windows smoke / owner blocker disposition | Open residual |
 | WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
-| WR5-003 | Playwright frontend flow-test foundation | Not started |
+| WR5-003 | Playwright frontend flow-test foundation | In progress (mocked smoke suite) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
 | WR5-005 | Durable attempt schema / orchestration boundary | Not started |
 | WR5-006 | Cancellation and bounded retry | Not started |
