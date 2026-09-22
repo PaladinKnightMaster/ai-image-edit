@@ -25,7 +25,9 @@ exact setup command for the best pick. JSON for tooling/UI:
 python scripts/scan_machine.py --json
 ```
 
-The running backend exposes the same data at `GET /api/hardware` (used by the UI).
+The running backend exposes the same data at `GET /api/hardware`. The `/chat`
+sidebar **Hardware fit** panel shows the live recommendation and can switch the
+active model to the best local pick.
 
 ## 2. Model matrix
 
