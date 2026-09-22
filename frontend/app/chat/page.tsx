@@ -7,11 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 
 import { EDIT_PRESETS } from "./edit-presets";
 import { ComposerPanel } from "./components/ComposerPanel";
+import { HardwareAdvisorPanel } from "./components/HardwareAdvisorPanel";
 import { HistoryPickerModal } from "./components/HistoryPickerModal";
 import { MessageTimeline } from "./components/MessageTimeline";
 import { ModeSwitchHero } from "./components/ModeSwitchHero";
 import { UtilitiesPanel } from "./components/UtilitiesPanel";
 import { getJobStatusHelp, getJobStatusLabel, getJobStatusTone } from "./status-copy";
+import type { HardwareAdvice } from "./types";
 
 type SystemInfo = {
   profile: string;
@@ -378,6 +380,7 @@ export default function ChatPage() {
     []
   );
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [hardwareAdvice, setHardwareAdvice] = useState<HardwareAdvice | null>(null);
   const [readyState, setReadyState] = useState<ReadyState | null>(null);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [recentRuns, setRecentRuns] = useState<RunRecord[]>([]);
@@ -512,6 +515,19 @@ export default function ChatPage() {
     }
   }, [backendUrl]);
 
+  const loadHardware = useCallback(async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/hardware`, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const data = (await response.json()) as HardwareAdvice;
+      setHardwareAdvice(data);
+    } catch {
+      // ignore
+    }
+  }, [backendUrl]);
+
   const loadRuns = useCallback(async () => {
     try {
       const response = await fetch(`${backendUrl}/api/runs?limit=6`, { cache: "no-store" });
@@ -637,10 +653,11 @@ export default function ChatPage() {
   useEffect(() => {
     void loadSystem();
     void loadModels();
+    void loadHardware();
     void loadRuns();
     void loadReady();
     void loadFailedRuns();
-  }, [loadSystem, loadModels, loadRuns, loadReady, loadFailedRuns]);
+  }, [loadSystem, loadModels, loadHardware, loadRuns, loadReady, loadFailedRuns]);
 
   useEffect(() => {
     if (!models.length) {
@@ -1724,6 +1741,15 @@ export default function ChatPage() {
               </div>
             ) : null}
           </div>
+
+          <HardwareAdvisorPanel
+            advice={hardwareAdvice}
+            selectedModelId={selectedModelId}
+            onSelectModel={setSelectedModelId}
+            onRefresh={() => {
+              void loadHardware();
+            }}
+          />
 
           <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">

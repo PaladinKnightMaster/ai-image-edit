@@ -18,6 +18,39 @@ export type ModelInfo = {
   review_mode?: string | null;
 };
 
+export type HardwareModelAdvice = {
+  id: string;
+  label: string;
+  engine: string;
+  capabilities: string[];
+  approx_disk_gb: number;
+  verdict: string;
+  verdict_label: string;
+  reason: string;
+  downloadable: boolean;
+  present: boolean;
+  setup: string;
+  docs: string;
+  notes: string;
+};
+
+export type HardwareAdvice = {
+  hardware: {
+    has_cuda?: boolean;
+    vram_gb?: number | null;
+    ram_gb?: number | null;
+    cpu_brand?: string | null;
+    disk_free_gb?: number | null;
+    openvino_devices?: string[];
+    has_openvino?: boolean;
+    has_intel_gpu?: boolean;
+  };
+  models: HardwareModelAdvice[];
+  best_choice: string | null;
+  best_choice_setup: string | null;
+  summary: string;
+};
+
 export type RunRecord = {
   id: string;
   job_id: string;
