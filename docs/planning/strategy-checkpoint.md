@@ -41,18 +41,18 @@ does not close Sprint 5 reliability tickets. Full ticket table lives in `docs/co
 
 | Strategy step | Status |
 | --- | --- |
-| 1. Clean-environment validation | Open — Sandbox host blocker; no pass recorded (Sprint 4 residual) |
+| 1. Clean-environment validation | Accepted residual — Sandbox host blocker; not a Sprint 5 gate |
 | 2. Automated product-flow coverage | In progress (WR5-003 mocked smoke) |
 | 3. Job transport / SSE reconciliation | Done (WR5-004 / PR #6) |
-| 4. Durable attempts / cancel / retry / restart | Not started (WR5-005–007) |
+| 4. Durable attempts / cancel / retry / restart | WR5-005 in progress; WR5-006–007 not started |
 | 5. CPU + UI performance baseline | Not started (WR5-008); small OpenVINO progress polish in WR5-004 PR |
 | 6. Optional Temporal spike | Not started |
 | 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1) |
 
 ## Validation Decision
 
-- Windows Sandbox substitutes for the unavailable fresh Windows machine for clean installation and non-model
-  release smoke
+- Windows Sandbox remains the preferred clean-Windows surrogate when the host feature works.
+  On this machine the host crash is an accepted residual and is not a Sprint 5 gate.
 - Docker/WSL2 validates dependency and build reproducibility, not native Windows behavior
 - absence of an independent physical tester remains a residual risk
 - all heavy model runs continue to require explicit warning and approval

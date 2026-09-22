@@ -57,10 +57,10 @@ No model run is needed for the entry gate.
 - Owner: DevOps + Release Guard
 - Work: export a clean commit, launch Windows Sandbox, install dependencies inside it, run
   `scripts/release_smoke.ps1`, and record the environment honestly
-- Progress: clean-export, signed-prerequisite, bootstrap, and evidence harness implemented; `e829507` package
-  prepared; host Sandbox app crashes before bootstrap due to missing `WinRT.Runtime 2.2.0.0`; post-restart retry
-  plus post-Repair and post-Reset retries failed identically; owner blocker disposition pending
-- Done when: result or owner-accepted blocker is captured in the Sprint 4 result log
+- Progress: harness implemented; host Sandbox app crashes before bootstrap (`WinRT.Runtime 2.2.0.0`).
+  Owner accepted this as residual risk on 2026-09-22. It is not a gate for Sprint 5 backend work.
+  Do not claim a clean-machine smoke pass.
+- Done when: residual acceptance is recorded (this note) or a future machine actually passes smoke
 
 ### WR5-002 - Reproducible dependency baseline
 
@@ -98,6 +98,8 @@ No model run is needed for the entry gate.
 - Work: introduce `JobOrchestrator`, `AttemptExecutor`, immutable retry inputs, attempt records, normalized failure
   classes, leases, and heartbeats
 - Done when: local SQLite orchestration preserves attempt history and existing API behavior remains compatible
+- Progress (2026-09-22): `job_attempts` plus `app/orchestration.py` record begin/heartbeat/finish.
+  Restart still marks queued/running jobs failed (WR5-007) but closes the open attempt as `process_restart`.
 
 ### WR5-006 - Cancellation and bounded retry
 

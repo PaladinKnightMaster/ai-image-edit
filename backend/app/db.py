@@ -81,6 +81,27 @@ def init_db() -> None:
                 job_id TEXT,
                 run_id TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS job_attempts (
+                id TEXT PRIMARY KEY,
+                job_id TEXT NOT NULL,
+                attempt_number INTEGER NOT NULL,
+                worker_id TEXT,
+                execution_mode TEXT,
+                status TEXT NOT NULL,
+                lease_expires_at INTEGER,
+                last_heartbeat_at INTEGER,
+                started_at INTEGER NOT NULL,
+                finished_at INTEGER,
+                exit_code INTEGER,
+                failure_type TEXT,
+                retryable INTEGER NOT NULL DEFAULT 0,
+                temp_output_image_id TEXT,
+                output_image_id TEXT,
+                FOREIGN KEY(job_id) REFERENCES jobs(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_job_attempts_job_id ON job_attempts(job_id);
             """
         )
         _ensure_columns(

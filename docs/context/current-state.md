@@ -12,7 +12,7 @@ Owner: Tech Lead
 - pending-review outputs require explicit reveal before normal reuse
 - `/chat` sidebar includes a **Hardware fit** panel backed by `GET /api/hardware`
 - the frontend is componentized but `frontend/app/chat/page.tsx` still owns substantial API, persistence, and
-  EventSource orchestration (stream reconciliation in progress on this branch)
+  EventSource orchestration (stream disconnect reconciles via the job API)
 - backend jobs, runs, and images persist in SQLite plus filesystem storage
 - runner abstractions cover Qwen T2I, Qwen Edit, FLUX GGUF, and SDXL OpenVINO lanes
 
@@ -85,11 +85,11 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 
 | ID | Work | Status |
 | --- | --- | --- |
-| WR5-001 | Isolated Windows smoke / owner blocker disposition | Open residual |
+| WR5-001 | Isolated Windows smoke / owner blocker disposition | Accepted residual (2026-09-22): Sandbox host stays broken; not a Sprint 5 gate |
 | WR5-002 | Reproducible Python / Docker dependency baseline | Not started |
-| WR5-003 | Playwright frontend flow-test foundation | In progress (mocked smoke suite) |
+| WR5-003 | Playwright frontend flow-test foundation | In progress (mocked smoke merged, PR #7) |
 | WR5-004 | EventSource / job-stream reconciliation | Done (PR #6) |
-| WR5-005 | Durable attempt schema / orchestration boundary | Not started |
+| WR5-005 | Durable attempt schema / orchestration boundary | In progress |
 | WR5-006 | Cancellation and bounded retry | Not started |
 | WR5-007 | Restart recovery | Not started |
 | WR5-008 | CPU and UI performance baseline | Not started (small OpenVINO progress polish in this PR) |
@@ -103,10 +103,10 @@ they do not close Sprint 5 reliability tickets.
 
 | Risk | State | Next action |
 | --- | --- | --- |
-| No isolated clean-Windows result | Persistent external host blocker | Owner accepts residual risk or approves Sandbox optional-feature reinstall + restarts. |
-| Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Reproduced after restart, Repair, Reset | Keep claiming no clean-machine pass; tester handoff stays blocked until disposition. |
+| No isolated clean-Windows result | Accepted residual | Sandbox host crash is not a gate. Do not claim clean-machine compatibility. |
+| Sandbox app 0.8.107.0 misses `WinRT.Runtime 2.2.0.0` | Accepted residual | Harness stays in repo. Revisit only on another Windows machine. |
 | Local Qwen Edit native crash / GPU requirement | Open, off-box | Do not force local acceptance; keep packet ready; 2.1 is candidate only. |
-| Frontend has no automated flow suite | Open | WR5-003 Playwright after stream reconciliation lands. |
+| Frontend flow coverage is partial | Open | WR5-003 mocked smoke exists; add reveal, compare, and reconnect cases. |
 | EventSource transport loss confused with job failure | Mitigated (PR #6) | Keep covered by Playwright reconnect cases in WR5-003. |
 | Queued/running work is failed on restart | Known limitation | WR5-005–007 attempts, leases, cancel, retry, recovery. |
 | Python dependencies are not reproducibly pinned | Open | WR5-002 constraints/lock + Diffusers revision pin. |
@@ -115,10 +115,9 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. Start WR5-003 Playwright frontend flow-test foundation (edit mode, progress, reveal, compare, reconnect).
-2. Then WR5-005 → WR5-006 → WR5-007 durable attempts, cancel/retry, restart recovery.
-3. Keep WR5-001 Sandbox disposition as a parallel owner decision — do not claim clean-machine compatibility.
-4. Do not download or register Qwen-Image-2.1 on this CPU box as a product default.
+1. Land WR5-005 attempt history, then WR5-006 cancellation and bounded retry, then WR5-007 restart recovery that uses attempts instead of blindly failing queued work.
+2. Expand WR5-003 Playwright for reveal, compare, and stream reconnect.
+3. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule
 

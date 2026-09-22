@@ -13,9 +13,8 @@ considering model replacement.
 ## Current Phase
 
 - Sprint 3: closed
-- Sprint 4: residual open — Windows Sandbox host blocker (`WinRT.Runtime`) unresolved; no clean-machine smoke pass
-- OpenVINO mainline: shipped (PRs #3–#5) — `sdxl-openvino` is primary local t2i + edit; hardware advisor in UI
-- Sprint 5: **active** Backend + UI reliability (stream reconciliation → flows → durable jobs → cancel/retry)
+- Sprint 4: residual accepted — Windows Sandbox host blocker is not a Sprint 5 gate; no clean-machine pass claimed
+- Sprint 5: **active** — durable attempts (WR5-005), then cancel/retry and restart recovery
 
 ## Locked Decisions
 
@@ -52,9 +51,10 @@ Decision sources:
 
 ## Immediate Next Action
 
-1. **WR5-003** — Playwright flow-test foundation (edit, progress, reveal, compare, reconnect)
-2. then WR5-005 → WR5-006 → WR5-007 durable attempts, cancel/retry, restart recovery
-3. Parallel: owner disposition for WR5-001 Sandbox blocker (accept residual vs reinstall) — do not claim smoke pass
+1. Land WR5-005 attempt history
+2. Then WR5-006 cancellation and bounded retry, then WR5-007 restart recovery
+3. Expand Playwright for reveal and stream reconnect
+4. Do not treat Windows Sandbox as a gate and do not download Qwen-Image-2.1 as the CPU default
 
 ## Then
 
