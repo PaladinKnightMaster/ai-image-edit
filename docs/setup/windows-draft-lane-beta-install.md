@@ -141,7 +141,7 @@ Use one repo-root virtual environment:
 ```powershell
 py -3.12 -m venv .venv
 & .\.venv\Scripts\python.exe -m pip install --upgrade pip
-& .\.venv\Scripts\python.exe -m pip install -r .\backend\requirements.txt
+& .\.venv\Scripts\python.exe -m pip install -c .\backend\constraints.txt -r .\backend\requirements.txt
 ```
 
 The requirements include a Git-based dependency, so Git must remain available during installation.
@@ -358,7 +358,7 @@ Before updating, stop backend and frontend.
 git fetch origin
 $ApprovedCommit = "PASTE_APPROVED_COMMIT_HERE"
 git checkout $ApprovedCommit
-& .\.venv\Scripts\python.exe -m pip install -r .\backend\requirements.txt
+& .\.venv\Scripts\python.exe -m pip install -c .\backend\constraints.txt -r .\backend\requirements.txt
 Push-Location .\frontend
 npm.cmd ci
 Pop-Location

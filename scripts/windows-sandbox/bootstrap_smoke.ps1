@@ -176,7 +176,7 @@ try {
   Invoke-NativeChecked -FilePath $python -Arguments @("-m", "venv", $venvRoot) -Label "Virtual environment creation"
   $venvPython = Join-Path $venvRoot "Scripts\python.exe"
   Invoke-NativeChecked -FilePath $venvPython -Arguments @("-m", "pip", "install", "--upgrade", "pip") -Label "pip upgrade"
-  Invoke-NativeChecked -FilePath $venvPython -Arguments @("-m", "pip", "install", "-r", (Join-Path $sourceRoot "backend\requirements.txt")) -Label "Backend dependency install"
+  Invoke-NativeChecked -FilePath $venvPython -Arguments @("-m", "pip", "install", "-c", (Join-Path $sourceRoot "backend\constraints.txt"), "-r", (Join-Path $sourceRoot "backend\requirements.txt")) -Label "Backend dependency install"
 
   $result.phase = "installing-frontend-dependencies"
   $frontendRoot = Join-Path $sourceRoot "frontend"

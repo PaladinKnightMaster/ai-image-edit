@@ -13,7 +13,8 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 class StartupSmokeTest(unittest.TestCase):
     def test_fast_check_profile_health_and_models(self) -> None:
         env = os.environ.copy()
-        env["DOTENV_PATH"] = str(BACKEND_ROOT / ".env.fast-check")
+        # Prefer an already-set path (Docker smoke) over the local fast-check profile.
+        env["DOTENV_PATH"] = env.get("DOTENV_PATH") or str(BACKEND_ROOT / ".env.fast-check")
 
         script = """
 import json
