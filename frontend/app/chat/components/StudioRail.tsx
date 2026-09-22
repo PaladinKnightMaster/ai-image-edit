@@ -69,14 +69,18 @@ export function StudioRail({ setup, utilities }: StudioRailProps) {
           })}
         </nav>
       </aside>
-      {drawer ? (
-        <div
-          className="fixed inset-x-0 bottom-14 top-0 z-30 overflow-y-auto border-slate-200 bg-slate-50 p-4 lg:static lg:bottom-auto lg:top-auto lg:z-auto lg:h-screen lg:w-80 lg:shrink-0 lg:border-r"
-          data-testid={`studio-drawer-${drawer}`}
-        >
-          {drawer === "setup" ? setup : utilities}
-        </div>
-      ) : null}
+      <div
+        className={
+          drawer
+            ? "fixed inset-x-0 bottom-14 top-0 z-30 overflow-y-auto border-slate-200 bg-slate-50 p-4 lg:static lg:bottom-auto lg:top-auto lg:z-auto lg:h-screen lg:w-80 lg:shrink-0 lg:border-r"
+            : "hidden"
+        }
+        data-testid={drawer ? `studio-drawer-${drawer}` : undefined}
+        aria-hidden={drawer ? undefined : true}
+      >
+        <div className={drawer === "setup" ? "block" : "hidden"}>{setup}</div>
+        <div className={drawer === "utilities" ? "block" : "hidden"}>{utilities}</div>
+      </div>
     </>
   );
 }
