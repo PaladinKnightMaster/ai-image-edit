@@ -115,7 +115,7 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. After the Playwright flow PR merges, implement WR5-007 restart recovery.
+1. After restart recovery (WR5-007) merges, record the CPU and UI performance baseline (WR5-008).
 2. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default.
 
 ## Heavy-Run Rule
