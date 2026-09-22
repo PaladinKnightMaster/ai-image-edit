@@ -75,16 +75,17 @@ class JobAttemptTest(unittest.TestCase):
     def test_restart_recovery_closes_open_attempt_without_deleting_history(self) -> None:
         attempt = self.orchestration.begin_attempt("job-1")
         recovered = self.jobs.recover_interrupted_jobs()
-        self.assertEqual(recovered["running"], 1)
+        self.assertEqual(recovered["interrupted"], 1)
+        self.assertIn("job-1", recovered["requeue_ids"])
         history = self.orchestration.list_attempts("job-1")
         self.assertEqual(len(history), 1)
         self.assertEqual(history[0]["id"], attempt["id"])
-        self.assertEqual(history[0]["status"], "failed")
+        self.assertEqual(history[0]["status"], "interrupted")
         self.assertEqual(history[0]["failure_type"], "process_restart")
-        self.assertFalse(history[0]["retryable"])
+        self.assertTrue(history[0]["retryable"])
         job = self.jobs.get_job("job-1")
-        self.assertEqual(job["status"], "failed")
-        self.assertEqual(job["error"], "server restarted")
+        self.assertEqual(job["status"], "queued")
+        self.assertIsNone(job["error"])
 
     def test_classify_failure_does_not_retry_restart_or_oom(self) -> None:
         self.assertEqual(

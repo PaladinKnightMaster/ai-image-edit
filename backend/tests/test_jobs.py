@@ -214,7 +214,7 @@ class JobStateTransitionTest(unittest.TestCase):
         self.assertIsNone(self.jobs.get_run(run_id))
         self.assertFalse(image_path.exists())
 
-    def test_recover_interrupted_jobs_marks_queued_and_running_failed(self) -> None:
+    def test_recover_interrupted_jobs_requeues_once_and_keeps_terminal_jobs(self) -> None:
         self._insert_run(job_id="job-queued", run_id="run-queued", status="queued")
         self._insert_run(job_id="job-running", run_id="run-running", status="running")
         self._insert_run(
@@ -223,31 +223,42 @@ class JobStateTransitionTest(unittest.TestCase):
             status="succeeded",
             output_image_id="output-image",
         )
+        self._insert_run(
+            job_id="job-review",
+            run_id="run-review",
+            status="pending_review",
+            pending_output_image_id="pending-image",
+        )
 
         recovered = self.jobs.recover_interrupted_jobs()
 
-        self.assertEqual(recovered, {"queued": 1, "running": 1, "marked_failed": 2})
-        queued = self.jobs.get_job("job-queued")
+        self.assertEqual(recovered["requeued"], 2)
+        self.assertEqual(recovered["interrupted"], 1)
+        self.assertEqual(recovered["marked_failed"], 0)
+        self.assertCountEqual(recovered["requeue_ids"], ["job-queued", "job-running"])
+        self.assertEqual(self.jobs.get_job("job-queued")["status"], "queued")
+        self.assertIsNone(self.jobs.get_job("job-queued")["error"])
         running = self.jobs.get_job("job-running")
-        succeeded = self.jobs.get_job("job-succeeded")
-        self.assertEqual(queued["status"], "failed")
-        self.assertEqual(queued["error"], "server restarted")
-        self.assertEqual(queued["status_label"], "Failed")
-        self.assertEqual(queued["stage_label"], "Failed")
-        self.assertEqual(
-            queued["error_detail"],
-            "This job was marked failed during backend restart recovery. The run metadata is safe, but the job is not resumable.",
-        )
-        self.assertEqual(queued["stage"], "failed")
-        self.assertEqual(running["status"], "failed")
-        self.assertEqual(running["error"], "server restarted")
-        self.assertEqual(running["status_label"], "Failed")
-        self.assertEqual(
-            running["error_detail"],
-            "This job was marked failed during backend restart recovery. The run metadata is safe, but the job is not resumable.",
-        )
-        self.assertEqual(running["stage"], "failed")
-        self.assertEqual(succeeded["status"], "succeeded")
+        self.assertEqual(running["status"], "queued")
+        self.assertEqual(running["attempts"][0]["status"], "interrupted")
+        self.assertTrue(running["attempts"][0]["retryable"])
+        self.assertEqual(self.jobs.get_job("job-succeeded")["status"], "succeeded")
+        self.assertEqual(self.jobs.get_job("job-review")["status"], "pending_review")
+
+        again = self.jobs.recover_interrupted_jobs()
+        self.assertEqual(again["marked_failed"], 0)
+        self.assertIn("job-queued", again["requeue_ids"])
+        self.assertIn("job-running", again["requeue_ids"])
+
+        with self.db.get_connection() as conn:
+            conn.execute("UPDATE jobs SET status = ? WHERE id = ?", ("running", "job-running"))
+            conn.commit()
+        failed = self.jobs.recover_interrupted_jobs()
+        self.assertEqual(failed["marked_failed"], 1)
+        restarted = self.jobs.get_job("job-running")
+        self.assertEqual(restarted["status"], "failed")
+        self.assertEqual(restarted["error"], "server restarted")
+        self.assertFalse(restarted["attempts"][-1]["retryable"])
 
     def test_status_copy_distinguishes_pending_review_and_observer_timeout(self) -> None:
         self._insert_run(

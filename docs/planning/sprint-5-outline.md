@@ -117,6 +117,8 @@ No model run is needed for the entry gate.
 - Owner: Backend + Reviewer
 - Work: requeue persisted queued/retry-wait work, classify expired running leases as interrupted, preserve terminal
   states, and make retry policy explicit
+- Progress (2026-09-22): startup requeues queued work, closes a running attempt as interrupted, and retries that
+  job once. A second restart of the same running job fails it. Terminal statuses stay put.
 - Done when: restart tests prove state transitions without launching a model
 
 ### WR5-008 - CPU and UI performance baseline
