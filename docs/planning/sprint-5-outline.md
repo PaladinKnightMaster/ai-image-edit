@@ -74,7 +74,7 @@ No model run is needed for the entry gate.
   `scripts/verify_python_baseline.ps1` cover non-model reproducibility.
   Verified: two clean pip resolves matched; Docker non-model smoke passed (`/health` + startup unittest).
 - Done when: two clean installs resolve the same direct dependency baseline and smoke passes without model assets
-  (**met** on 2026-09-22; awaiting merge)
+  (**met** and merged in PR #13 on 2026-09-22)
 
 ### WR5-003 - Frontend flow-test foundation
 
