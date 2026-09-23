@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
 import { EDIT_PRESETS } from "./edit-presets";
+import { rememberPresetThumbnail, thumbnailsFromRuns, loadPresetThumbnails, savePresetThumbnails } from "./preset-thumbnails";
 import { ComposerPanel } from "./components/ComposerPanel";
 import { HardwareAdvisorPanel } from "./components/HardwareAdvisorPanel";
 import { HistoryPickerModal } from "./components/HistoryPickerModal";
@@ -394,6 +395,7 @@ export default function ChatPage() {
   const [readyState, setReadyState] = useState<ReadyState | null>(null);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [recentRuns, setRecentRuns] = useState<RunRecord[]>([]);
+  const [presetThumbnails, setPresetThumbnails] = useState<Record<string, string>>({});
   const [failedRuns, setFailedRuns] = useState<RunRecord[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -555,6 +557,9 @@ export default function ChatPage() {
       }
       const data = (await response.json()) as RunRecord[];
       setRecentRuns(data);
+      const merged = { ...loadPresetThumbnails(), ...thumbnailsFromRuns(data) };
+      savePresetThumbnails(merged);
+      setPresetThumbnails(merged);
     } catch {
       // ignore
     }
@@ -677,6 +682,10 @@ export default function ChatPage() {
     void loadReady();
     void loadFailedRuns();
   }, [loadSystem, loadModels, loadHardware, loadRuns, loadReady, loadFailedRuns]);
+
+  useEffect(() => {
+    setPresetThumbnails(loadPresetThumbnails());
+  }, []);
 
   useEffect(() => {
     if (!models.length) {
@@ -894,7 +903,16 @@ export default function ChatPage() {
 
   const updateMessageByJob = useCallback((jobId: string, patch: Partial<ChatMessage>) => {
     setMessages((current) =>
-      current.map((message) => (message.jobId === jobId ? { ...message, ...patch } : message))
+      current.map((message) => {
+        if (message.jobId !== jobId) {
+          return message;
+        }
+        const next = { ...message, ...patch };
+        if (next.outputImageId && next.prompt) {
+          setPresetThumbnails(rememberPresetThumbnail(next.prompt, next.outputImageId));
+        }
+        return next;
+      })
     );
   }, []);
 
@@ -2094,6 +2112,7 @@ export default function ChatPage() {
             steps={steps}
             strength={strength}
             submitLabel={submitLabel}
+            presetThumbnails={presetThumbnails}
             trueCfgScale={trueCfgScale}
             width={width}
           />

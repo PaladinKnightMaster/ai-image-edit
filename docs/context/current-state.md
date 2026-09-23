@@ -11,7 +11,7 @@ Owner: Tech Lead
 - portrait presets, generated-image-to-edit handoff, before/after compare, history, download, and reuse exist
 - `/chat` is a studio: a pinned prompt, a visual preset row, and a Library gallery of recent runs. A collapsible rail opens Setup (Hardware fit and model folder) or Utilities (runtime, worker status, installed models, cleanup). The rail is a left column on a wide screen and a bottom bar on a narrow one.
 - Hardware fit suggests `models/openvino/sdxl_base`, asks once to confirm or change that folder, and saves the choice. `SDXL_OV_BASE_DIR` overrides the setting. Only the recommended local model can be downloaded in-app.
-- preset tiles are color blocks, not saved result photos
+- preset tiles show the latest local result whose prompt matches that preset; presets with no saved run stay color tiles
 - pending-review outputs require explicit reveal before normal reuse
 - the frontend is componentized but `frontend/app/chat/page.tsx` still owns substantial API, persistence, and
   EventSource orchestration (stream disconnect reconciles via the job API)
@@ -116,7 +116,7 @@ Roadmap in `docs/planning/sprint-5-outline.md`. Reliability P0s are done. Tempor
 
 ## Immediate Next Action
 
-1. Give each portrait preset a real result thumbnail so the preset row is a visual prompt library.
+1. Use the studio: a finished preset run now fills that preset's thumbnail. Presets with no completed run stay color tiles until one exists.
 2. WR5-010 stays off-box. Next.js 16 stays a later increment. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box. Do not install Temporal.
 
 ## Heavy-Run Rule

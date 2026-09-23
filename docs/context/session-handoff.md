@@ -56,7 +56,7 @@ Decision sources:
 
 ## Immediate Next Action
 
-1. Replace color preset tiles with a real result thumbnail per portrait preset
+1. A finished preset run now fills that preset's thumbnail. Presets with no completed run stay color tiles.
 2. WR5-010 stays off-box. Next.js 16 stays later. Do not treat Windows Sandbox as a gate, do not download Qwen-Image-2.1 as the CPU default, and do not install Temporal
 
 ## Then

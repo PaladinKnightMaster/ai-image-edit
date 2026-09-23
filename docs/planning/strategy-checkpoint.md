@@ -48,7 +48,7 @@ Sprint 5 reliability work is closed or deferred. The active roadmap is the priva
 | 5. CPU + UI performance baseline | Done (WR5-008); report in `docs/planning/cpu-ui-performance-baseline.md` |
 | 6. Optional Temporal spike | Deferred — ADR 0007; no Temporal install |
 | 7. Benchmark-driven model evaluation | Candidate noted only (WR5-010 / Qwen-Image-2.1); off-box only |
-| 8. Private studio surface | Active — PR #16 folder confirmation, PR #17 rail + gallery. Next: real preset thumbnails |
+| 8. Private studio surface | Active — preset tiles show the latest local result that used that preset prompt. |
 
 ## Studio Amendment (2026-09-22)
 

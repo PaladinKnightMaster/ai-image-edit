@@ -58,6 +58,7 @@ type ComposerPanelProps = {
   steps: string;
   strength: string;
   submitLabel: string;
+  presetThumbnails?: Record<string, string>;
   trueCfgScale: string;
   width: string;
 };
@@ -153,6 +154,7 @@ export function ComposerPanel({
   steps,
   strength,
   submitLabel,
+  presetThumbnails = {},
   trueCfgScale,
   width
 }: ComposerPanelProps) {
@@ -195,10 +197,18 @@ export function ComposerPanel({
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
                   }`}
                 >
-                  <span
-                    className={`block h-16 rounded-xl ${presetSwatch(preset.id)}`}
-                    aria-hidden="true"
-                  />
+                  <span className="block h-16 overflow-hidden rounded-xl">
+                    {presetThumbnails[preset.id] ? (
+                      <img
+                        src={`${backendUrl}/api/images/${presetThumbnails[preset.id]}`}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        data-testid={`preset-thumb-${preset.id}`}
+                      />
+                    ) : (
+                      <span className={`block h-full ${presetSwatch(preset.id)}`} aria-hidden="true" />
+                    )}
+                  </span>
                   <span className="mt-2 block text-sm font-semibold">{preset.name}</span>
                   <span className={`mt-1 block text-[10px] uppercase tracking-[0.16em] ${isActive ? "text-slate-300" : "text-slate-500"}`}>
                     Use
