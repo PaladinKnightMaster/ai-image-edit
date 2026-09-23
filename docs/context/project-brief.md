@@ -1,7 +1,7 @@
 # Project Brief
 
 Status: Active
-Last updated: 2026-07-16
+Last updated: 2026-09-22
 Owner: Product + Tech Lead
 
 ## Product
@@ -53,11 +53,22 @@ terms remain documented for any future sharing, distribution, or commercializati
 
 ## Current Runtime Direction
 
-- local draft edit lane: `flux2-klein-9b-gguf`
-- intended edit acceptance lane: `qwen-image-edit-2511`, currently off-box because the local CPU path crashes
-- supporting T2I lane: `qwen-image-2512`
-- research lane: `sdxl-openvino`
+Updated 2026-09-22. The older FLUX-as-draft / Qwen-as-acceptance / SDXL-as-research split is superseded for daily use.
+
+- **local mainline:** `sdxl-openvino` for text-to-image and prompt-guided edit on CPU
+- optional slow draft: `flux2-klein-9b-gguf`
+- frontier edit and T2I: `qwen-image-edit-2511` and `qwen-image-2512`, off-box / GPU only
+- Qwen-Image-2.1: catalogued candidate only
 - model replacement: benchmark-driven, not roadmap-driven
+
+## Product Surface Direction
+
+The daily screen is a private studio, learned from online create pages and prompt galleries, without a public Explore feed.
+
+- the prompt and Run edit stay pinned
+- portrait presets are the prompt library; the next gap is a real thumbnail on each preset
+- recent runs are the gallery
+- Setup and Utilities open from a collapsible rail and stay off the portrait until asked
 
 ## Engineering Direction
 
@@ -78,5 +89,5 @@ terms remain documented for any future sharing, distribution, or commercializati
 
 ## Scope Boundary
 
-Current work improves reliability, reproducibility, performance, and workflow quality. It does not add masking,
-batch editing, mobile, hosted inference, a broad model zoo, or a GPU requirement.
+Current work improves the studio workflow on the existing CPU runtime. It does not add masking,
+batch editing, mobile apps, hosted inference, a broad model zoo, or a GPU requirement.

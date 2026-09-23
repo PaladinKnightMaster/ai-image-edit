@@ -5,6 +5,13 @@ Last updated: 2026-09-22
 
 ## 2026-09-22
 
+### The daily screen is a private studio
+
+- pinned prompt, visual preset row, and a Library gallery of this machine's runs
+- Setup and Utilities open from a collapsible rail and stay off the portrait until asked
+- no public Explore feed and no second models column
+- source: PR #16 and PR #17; strategy amendment in `docs/planning/strategy-checkpoint.md`
+
 ### Temporal is deferred
 
 - SQLite attempt, cancel, one-retry, and restart recovery stay the product path

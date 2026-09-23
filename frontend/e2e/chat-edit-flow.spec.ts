@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { EDIT_PRESETS } from "../app/chat/edit-presets";
 import { installChatApiMocks, MOCK_HARDWARE, type EditScenario } from "./fixtures/mock-api";
 
 async function openChat(page: Page, scenario: EditScenario = "success") {
@@ -35,6 +36,43 @@ test.describe("chat edit flow (mocked backend)", () => {
     await expect(page.getByTestId("hardware-ready")).toBeVisible();
     await expect(page.getByTestId("hardware-ready").getByText("Ready", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Run edit" })).toBeVisible();
+  });
+
+  test("shows a saved result on a preset that has been run", async ({ page }) => {
+    const preset = EDIT_PRESETS.find((item) => item.id === "natural-skin-retouch");
+    if (!preset) {
+      throw new Error("missing preset");
+    }
+    await installChatApiMocks(page);
+    await page.route("http://127.0.0.1:8000/api/runs**", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.fallback();
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            id: "run-preset-1",
+            job_id: "job-preset-1",
+            model_id: "sdxl-openvino",
+            prompt: preset.promptTemplate,
+            seed: 1,
+            steps: 8,
+            output_image_id: "img-preset-1",
+            status: "succeeded",
+            created_at: 1_700_000_100
+          }
+        ])
+      });
+    });
+    await page.goto("/chat");
+    await expect(page.getByTestId("preset-thumb-natural-skin-retouch")).toBeVisible();
+    await expect(page.getByTestId("preset-thumb-natural-skin-retouch")).toHaveAttribute(
+      "src",
+      "http://127.0.0.1:8000/api/images/img-preset-1"
+    );
   });
 
   test("offers one download when the recommended model is missing", async ({ page }) => {

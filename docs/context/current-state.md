@@ -9,8 +9,10 @@ Owner: Tech Lead
 - the product is edit-first with explicit `Edit Photo` and `Create from Scratch` modes
 - base and optional reference-image roles are explicit
 - portrait presets, generated-image-to-edit handoff, before/after compare, history, download, and reuse exist
+- `/chat` is a studio: a pinned prompt, a visual preset row, and a Library gallery of recent runs. A collapsible rail opens Setup (Hardware fit and model folder) or Utilities (runtime, worker status, installed models, cleanup). The rail is a left column on a wide screen and a bottom bar on a narrow one.
+- Hardware fit suggests `models/openvino/sdxl_base`, asks once to confirm or change that folder, and saves the choice. `SDXL_OV_BASE_DIR` overrides the setting. Only the recommended local model can be downloaded in-app.
+- preset tiles show the latest local result whose prompt matches that preset; presets with no saved run stay color tiles
 - pending-review outputs require explicit reveal before normal reuse
-- `/chat` sidebar **Hardware fit** suggests `models/openvino/sdxl_base`, asks once to confirm or change that folder, and saves the choice. `SDXL_OV_BASE_DIR` overrides the setting. Only that recommended model can be downloaded in-app.
 - the frontend is componentized but `frontend/app/chat/page.tsx` still owns substantial API, persistence, and
   EventSource orchestration (stream disconnect reconciles via the job API)
 - backend jobs, runs, and images persist in SQLite plus filesystem storage
@@ -79,9 +81,9 @@ Still pending:
 Product work (OpenVINO mainline, hardware UI) continued without claiming a clean-machine smoke pass.
 Independent physical-machine evidence remains an accepted residual risk.
 
-### Sprint 5 — active Backend + UI reliability track
+### Sprint 5 — reliability track closed; studio UX is the active product track
 
-Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged):
+Roadmap in `docs/planning/sprint-5-outline.md`. Reliability P0s are done. Temporal is deferred. The open product work is the studio, not another orchestration framework.
 
 | ID | Work | Status |
 | --- | --- | --- |
@@ -96,8 +98,7 @@ Roadmap in `docs/planning/sprint-5-outline.md` (strategy quality order unchanged
 | WR5-009 | Optional Temporal spike | Deferred — ADR 0007; SQLite orchestration stays the runtime |
 | WR5-010 | Model candidate review (incl. Qwen-Image-2.1) | Candidate noted only |
 
-**Backend + UI improvement strategy is not complete.** OpenVINO + hardware UI closed a product/runtime gap;
-they do not close Sprint 5 reliability tickets.
+**Sprint 5 reliability tickets are closed or explicitly deferred.** The active product track is the studio layout: pinned prompt, preset row, private gallery, and a collapsible Setup / Utilities rail (PR #17).
 
 ## Current Blockers And Risks
 
@@ -115,8 +116,8 @@ they do not close Sprint 5 reliability tickets.
 
 ## Immediate Next Action
 
-1. WR5-010 gated Qwen-Image-2.1 evaluation off-box only, when a GPU or off-box machine is available.
-2. Next.js 16 remains a later increment. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box as a product default. Do not install Temporal.
+1. Use the studio: a finished preset run now fills that preset's thumbnail. Presets with no completed run stay color tiles until one exists.
+2. WR5-010 stays off-box. Next.js 16 stays a later increment. Do not treat Windows Sandbox as a gate. Do not download Qwen-Image-2.1 onto this CPU box. Do not install Temporal.
 
 ## Heavy-Run Rule
 
