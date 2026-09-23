@@ -908,8 +908,14 @@ export default function ChatPage() {
           return message;
         }
         const next = { ...message, ...patch };
-        if (next.outputImageId && next.prompt) {
-          setPresetThumbnails(rememberPresetThumbnail(next.prompt, next.outputImageId));
+        const promptText =
+          next.prompt ||
+          (typeof next.request?.params?.prompt === "string"
+            ? next.request.params.prompt
+            : undefined) ||
+          next.run?.prompt;
+        if (next.outputImageId && promptText) {
+          setPresetThumbnails(rememberPresetThumbnail(promptText, next.outputImageId));
         }
         return next;
       })

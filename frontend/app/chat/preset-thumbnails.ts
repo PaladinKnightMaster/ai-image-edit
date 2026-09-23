@@ -39,7 +39,8 @@ export function thumbnailsFromRuns(runs: RunRecord[]): Record<string, string> {
   const found: Record<string, string> = {};
   for (const run of runs) {
     const presetId = presetIdForPrompt(run.prompt || "");
-    const imageId = run.output_image_id || run.pending_output_image_id;
+    // Only revealed outputs — pending_review images stay hidden until Reveal.
+    const imageId = run.output_image_id;
     if (presetId && imageId && !found[presetId]) {
       found[presetId] = imageId;
     }
