@@ -28,6 +28,7 @@ data/app.benchmark-review.db-shm
 data/app.benchmark-review.db-wal
 data/benchmark-backend.err.log
 data/benchmark-backend.out.log
+data/benchmark-review-summary.json
 data/model_location.json
 data/flux2_outputs/
 fixtures/private/
